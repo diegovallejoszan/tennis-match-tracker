@@ -20,6 +20,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     updateAge: 24 * 60 * 60,
   },
   callbacks: {
+    jwt({ token, user }) {
+      if (user?.id) token.uid = user.id;
+      return token;
+    },
+    session({ session, token }) {
+      if (session?.user) session.user.id = token.uid as string;
+      return session;
+    },
     authorized({ auth, request: { nextUrl } }) {
       const isLoggedIn = !!auth?.user;
       const isOnLanding = nextUrl.pathname === "/";
