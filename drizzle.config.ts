@@ -2,7 +2,7 @@ import { defineConfig } from "drizzle-kit";
 
 export default defineConfig({
   dialect: "postgresql",
-  schema: "./src/db/schema/auth.ts",
+  schema: ["./src/db/schema/auth.ts", "./src/db/schema/players.ts"],
   out: "./drizzle",
   dbCredentials: {
     url: process.env.DATABASE_URL ?? "postgres://localhost:5432/tennis_tracker",

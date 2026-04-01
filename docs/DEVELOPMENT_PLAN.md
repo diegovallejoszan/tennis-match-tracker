@@ -252,11 +252,11 @@ Each phase produces a usable, deployed increment. You can start registering play
 
 ## Phase checklist
 
-- [ ] **Phase 1a** — Install shadcn/ui, build responsive app shell with nav and placeholder pages
-- [ ] **Phase 1b** — Set up NextAuth v5 with Google provider and Drizzle adapter
-- [ ] **Phase 1c** — Create Railway account, provision PostgreSQL, connect GitHub repo, deploy
-- [ ] **Phase 1d** — Set up Drizzle ORM, initial auth schema, first migration
-- [ ] **Phase 2** — Players CRUD: schema, server actions, list/create/edit pages, tests
+- [x] **Phase 1a** — Install shadcn/ui, build responsive app shell with nav and placeholder pages
+- [x] **Phase 1b** — Set up NextAuth v5 with Google provider and Drizzle adapter
+- [x] **Phase 1c** — Create Railway account, provision PostgreSQL, connect GitHub repo, deploy
+- [x] **Phase 1d** — Set up Drizzle ORM, initial auth schema, first migration
+- [x] **Phase 2** — Players CRUD: schema, server actions, list/create/edit pages, tests
 - [ ] **Phase 3** — Match registration: schema, form with opponents/score/learnings, list/detail pages
 - [ ] **Phase 4** — Dashboard: summary cards, Recharts charts, filters, responsive layout
 - [ ] **Phase 5** — Match preparation: opponent selector, AI game plan generation via OpenAI

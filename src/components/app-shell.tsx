@@ -10,6 +10,7 @@ import {
   Target,
   Menu,
   User,
+  UserCircle,
   LogOut,
 } from "lucide-react";
 import type { Session } from "next-auth";
@@ -39,6 +40,7 @@ const navItems = [
   { href: "/players", label: "Players", icon: Users },
   { href: "/matches", label: "Matches", icon: Trophy },
   { href: "/prepare", label: "Prepare", icon: Target },
+  { href: "/account", label: "My Account", icon: UserCircle },
 ] as const;
 
 function NavLinks({
@@ -135,6 +137,9 @@ export function AppShell({
               <DropdownMenuLabel>My Account</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
+                <Link href="/account">Profile & settings</Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
                 <Link href="/dashboard">Dashboard</Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
@@ -181,6 +186,11 @@ export function AppShell({
                   <DropdownMenuLabel>My Account</DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
+                    <Link href="/account" onClick={() => setMobileOpen(false)}>
+                      Profile & settings
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
                     <Link href="/dashboard" onClick={() => setMobileOpen(false)}>
                       Dashboard
                     </Link>
@@ -211,6 +221,9 @@ export function AppShell({
             <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuLabel>My Account</DropdownMenuLabel>
               <DropdownMenuSeparator />
+              <DropdownMenuItem asChild>
+                <Link href="/account">Profile & settings</Link>
+              </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link href="/dashboard">Dashboard</Link>
               </DropdownMenuItem>

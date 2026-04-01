@@ -4,6 +4,7 @@ import {
   primaryKey,
   text,
   timestamp,
+  varchar,
 } from "drizzle-orm/pg-core";
 
 export const users = pgTable("user", {
@@ -15,6 +16,10 @@ export const users = pgTable("user", {
   emailVerified: timestamp("emailVerified", { mode: "date" }),
   image: text("image"),
   onboardingCompletedAt: timestamp("onboardingCompletedAt", { mode: "date" }),
+  /** Logged-in user’s own play style (optional). */
+  profilePlayStyle: varchar("profilePlayStyle", { length: 100 }),
+  profileStrengths: text("profileStrengths"),
+  profileWeaknesses: text("profileWeaknesses"),
 });
 
 export const accounts = pgTable(
