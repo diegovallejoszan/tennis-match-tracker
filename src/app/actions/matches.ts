@@ -110,6 +110,7 @@ export async function createMatchAction(
   });
 
   revalidatePath("/matches");
+  revalidatePath("/dashboard");
   return { ok: true };
 }
 
@@ -159,6 +160,7 @@ export async function updateMatchAction(
 
   revalidatePath("/matches");
   revalidatePath(`/matches/${matchId}`);
+  revalidatePath("/dashboard");
   return { ok: true };
 }
 
@@ -172,5 +174,6 @@ export async function deleteMatchAction(matchId: string): Promise<void> {
     .delete(matches)
     .where(and(eq(matches.id, matchId), eq(matches.userId, userId)));
 
+  revalidatePath("/dashboard");
   redirect("/matches");
 }

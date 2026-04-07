@@ -1,13 +1,14 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
-import { desc, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { db, matchPlayers, matches, players } from "@/db";
+import { db, players } from "@/db";
 import { auth } from "@/lib/auth";
+import { fetchGroupedMatchesForUser } from "@/lib/grouped-matches";
 
 type MatchesPageProps = {
   searchParams: Promise<{
@@ -16,19 +17,6 @@ type MatchesPageProps = {
     to?: string;
     opponentId?: string;
   }>;
-};
-
-type MatchRowData = {
-  id: string;
-  date: string;
-  time: string | null;
-  matchType: string;
-  outcome: string | null;
-  score: string | null;
-  notes: string | null;
-  createdAt: Date;
-  partner: { id: string; name: string } | null;
-  opponents: Array<{ id: string; name: string }>;
 };
 
 const typeLabels: Record<string, string> = {
@@ -43,69 +31,16 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
 
   const { type = "", from = "", to = "", opponentId = "" } = await searchParams;
 
-  const [playerRows, joinedRows] = await Promise.all([
+  const [playerRows, groupedMatches] = await Promise.all([
     db
       .select({ id: players.id, name: players.name })
       .from(players)
       .where(eq(players.userId, session.user.id))
       .orderBy(players.name),
-    db
-      .select({
-        matchId: matches.id,
-        date: matches.date,
-        time: matches.time,
-        matchType: matches.matchType,
-        outcome: matches.outcome,
-        score: matches.score,
-        notes: matches.notes,
-        createdAt: matches.createdAt,
-        opponentId: players.id,
-        opponentName: players.name,
-        role: matchPlayers.role,
-      })
-      .from(matches)
-      .leftJoin(matchPlayers, eq(matchPlayers.matchId, matches.id))
-      .leftJoin(players, eq(players.id, matchPlayers.playerId))
-      .where(eq(matches.userId, session.user.id))
-      .orderBy(desc(matches.date), desc(matches.time), desc(matches.createdAt)),
+    fetchGroupedMatchesForUser(session.user.id),
   ]);
 
-  const grouped = new Map<string, MatchRowData>();
-
-  for (const row of joinedRows) {
-    if (!grouped.has(row.matchId)) {
-      grouped.set(row.matchId, {
-        id: row.matchId,
-        date: row.date,
-        time: row.time,
-        matchType: row.matchType,
-        outcome: row.outcome,
-        score: row.score,
-        notes: row.notes,
-        createdAt: row.createdAt,
-        partner: null,
-        opponents: [],
-      });
-    }
-
-    const entry = grouped.get(row.matchId)!;
-    if (
-      row.role === "opponent" &&
-      row.opponentId !== null &&
-      row.opponentName !== null
-    ) {
-      entry.opponents.push({ id: row.opponentId, name: row.opponentName });
-    }
-    if (
-      row.role === "teammate" &&
-      row.opponentId !== null &&
-      row.opponentName !== null
-    ) {
-      entry.partner = { id: row.opponentId, name: row.opponentName };
-    }
-  }
-
-  const filtered = [...grouped.values()].filter((match) => {
+  const filtered = groupedMatches.filter((match) => {
     if (type && match.matchType !== type) return false;
     if (from && match.date < from) return false;
     if (to && match.date > to) return false;
