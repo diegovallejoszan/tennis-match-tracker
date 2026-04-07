@@ -258,6 +258,6 @@ Each phase produces a usable, deployed increment. You can start registering play
 - [x] **Phase 1d** — Set up Drizzle ORM, initial auth schema, first migration
 - [x] **Phase 2** — Players CRUD: schema, server actions, list/create/edit pages, tests
 - [x] **Phase 3** — Match registration: schema, form with opponents/score/notes, list/detail pages
-- [ ] **Phase 4** — Dashboard: summary cards, Recharts charts, filters, responsive layout
+- [x] **Phase 4** — Dashboard: summary cards, Recharts charts, filters, responsive layout
 - [ ] **Phase 5** — Match preparation: opponent selector, AI game plan generation via OpenAI
 - [ ] **Phase 6** — Polish: custom domain, loading states, error boundaries, Lighthouse audit
