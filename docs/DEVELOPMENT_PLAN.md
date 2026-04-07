@@ -134,7 +134,7 @@ export const players = pgTable("players", {
 
 ## Phase 3 -- Match Registration
 
-**Goal**: Record every match with score, type, and personal learnings.
+**Goal**: Record every match with score, type, and notes.
 
 **Branch**: `feature/phase-3-matches`
 
@@ -149,7 +149,7 @@ export const matches = pgTable("matches", {
   time: time("time"),
   matchType: varchar("match_type", { length: 20 }).notNull(), // "practice" | "single" | "doubles"
   score: varchar("score", { length: 50 }),
-  keyLearnings: text("key_learnings"),
+  notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -164,7 +164,7 @@ export const matchPlayers = pgTable("match_players", {
 ### Features
 
 - `/matches` page with chronological list, filters by type/date/opponent
-- `/matches/new` form: date picker, optional time, select opponents from player list, score input, match type radio, key learnings textarea
+- `/matches/new` form: date picker, optional time, select opponents from player list, score input, match type radio, notes textarea
 - `/matches/[id]` detail view + edit
 - Server Actions with Zod validation
 - Tests
@@ -197,7 +197,7 @@ export const matchPlayers = pgTable("match_players", {
 ### Features
 
 - `/prepare` page: select an opponent from dropdown
-- On selection, gather context: opponent characteristics, past match scores, your key learnings from those matches
+- On selection, gather context: opponent characteristics, past match scores, your notes from those matches
 - Send context to an LLM (OpenAI API via server action) with a prompt like: "Given this opponent profile and our match history, suggest a game plan"
 - Display the generated game plan paragraph
 - Option to save the game plan to a new `game_plans` table for future reference
@@ -257,7 +257,7 @@ Each phase produces a usable, deployed increment. You can start registering play
 - [x] **Phase 1c** — Create Railway account, provision PostgreSQL, connect GitHub repo, deploy
 - [x] **Phase 1d** — Set up Drizzle ORM, initial auth schema, first migration
 - [x] **Phase 2** — Players CRUD: schema, server actions, list/create/edit pages, tests
-- [ ] **Phase 3** — Match registration: schema, form with opponents/score/learnings, list/detail pages
+- [x] **Phase 3** — Match registration: schema, form with opponents/score/notes, list/detail pages
 - [ ] **Phase 4** — Dashboard: summary cards, Recharts charts, filters, responsive layout
 - [ ] **Phase 5** — Match preparation: opponent selector, AI game plan generation via OpenAI
 - [ ] **Phase 6** — Polish: custom domain, loading states, error boundaries, Lighthouse audit
