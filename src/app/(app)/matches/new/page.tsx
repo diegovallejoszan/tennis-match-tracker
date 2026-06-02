@@ -7,17 +7,24 @@ import { MatchForm } from "@/components/matches/match-form";
 import { Button } from "@/components/ui/button";
 import { db, players } from "@/db";
 import { auth } from "@/lib/auth";
+import { isAppLocale, type AppLocale } from "@/lib/locale";
 import { defaultMatchFormValues } from "@/lib/matches-validation";
+import { getUserLocale } from "@/lib/user-locale-db";
 
 export default async function NewMatchPage() {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
 
-  const playerRows = await db
-    .select({ id: players.id, name: players.name })
-    .from(players)
-    .where(eq(players.userId, session.user.id))
-    .orderBy(asc(players.name));
+  const [playerRows, locale] = await Promise.all([
+    db
+      .select({ id: players.id, name: players.name })
+      .from(players)
+      .where(eq(players.userId, session.user.id))
+      .orderBy(asc(players.name)),
+    getUserLocale(session.user.id),
+  ]);
+
+  const userLocale: AppLocale = isAppLocale(locale) ? locale : "en";
 
   return (
     <div className="p-4 md:p-6">
@@ -31,6 +38,7 @@ export default async function NewMatchPage() {
         mode="create"
         defaultValues={defaultMatchFormValues()}
         players={playerRows}
+        userLocale={userLocale}
       />
     </div>
   );

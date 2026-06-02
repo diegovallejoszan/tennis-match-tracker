@@ -5,6 +5,7 @@ const mocks = vi.hoisted(() => {
     players: {},
     matches: {},
     matchPlayers: {},
+    matchScoreSegments: {},
   };
 
   const validPlayersWhere = vi.fn().mockResolvedValue([{ id: "op-1" }]);
@@ -84,6 +85,7 @@ vi.mock("@/db", () => ({
   players: mocks.tables.players,
   matches: mocks.tables.matches,
   matchPlayers: mocks.tables.matchPlayers,
+  matchScoreSegments: mocks.tables.matchScoreSegments,
 }));
 
 import { auth } from "@/lib/auth";
@@ -103,7 +105,10 @@ const validPayload = {
   date: "2026-04-01",
   matchType: "single" as const,
   outcome: "win" as const,
-  score: "6-4 6-3",
+  scoreSegments: [
+    { segmentType: "set" as const, userGamesOrPoints: 6, opponentGamesOrPoints: 4 },
+    { segmentType: "set" as const, userGamesOrPoints: 6, opponentGamesOrPoints: 3 },
+  ],
   notes: "Targeted second serve.",
   opponentIds: [opponentId],
   partnerId: "",
@@ -142,7 +147,7 @@ describe("createMatchAction", () => {
     expect(result).toEqual({ ok: true });
     expect(mocks.transactionFn).toHaveBeenCalledTimes(1);
     expect(mocks.txInsertMatchValues).toHaveBeenCalledTimes(1);
-    expect(mocks.txInsertPlayersValues).toHaveBeenCalledTimes(1);
+    expect(mocks.txInsertPlayersValues).toHaveBeenCalledTimes(2);
   });
 
   it("creates doubles match with partner and opponents", async () => {
@@ -156,7 +161,8 @@ describe("createMatchAction", () => {
       date: "2026-04-01",
       matchType: "doubles",
       outcome: "loss",
-      score: "4-6 6-4",
+      useStructuredScore: false,
+      legacyScore: "4-6 6-4",
       opponentIds: [opponentId, otherOpp],
       partnerId,
       notes: "",
@@ -179,8 +185,8 @@ describe("updateMatchAction", () => {
     expect(result).toEqual({ ok: true });
     expect(mocks.transactionFn).toHaveBeenCalledTimes(1);
     expect(mocks.txUpdate).toHaveBeenCalledTimes(1);
-    expect(mocks.txDelete).toHaveBeenCalledTimes(1);
-    expect(mocks.txInsertPlayersValues).toHaveBeenCalledTimes(1);
+    expect(mocks.txDelete).toHaveBeenCalledTimes(2);
+    expect(mocks.txInsertPlayersValues).toHaveBeenCalledTimes(2);
   });
 });
 

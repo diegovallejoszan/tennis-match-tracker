@@ -1,0 +1,86 @@
+import type { MatchOutcome } from "@/lib/matches-validation";
+
+import { formatScoreFromSegments } from "./format";
+import type { IntegrityIssue, ScoreSegmentInput } from "./types";
+import { countSetsWon, validateAllSegments } from "./validate";
+
+export type MatchIntegrityInput = {
+  outcome: MatchOutcome | null;
+  segments: ScoreSegmentInput[];
+  legacyScore?: string | null;
+};
+
+export function checkMatchIntegrity(
+  input: MatchIntegrityInput,
+): IntegrityIssue[] {
+  const issues: IntegrityIssue[] = [];
+  const { outcome, segments, legacyScore } = input;
+  const hasSegments = segments.length > 0;
+  const hasLegacy =
+    legacyScore != null && legacyScore.trim().length > 0 && !hasSegments;
+
+  if (!hasSegments && !hasLegacy && outcome && outcome !== "non_finished") {
+    issues.push({
+      code: "missing_score",
+      message: "Add score segments or a legacy score for completed matches",
+      severity: "error",
+    });
+  }
+
+  if (hasSegments) {
+    issues.push(...validateAllSegments(segments));
+
+    const formatted = formatScoreFromSegments(segments);
+    if (formatted.length > 120) {
+      issues.push({
+        code: "score_too_long",
+        message: "Generated score exceeds maximum length",
+        severity: "error",
+      });
+    }
+
+    if (outcome === "win" || outcome === "loss") {
+      const { user, opponent } = countSetsWon(segments);
+      if (user === opponent && user > 0) {
+        issues.push({
+          code: "tied_match",
+          message: "Sets are tied — match may be incomplete",
+          severity: "warning",
+        });
+      } else if (outcome === "win" && user <= opponent) {
+        issues.push({
+          code: "outcome_vs_score",
+          message: "Result is Win but the structured score favors your opponent",
+          severity: "error",
+        });
+      } else if (outcome === "loss" && opponent <= user) {
+        issues.push({
+          code: "outcome_vs_score",
+          message: "Result is Loss but the structured score favors you",
+          severity: "error",
+        });
+      }
+    }
+  }
+
+  if (outcome === "non_finished" && hasSegments) {
+    const errors = issues.filter((i) => i.severity === "error");
+    if (errors.length === 0) {
+      const { user, opponent } = countSetsWon(segments);
+      if (user !== opponent && (user >= 2 || opponent >= 2)) {
+        issues.push({
+          code: "looks_finished",
+          message:
+            "Match is marked non-finished but the score suggests a completed match",
+          severity: "warning",
+        });
+      }
+    }
+  }
+
+  return issues;
+}
+
+export function hasBlockingIntegrityIssues(issues: IntegrityIssue[]): boolean {
+  return issues.some((i) => i.severity === "error");
+}

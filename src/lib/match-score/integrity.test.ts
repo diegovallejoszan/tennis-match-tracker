@@ -1,0 +1,39 @@
+import { describe, expect, it } from "vitest";
+
+import { checkMatchIntegrity, hasBlockingIntegrityIssues } from "./integrity";
+import type { ScoreSegmentInput } from "./types";
+
+const winSets: ScoreSegmentInput[] = [
+  { segmentType: "set", userGamesOrPoints: 6, opponentGamesOrPoints: 4 },
+  { segmentType: "set", userGamesOrPoints: 6, opponentGamesOrPoints: 3 },
+];
+
+describe("checkMatchIntegrity", () => {
+  it("flags outcome vs structured score mismatch", () => {
+    const issues = checkMatchIntegrity({
+      outcome: "win",
+      segments: [
+        { segmentType: "set", userGamesOrPoints: 4, opponentGamesOrPoints: 6 },
+        { segmentType: "set", userGamesOrPoints: 3, opponentGamesOrPoints: 6 },
+      ],
+    });
+    expect(issues.some((i) => i.code === "outcome_vs_score")).toBe(true);
+    expect(hasBlockingIntegrityIssues(issues)).toBe(true);
+  });
+
+  it("accepts consistent win and score", () => {
+    const issues = checkMatchIntegrity({
+      outcome: "win",
+      segments: winSets,
+    });
+    expect(hasBlockingIntegrityIssues(issues)).toBe(false);
+  });
+
+  it("allows non-finished without segments", () => {
+    const issues = checkMatchIntegrity({
+      outcome: "non_finished",
+      segments: [],
+    });
+    expect(hasBlockingIntegrityIssues(issues)).toBe(false);
+  });
+});

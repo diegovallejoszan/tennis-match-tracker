@@ -7,6 +7,8 @@ import { useEffect, useState, useTransition } from "react";
 import { useForm, useWatch } from "react-hook-form";
 
 import { createMatchAction, updateMatchAction } from "@/app/actions/matches";
+import { MatchAudioNotes } from "@/components/matches/match-audio-notes";
+import { ScoreSegmentsEditor } from "@/components/matches/score-segments-editor";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -19,6 +21,8 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { formatScoreFromSegments } from "@/lib/match-score";
+import type { AppLocale } from "@/lib/locale";
 import {
   MATCH_TYPES,
   matchFormSchema,
@@ -32,6 +36,7 @@ type MatchFormProps = {
   matchId?: string;
   defaultValues: MatchFormInput;
   players: Array<{ id: string; name: string }>;
+  userLocale?: AppLocale;
 };
 
 const matchTypeLabels: Record<(typeof MATCH_TYPES)[number], string> = {
@@ -43,6 +48,7 @@ const matchTypeLabels: Record<(typeof MATCH_TYPES)[number], string> = {
 const outcomeLabels: Record<(typeof OUTCOMES)[number], string> = {
   win: "Win",
   loss: "Loss",
+  non_finished: "Not finished",
 };
 
 export function MatchForm({
@@ -50,6 +56,7 @@ export function MatchForm({
   matchId,
   defaultValues,
   players,
+  userLocale = "en",
 }: MatchFormProps) {
   const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);
@@ -62,6 +69,12 @@ export function MatchForm({
 
   const matchType = useWatch({ control: form.control, name: "matchType" });
   const partnerId = useWatch({ control: form.control, name: "partnerId" });
+  const outcome = useWatch({ control: form.control, name: "outcome" });
+  const useStructuredScore = useWatch({
+    control: form.control,
+    name: "useStructuredScore",
+  });
+  const scoreSegments = useWatch({ control: form.control, name: "scoreSegments" });
 
   useEffect(() => {
     if (matchType !== "doubles") {
@@ -85,7 +98,14 @@ export function MatchForm({
 
   const showCompetitiveFields =
     matchType === "single" || matchType === "doubles";
-  const scoreRequired = showCompetitiveFields;
+  const scoreRequired =
+    showCompetitiveFields &&
+    outcome !== "non_finished" &&
+    (outcome === "win" || outcome === "loss");
+  const generatedPreview =
+    useStructuredScore && (scoreSegments?.length ?? 0) > 0
+      ? formatScoreFromSegments(scoreSegments ?? [])
+      : null;
 
   function onSubmit(values: MatchFormValues) {
     setServerError(null);
@@ -302,32 +322,67 @@ export function MatchForm({
           )}
         />
 
-        <FormField
-          control={form.control}
-          name="score"
-          render={({ field }) => (
-            <FormItem className="max-w-lg">
-              <FormLabel>
-                Score
-                {scoreRequired ? (
-                  <span className="font-normal text-muted-foreground">
-                    {" "}
-                    (required)
-                  </span>
-                ) : (
-                  <span className="font-normal text-muted-foreground">
-                    {" "}
-                    (optional)
-                  </span>
-                )}
-              </FormLabel>
-              <FormControl>
-                <Input placeholder="e.g. 6-4 6-3" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        {showCompetitiveFields ? (
+          <FormField
+            control={form.control}
+            name="useStructuredScore"
+            render={({ field }) => (
+              <FormItem className="flex items-center gap-2 space-y-0">
+                <FormControl>
+                  <Checkbox
+                    checked={field.value}
+                    onCheckedChange={(checked) =>
+                      field.onChange(checked === true)
+                    }
+                  />
+                </FormControl>
+                <FormLabel className="!mt-0 font-normal">
+                  Register score segment by segment (recommended)
+                </FormLabel>
+              </FormItem>
+            )}
+          />
+        ) : null}
+
+        {showCompetitiveFields && useStructuredScore ? (
+          <ScoreSegmentsEditor control={form.control} />
+        ) : null}
+
+        {showCompetitiveFields && !useStructuredScore ? (
+          <FormField
+            control={form.control}
+            name="legacyScore"
+            render={({ field }) => (
+              <FormItem className="max-w-lg">
+                <FormLabel>
+                  Score (legacy text)
+                  {scoreRequired ? (
+                    <span className="font-normal text-muted-foreground">
+                      {" "}
+                      (required)
+                    </span>
+                  ) : (
+                    <span className="font-normal text-muted-foreground">
+                      {" "}
+                      (optional for not finished)
+                    </span>
+                  )}
+                </FormLabel>
+                <FormControl>
+                  <Input placeholder="e.g. 6-4 6-3" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        ) : null}
+
+        {generatedPreview ? (
+          <p className="text-sm text-muted-foreground">
+            Display score:{" "}
+            <span className="font-mono text-foreground">{generatedPreview}</span>
+          </p>
+        ) : null}
 
         <FormField
           control={form.control}
@@ -339,6 +394,15 @@ export function MatchForm({
                 Learnings, observations, or anything else worth remembering about
                 this match.
               </p>
+              <MatchAudioNotes
+                locale={userLocale}
+                onTranscript={(text) => {
+                  const current = field.value.trim();
+                  field.onChange(
+                    current ? `${current}\n\n${text}` : text,
+                  );
+                }}
+              />
               <FormControl>
                 <Textarea
                   placeholder="Optional"

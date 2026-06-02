@@ -1,6 +1,7 @@
 import NextAuth from "next-auth";
 import Google from "next-auth/providers/google";
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
+import { ensureUserLocale } from "@/lib/user-locale-db";
 import { db, accounts, sessions, users, verificationTokens } from "@/db";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
@@ -18,6 +19,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     strategy: "jwt",
     maxAge: 30 * 24 * 60 * 60,
     updateAge: 24 * 60 * 60,
+  },
+  events: {
+    async signIn({ user }) {
+      if (user.id) {
+        await ensureUserLocale(user.id);
+      }
+    },
   },
   callbacks: {
     jwt({ token, user }) {

@@ -3,6 +3,7 @@ import postgres from "postgres";
 import * as authSchema from "./schema/auth";
 import * as matchesSchema from "./schema/matches";
 import * as playersSchema from "./schema/players";
+import * as userPreferencesSchema from "./schema/user-preferences";
 
 const connectionString = process.env.DATABASE_URL;
 
@@ -12,9 +13,15 @@ if (!connectionString) {
 
 const client = postgres(connectionString, { prepare: false });
 export const db = drizzle(client, {
-  schema: { ...authSchema, ...playersSchema, ...matchesSchema },
+  schema: {
+    ...authSchema,
+    ...playersSchema,
+    ...matchesSchema,
+    ...userPreferencesSchema,
+  },
 });
 
 export * from "./schema/auth";
 export * from "./schema/matches";
 export * from "./schema/players";
+export * from "./schema/user-preferences";

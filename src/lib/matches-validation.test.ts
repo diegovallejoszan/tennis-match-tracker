@@ -4,22 +4,57 @@ import {
   defaultMatchFormValues,
   parseMatchForm,
   toDbMatchValues,
+  toDbScoreSegments,
 } from "./matches-validation";
 
 const opponentA = "550e8400-e29b-41d4-a716-446655440000";
 const opponentB = "6ba7b810-9dad-11d1-80b4-00c04fd430c8";
 const partnerC = "6ba7b811-9dad-11d1-80b4-00c04fd430c8";
 
+const winSegments = [
+  { segmentType: "set" as const, userGamesOrPoints: 6, opponentGamesOrPoints: 4 },
+  { segmentType: "set" as const, userGamesOrPoints: 6, opponentGamesOrPoints: 3 },
+];
+
 describe("parseMatchForm", () => {
-  it("accepts a valid singles payload", () => {
+  it("accepts a valid singles payload with structured score", () => {
     const parsed = parseMatchForm({
       ...defaultMatchFormValues(),
       date: "2026-04-01",
       time: "18:30",
       matchType: "single",
       outcome: "win",
-      score: "6-4 6-3",
+      scoreSegments: winSegments,
       notes: "Keep first serves deep.",
+      opponentIds: [opponentA],
+      partnerId: "",
+    });
+
+    expect(parsed.success).toBe(true);
+  });
+
+  it("accepts legacy score when structured is off", () => {
+    const parsed = parseMatchForm({
+      ...defaultMatchFormValues(),
+      date: "2026-04-01",
+      matchType: "single",
+      outcome: "win",
+      useStructuredScore: false,
+      legacyScore: "6-4 6-3",
+      opponentIds: [opponentA],
+      partnerId: "",
+    });
+
+    expect(parsed.success).toBe(true);
+  });
+
+  it("accepts non-finished without score segments", () => {
+    const parsed = parseMatchForm({
+      ...defaultMatchFormValues(),
+      date: "2026-04-01",
+      matchType: "single",
+      outcome: "non_finished",
+      scoreSegments: [],
       opponentIds: [opponentA],
       partnerId: "",
     });
@@ -33,7 +68,8 @@ describe("parseMatchForm", () => {
       date: "2026-04-01",
       matchType: "doubles",
       outcome: "loss",
-      score: "4-6 6-4 6-7",
+      useStructuredScore: false,
+      legacyScore: "4-6 6-4 6-7",
       opponentIds: [opponentA, opponentB],
       partnerId: partnerC,
     });
@@ -47,7 +83,7 @@ describe("parseMatchForm", () => {
       date: "2026-04-01",
       matchType: "doubles",
       outcome: "win",
-      score: "6-0 6-0",
+      scoreSegments: winSegments,
       opponentIds: [opponentA],
       partnerId: opponentA,
     });
@@ -62,7 +98,7 @@ describe("parseMatchForm", () => {
         date: "2026-04-01",
         matchType: "single",
         outcome: "",
-        score: "",
+        scoreSegments: [],
         opponentIds: [opponentA],
         partnerId: "",
       }).success,
@@ -84,7 +120,7 @@ describe("parseMatchForm", () => {
       date: "2026-04-01",
       matchType: "single",
       outcome: "win",
-      score: "6-0",
+      scoreSegments: winSegments,
       opponentIds: ["not-a-uuid"],
       partnerId: "",
     });
@@ -98,7 +134,8 @@ describe("parseMatchForm", () => {
       date: "2026-04-01",
       matchType: "practice",
       outcome: "",
-      score: "",
+      legacyScore: "",
+      scoreSegments: [],
       notes: "",
       opponentIds: [],
       partnerId: "",
@@ -116,7 +153,8 @@ describe("toDbMatchValues", () => {
       time: "",
       matchType: "practice",
       outcome: "",
-      score: "",
+      legacyScore: "",
+      scoreSegments: [],
       notes: "",
       opponentIds: [],
       partnerId: "",
@@ -136,13 +174,16 @@ describe("toDbMatchValues", () => {
     });
   });
 
-  it("persists outcome and score for singles", () => {
+  it("auto-generates score from segments for singles", () => {
     const parsed = parseMatchForm({
       ...defaultMatchFormValues(),
       date: "2026-04-01",
       matchType: "single",
       outcome: "loss",
-      score: "3-6 2-6",
+      scoreSegments: [
+        { segmentType: "set", userGamesOrPoints: 3, opponentGamesOrPoints: 6 },
+        { segmentType: "set", userGamesOrPoints: 2, opponentGamesOrPoints: 6 },
+      ],
       opponentIds: [opponentA],
       partnerId: "",
     });
@@ -154,5 +195,6 @@ describe("toDbMatchValues", () => {
       score: "3-6 2-6",
       matchType: "single",
     });
+    expect(toDbScoreSegments(parsed.data)).toHaveLength(2);
   });
 });

@@ -220,6 +220,9 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                     {match.outcome === "loss" ? (
                       <Badge variant="destructive">Loss</Badge>
                     ) : null}
+                    {match.outcome === "non_finished" ? (
+                      <Badge variant="outline">Not finished</Badge>
+                    ) : null}
                   </div>
                   {match.score ? (
                     <p className="mt-2 text-sm text-muted-foreground">Score: {match.score}</p>

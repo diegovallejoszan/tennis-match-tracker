@@ -1,12 +1,27 @@
 import { z } from "zod";
 
+import { SEGMENT_TYPES } from "@/lib/match-score/types";
+import { formatScoreFromSegments } from "@/lib/match-score/format";
+import {
+  checkMatchIntegrity,
+  hasBlockingIntegrityIssues,
+} from "@/lib/match-score/integrity";
+
 export const MATCH_TYPES = ["practice", "single", "doubles"] as const;
 export type MatchType = (typeof MATCH_TYPES)[number];
 
-export const OUTCOMES = ["win", "loss"] as const;
+export const OUTCOMES = ["win", "loss", "non_finished"] as const;
 export type MatchOutcome = (typeof OUTCOMES)[number];
 
 const uuidOrEmpty = z.union([z.string().uuid("Invalid id"), z.literal("")]);
+
+export const scoreSegmentSchema = z.object({
+  segmentType: z.enum(SEGMENT_TYPES),
+  userGamesOrPoints: z.number().int().min(0).max(99),
+  opponentGamesOrPoints: z.number().int().min(0).max(99),
+});
+
+export type ScoreSegmentFormValue = z.infer<typeof scoreSegmentSchema>;
 
 export const matchFormSchema = z
   .object({
@@ -18,8 +33,14 @@ export const matchFormSchema = z
       .regex(/^$|^\d{2}:\d{2}(:\d{2})?$/, "Invalid time format"),
     matchType: z.enum(MATCH_TYPES),
     /** Required for single/doubles; ignored for practice in DB. */
-    outcome: z.enum(["", "win", "loss"]),
-    score: z.string().trim().max(50, "Score must be at most 50 characters"),
+    outcome: z.enum(["", ...OUTCOMES]),
+    /** Legacy free-text score when not using structured segments. */
+    legacyScore: z
+      .string()
+      .trim()
+      .max(120, "Score must be at most 120 characters"),
+    useStructuredScore: z.boolean(),
+    scoreSegments: z.array(scoreSegmentSchema),
     notes: z
       .string()
       .trim()
@@ -40,19 +61,48 @@ export const matchFormSchema = z
       return;
     }
 
-    if (data.outcome !== "win" && data.outcome !== "loss") {
+    if (
+      data.outcome !== "win" &&
+      data.outcome !== "loss" &&
+      data.outcome !== "non_finished"
+    ) {
       ctx.addIssue({
         code: "custom",
-        message: "Select win or loss",
+        message: "Select a match result",
         path: ["outcome"],
       });
     }
 
-    if (data.score.trim().length === 0) {
+    const competitiveFinished =
+      data.outcome === "win" || data.outcome === "loss";
+
+    if (data.useStructuredScore) {
+      if (competitiveFinished && data.scoreSegments.length === 0) {
+        ctx.addIssue({
+          code: "custom",
+          message: "Add at least one score segment",
+          path: ["scoreSegments"],
+        });
+      }
+      const integrity = checkMatchIntegrity({
+        outcome:
+          data.outcome === "" ? null : (data.outcome as MatchOutcome),
+        segments: data.scoreSegments,
+      });
+      if (hasBlockingIntegrityIssues(integrity)) {
+        for (const issue of integrity.filter((i) => i.severity === "error")) {
+          ctx.addIssue({
+            code: "custom",
+            message: issue.message,
+            path: ["scoreSegments"],
+          });
+        }
+      }
+    } else if (competitiveFinished && data.legacyScore.trim().length === 0) {
       ctx.addIssue({
         code: "custom",
         message: "Score is required",
-        path: ["score"],
+        path: ["legacyScore"],
       });
     }
 
@@ -111,7 +161,9 @@ export function defaultMatchFormValues(): MatchFormInput {
     time: "",
     matchType: "practice",
     outcome: "",
-    score: "",
+    legacyScore: "",
+    useStructuredScore: true,
+    scoreSegments: [],
     notes: "",
     opponentIds: [],
     partnerId: "",
@@ -126,12 +178,23 @@ function emptyToNull(value: string): string | null {
   return value === "" ? null : value;
 }
 
-export function toDbMatchValues(data: MatchFormValues, userId: string) {
-  const score =
-    data.matchType === "practice"
-      ? emptyToNull(data.score)
-      : data.score.trim();
+export function resolveMatchScore(data: MatchFormValues): string | null {
+  if (data.matchType === "practice") {
+    if (data.useStructuredScore && data.scoreSegments.length > 0) {
+      return formatScoreFromSegments(data.scoreSegments);
+    }
+    const legacy = data.legacyScore.trim();
+    return legacy === "" ? null : legacy;
+  }
 
+  if (data.useStructuredScore && data.scoreSegments.length > 0) {
+    return formatScoreFromSegments(data.scoreSegments);
+  }
+  const legacy = data.legacyScore.trim();
+  return legacy === "" ? null : legacy;
+}
+
+export function toDbMatchValues(data: MatchFormValues, userId: string) {
   return {
     userId,
     date: data.date,
@@ -140,10 +203,24 @@ export function toDbMatchValues(data: MatchFormValues, userId: string) {
     outcome:
       data.matchType === "practice"
         ? null
-        : data.outcome === "win" || data.outcome === "loss"
+        : data.outcome === "win" ||
+            data.outcome === "loss" ||
+            data.outcome === "non_finished"
           ? data.outcome
           : null,
-    score: score === "" ? null : score,
+    score: resolveMatchScore(data),
     notes: emptyToNull(data.notes),
   };
+}
+
+export function toDbScoreSegments(data: MatchFormValues) {
+  if (!data.useStructuredScore || data.scoreSegments.length === 0) {
+    return [];
+  }
+  return data.scoreSegments.map((seg, index) => ({
+    segmentOrder: index,
+    segmentType: seg.segmentType,
+    userGamesOrPoints: seg.userGamesOrPoints,
+    opponentGamesOrPoints: seg.opponentGamesOrPoints,
+  }));
 }

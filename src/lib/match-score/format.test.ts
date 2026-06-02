@@ -1,0 +1,34 @@
+import { describe, expect, it } from "vitest";
+
+import { formatScoreFromSegments } from "./format";
+import type { ScoreSegmentInput } from "./types";
+
+describe("formatScoreFromSegments", () => {
+  it("formats straight sets", () => {
+    const segments: ScoreSegmentInput[] = [
+      { segmentType: "set", userGamesOrPoints: 6, opponentGamesOrPoints: 4 },
+      { segmentType: "set", userGamesOrPoints: 6, opponentGamesOrPoints: 3 },
+    ];
+    expect(formatScoreFromSegments(segments)).toBe("6-4 6-3");
+  });
+
+  it("merges set at 6-6 with tie break", () => {
+    const segments: ScoreSegmentInput[] = [
+      { segmentType: "set", userGamesOrPoints: 6, opponentGamesOrPoints: 6 },
+      { segmentType: "tie_break", userGamesOrPoints: 7, opponentGamesOrPoints: 5 },
+      { segmentType: "set", userGamesOrPoints: 6, opponentGamesOrPoints: 2 },
+    ];
+    expect(formatScoreFromSegments(segments)).toBe("7-6(5) 6-2");
+  });
+
+  it("formats super tie break", () => {
+    const segments: ScoreSegmentInput[] = [
+      {
+        segmentType: "super_tie_break",
+        userGamesOrPoints: 10,
+        opponentGamesOrPoints: 8,
+      },
+    ];
+    expect(formatScoreFromSegments(segments)).toBe("[10-8]");
+  });
+});

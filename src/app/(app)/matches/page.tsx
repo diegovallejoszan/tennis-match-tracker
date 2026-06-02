@@ -184,6 +184,9 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
                     {match.outcome === "loss" ? (
                       <Badge variant="destructive">Loss</Badge>
                     ) : null}
+                    {match.outcome === "non_finished" ? (
+                      <Badge variant="outline">Not finished</Badge>
+                    ) : null}
                     {!match.outcome ? (
                       <span className="text-muted-foreground">—</span>
                     ) : null}

@@ -46,6 +46,20 @@ describe("filterMatchesByDateRange", () => {
 });
 
 describe("competitiveWinLoss and winRatePercent", () => {
+  it("excludes non_finished from win rate", () => {
+    const { wins, losses } = competitiveWinLoss([
+      ...sample,
+      {
+        date: "2026-04-04",
+        matchType: "single",
+        outcome: "non_finished",
+        opponents: [],
+      },
+    ]);
+    expect(wins).toBe(2);
+    expect(losses).toBe(1);
+  });
+
   it("counts only win/loss outcomes", () => {
     expect(competitiveWinLoss(sample)).toEqual({ wins: 2, losses: 1 });
     expect(winRatePercent(2, 1)).toBe(66.7);

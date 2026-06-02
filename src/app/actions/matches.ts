@@ -4,9 +4,19 @@ import { and, eq, inArray } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
-import { db, matchPlayers, matches, players } from "@/db";
+import {
+  db,
+  matchPlayers,
+  matchScoreSegments,
+  matches,
+  players,
+} from "@/db";
 import { auth } from "@/lib/auth";
-import { parseMatchForm, toDbMatchValues } from "@/lib/matches-validation";
+import {
+  parseMatchForm,
+  toDbMatchValues,
+  toDbScoreSegments,
+} from "@/lib/matches-validation";
 
 export type MatchActionError = { error: string };
 export type MatchActionOk = { ok: true };
@@ -107,6 +117,14 @@ export async function createMatchAction(
     if (rows.length > 0) {
       await tx.insert(matchPlayers).values(rows);
     }
+
+    const segmentRows = toDbScoreSegments(parsed.data).map((seg) => ({
+      matchId,
+      ...seg,
+    }));
+    if (segmentRows.length > 0) {
+      await tx.insert(matchScoreSegments).values(segmentRows);
+    }
   });
 
   revalidatePath("/matches");
@@ -145,10 +163,21 @@ export async function updateMatchAction(
       }
 
       await tx.delete(matchPlayers).where(eq(matchPlayers.matchId, matchId));
+      await tx
+        .delete(matchScoreSegments)
+        .where(eq(matchScoreSegments.matchId, matchId));
 
       const rows = buildMatchPlayerRows(matchId, parsed.data);
       if (rows.length > 0) {
         await tx.insert(matchPlayers).values(rows);
+      }
+
+      const segmentRows = toDbScoreSegments(parsed.data).map((seg) => ({
+        matchId,
+        ...seg,
+      }));
+      if (segmentRows.length > 0) {
+        await tx.insert(matchScoreSegments).values(segmentRows);
       }
     });
   } catch (error) {
