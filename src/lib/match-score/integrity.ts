@@ -84,3 +84,37 @@ export function checkMatchIntegrity(
 export function hasBlockingIntegrityIssues(issues: IntegrityIssue[]): boolean {
   return issues.some((i) => i.severity === "error");
 }
+
+function segmentHasData(segment: ScoreSegmentInput): boolean {
+  return (
+    segment.userGamesOrPoints > 0 || segment.opponentGamesOrPoints > 0
+  );
+}
+
+export function hasEnteredScoreData(segments: ScoreSegmentInput[]): boolean {
+  return segments.some(segmentHasData);
+}
+
+/**
+ * Live form feedback only — surfaces result/score conflicts once the user has
+ * entered meaningful score data. Missing or incomplete scores are validated on
+ * submit, not while the user is still filling the form.
+ */
+export function getLiveIntegrityMessages(
+  input: MatchIntegrityInput,
+): string[] {
+  const { outcome, segments } = input;
+  if (outcome !== "win" && outcome !== "loss") return [];
+  if (!hasEnteredScoreData(segments)) return [];
+
+  const { user, opponent } = countSetsWon(segments);
+  if (user === opponent) return [];
+
+  if (outcome === "win" && user <= opponent) {
+    return ["Result is Win but the structured score favors your opponent"];
+  }
+  if (outcome === "loss" && opponent <= user) {
+    return ["Result is Loss but the structured score favors you"];
+  }
+  return [];
+}

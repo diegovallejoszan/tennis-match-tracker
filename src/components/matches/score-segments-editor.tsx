@@ -6,7 +6,6 @@ import type { Control } from "react-hook-form";
 import { useFieldArray, useFormState, useWatch } from "react-hook-form";
 
 import { FormValidationAlert } from "@/components/matches/form-validation-alert";
-
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -26,6 +25,9 @@ import type { MatchFormValues } from "@/lib/matches-validation";
 
 type ScoreSegmentsEditorProps = {
   control: Control<MatchFormValues>;
+  scoreRequired: boolean;
+  showValidationErrors: boolean;
+  liveConflictMessages: string[];
 };
 
 /**
@@ -73,14 +75,20 @@ function ScoreNumberInput({
   );
 }
 
-export function ScoreSegmentsEditor({ control }: ScoreSegmentsEditorProps) {
+export function ScoreSegmentsEditor({
+  control,
+  scoreRequired,
+  showValidationErrors,
+  liveConflictMessages,
+}: ScoreSegmentsEditorProps) {
   const { fields, append, remove } = useFieldArray({
     control,
     name: "scoreSegments",
   });
 
   const { errors } = useFormState({ control, name: "scoreSegments" });
-  const segmentError =
+  const submitSegmentError =
+    showValidationErrors &&
     typeof errors.scoreSegments?.message === "string"
       ? errors.scoreSegments.message
       : null;
@@ -93,10 +101,17 @@ export function ScoreSegmentsEditor({ control }: ScoreSegmentsEditorProps) {
 
   return (
     <div className="space-y-4 rounded-lg border border-border p-4">
-      {segmentError ? (
+      {liveConflictMessages.length > 0 ? (
+        <FormValidationAlert
+          title="Result doesn't match score"
+          messages={liveConflictMessages}
+        />
+      ) : null}
+
+      {submitSegmentError ? (
         <FormValidationAlert
           title="Score issue"
-          messages={[segmentError]}
+          messages={[submitSegmentError]}
         />
       ) : null}
 
@@ -104,8 +119,9 @@ export function ScoreSegmentsEditor({ control }: ScoreSegmentsEditorProps) {
         <div>
           <p className="text-sm font-medium">Structured score</p>
           <p className="text-xs text-muted-foreground">
-            Add each set or tie break in order. The display score is generated
-            automatically.
+            {scoreRequired
+              ? "Add each set or tie break in order. Required for completed matches."
+              : "Optional for matches not finished."}
           </p>
         </div>
         {preview ? (
@@ -114,9 +130,21 @@ export function ScoreSegmentsEditor({ control }: ScoreSegmentsEditorProps) {
       </div>
 
       {fields.length === 0 ? (
-        <p className="text-sm text-muted-foreground">
-          No segments yet. Add a set to start.
-        </p>
+        <div className="rounded-md border border-dashed border-border bg-muted/20 px-4 py-6 text-center">
+          <p className="text-sm text-muted-foreground">
+            {scoreRequired
+              ? "Add your first set to record the score."
+              : "Add sets or tie breaks if you want to note the partial score."}
+          </p>
+          <Button
+            type="button"
+            className="mt-4 w-full sm:w-auto"
+            onClick={() => append(defaultSegment("set"))}
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            Add first set
+          </Button>
+        </div>
       ) : null}
 
       <ul className="space-y-3">
@@ -207,30 +235,34 @@ export function ScoreSegmentsEditor({ control }: ScoreSegmentsEditorProps) {
         ))}
       </ul>
 
-      <div className="flex flex-wrap gap-2">
-        {SEGMENT_TYPES.map((type) => (
-          <Button
-            key={type}
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => append(defaultSegment(type))}
-          >
-            <Plus className="mr-1 h-3 w-3" />
-            {segmentTypeLabel(type)}
-          </Button>
-        ))}
-      </div>
+      {fields.length > 0 ? (
+        <div className="flex flex-wrap gap-2">
+          {SEGMENT_TYPES.map((type) => (
+            <Button
+              key={type}
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => append(defaultSegment(type))}
+            >
+              <Plus className="mr-1 h-3 w-3" />
+              {segmentTypeLabel(type)}
+            </Button>
+          ))}
+        </div>
+      ) : null}
 
-      <FormField
-        control={control}
-        name="scoreSegments"
-        render={() => (
-          <FormItem>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
+      {showValidationErrors ? (
+        <FormField
+          control={control}
+          name="scoreSegments"
+          render={() => (
+            <FormItem>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      ) : null}
     </div>
   );
 }

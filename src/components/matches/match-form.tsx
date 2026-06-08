@@ -11,7 +11,7 @@ import { createMatchAction, updateMatchAction } from "@/app/actions/matches";
 import { FormValidationAlert } from "@/components/matches/form-validation-alert";
 import { MatchAudioNotes } from "@/components/matches/match-audio-notes";
 import { ScoreSegmentsEditor } from "@/components/matches/score-segments-editor";
-import { checkMatchIntegrity } from "@/lib/match-score/integrity";
+import { getLiveIntegrityMessages } from "@/lib/match-score/integrity";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -32,7 +32,6 @@ import {
   OUTCOMES,
   type MatchFormInput,
   type MatchFormValues,
-  type MatchOutcome,
 } from "@/lib/matches-validation";
 
 function collectFormErrors(errors: FieldErrors<MatchFormValues>): string[] {
@@ -87,6 +86,7 @@ export function MatchForm({
   const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);
   const [submitErrors, setSubmitErrors] = useState<string[]>([]);
+  const [attemptedSubmit, setAttemptedSubmit] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   const form = useForm<MatchFormValues>({
@@ -136,24 +136,28 @@ export function MatchForm({
 
   const liveScoreErrors = useMemo(() => {
     if (!showCompetitiveFields || !useStructuredScore) return [];
-    if (outcome !== "win" && outcome !== "loss") return [];
-    return checkMatchIntegrity({
-      outcome: outcome as MatchOutcome,
+    return getLiveIntegrityMessages({
+      outcome:
+        outcome === "win" || outcome === "loss"
+          ? outcome
+          : null,
       segments: scoreSegments ?? [],
-    })
-      .filter((issue) => issue.severity === "error")
-      .map((issue) => issue.message);
+    });
   }, [showCompetitiveFields, useStructuredScore, outcome, scoreSegments]);
 
   const outcomeFieldError =
+    attemptedSubmit &&
     typeof form.formState.errors.outcome?.message === "string"
       ? form.formState.errors.outcome.message
       : null;
 
-  const alertMessages =
-    liveScoreErrors.length > 0 ? liveScoreErrors : submitErrors;
+  const alertMessages = attemptedSubmit ? submitErrors : [];
+
+  const highlightOutcome =
+    liveScoreErrors.length > 0 || Boolean(outcomeFieldError);
 
   function onInvalid(errors: FieldErrors<MatchFormValues>) {
+    setAttemptedSubmit(true);
     const messages = collectFormErrors(errors);
     setSubmitErrors(messages);
     requestAnimationFrame(() => {
@@ -166,6 +170,7 @@ export function MatchForm({
   function onSubmit(values: MatchFormValues) {
     setServerError(null);
     setSubmitErrors([]);
+    setAttemptedSubmit(false);
     startTransition(async () => {
       const result =
         mode === "create"
@@ -188,10 +193,12 @@ export function MatchForm({
         onSubmit={form.handleSubmit(onSubmit, onInvalid)}
         className="mx-auto max-w-4xl space-y-6"
       >
-        <FormValidationAlert
-          id="match-form-errors"
-          messages={alertMessages}
-        />
+        {attemptedSubmit ? (
+          <FormValidationAlert
+            id="match-form-errors"
+            messages={alertMessages}
+          />
+        ) : null}
 
         {serverError ? (
           <p
@@ -269,7 +276,7 @@ export function MatchForm({
                 <FormLabel>Result</FormLabel>
                 <div
                   className={`flex flex-wrap gap-2 rounded-md p-1 ${
-                    outcomeFieldError
+                    highlightOutcome
                       ? "ring-2 ring-destructive/60 ring-offset-2"
                       : ""
                   }`}
@@ -413,7 +420,12 @@ export function MatchForm({
         ) : null}
 
         {showCompetitiveFields && useStructuredScore ? (
-          <ScoreSegmentsEditor control={form.control} />
+          <ScoreSegmentsEditor
+            control={form.control}
+            scoreRequired={scoreRequired}
+            showValidationErrors={attemptedSubmit}
+            liveConflictMessages={liveScoreErrors}
+          />
         ) : null}
 
         {showCompetitiveFields && !useStructuredScore ? (

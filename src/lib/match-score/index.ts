@@ -1,4 +1,9 @@
 export * from "./format";
-export * from "./integrity";
+export {
+  checkMatchIntegrity,
+  getLiveIntegrityMessages,
+  hasBlockingIntegrityIssues,
+  hasEnteredScoreData,
+} from "./integrity";
 export * from "./types";
 export * from "./validate";
