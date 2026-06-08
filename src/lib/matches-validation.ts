@@ -91,11 +91,17 @@ export const matchFormSchema = z
       });
       if (hasBlockingIntegrityIssues(integrity)) {
         for (const issue of integrity.filter((i) => i.severity === "error")) {
-          ctx.addIssue({
-            code: "custom",
-            message: issue.message,
-            path: ["scoreSegments"],
-          });
+          const paths: Array<["scoreSegments"] | ["outcome"]> =
+            issue.code === "outcome_vs_score"
+              ? [["outcome"], ["scoreSegments"]]
+              : [["scoreSegments"]];
+          for (const path of paths) {
+            ctx.addIssue({
+              code: "custom",
+              message: issue.message,
+              path,
+            });
+          }
         }
       }
     } else if (competitiveFinished && data.legacyScore.trim().length === 0) {

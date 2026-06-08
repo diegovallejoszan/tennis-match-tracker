@@ -3,7 +3,9 @@
 import { Plus, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import type { Control } from "react-hook-form";
-import { useFieldArray, useWatch } from "react-hook-form";
+import { useFieldArray, useFormState, useWatch } from "react-hook-form";
+
+import { FormValidationAlert } from "@/components/matches/form-validation-alert";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -77,6 +79,12 @@ export function ScoreSegmentsEditor({ control }: ScoreSegmentsEditorProps) {
     name: "scoreSegments",
   });
 
+  const { errors } = useFormState({ control, name: "scoreSegments" });
+  const segmentError =
+    typeof errors.scoreSegments?.message === "string"
+      ? errors.scoreSegments.message
+      : null;
+
   const watchedSegments = useWatch({ control, name: "scoreSegments" }) ?? [];
   const preview =
     watchedSegments.length > 0
@@ -85,6 +93,13 @@ export function ScoreSegmentsEditor({ control }: ScoreSegmentsEditorProps) {
 
   return (
     <div className="space-y-4 rounded-lg border border-border p-4">
+      {segmentError ? (
+        <FormValidationAlert
+          title="Score issue"
+          messages={[segmentError]}
+        />
+      ) : null}
+
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-sm font-medium">Structured score</p>

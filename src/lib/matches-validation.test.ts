@@ -48,6 +48,29 @@ describe("parseMatchForm", () => {
     expect(parsed.success).toBe(true);
   });
 
+  it("rejects win with a loss score and surfaces outcome mismatch", () => {
+    const parsed = parseMatchForm({
+      ...defaultMatchFormValues(),
+      date: "2026-04-01",
+      matchType: "single",
+      outcome: "win",
+      scoreSegments: [
+        { segmentType: "set", userGamesOrPoints: 4, opponentGamesOrPoints: 6 },
+        { segmentType: "set", userGamesOrPoints: 3, opponentGamesOrPoints: 6 },
+      ],
+      opponentIds: [opponentA],
+      partnerId: "",
+    });
+
+    expect(parsed.success).toBe(false);
+    if (parsed.success) return;
+
+    const outcomeErrors = parsed.error.flatten().fieldErrors.outcome ?? [];
+    const scoreErrors = parsed.error.flatten().fieldErrors.scoreSegments ?? [];
+    expect(outcomeErrors.join(" ")).toMatch(/Win/i);
+    expect(scoreErrors.join(" ")).toMatch(/Win/i);
+  });
+
   it("accepts non-finished without score segments", () => {
     const parsed = parseMatchForm({
       ...defaultMatchFormValues(),

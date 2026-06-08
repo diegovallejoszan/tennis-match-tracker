@@ -3,12 +3,15 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
+import type { FieldErrors } from "react-hook-form";
 import { useForm, useWatch } from "react-hook-form";
 
 import { createMatchAction, updateMatchAction } from "@/app/actions/matches";
+import { FormValidationAlert } from "@/components/matches/form-validation-alert";
 import { MatchAudioNotes } from "@/components/matches/match-audio-notes";
 import { ScoreSegmentsEditor } from "@/components/matches/score-segments-editor";
+import { checkMatchIntegrity } from "@/lib/match-score/integrity";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -29,7 +32,30 @@ import {
   OUTCOMES,
   type MatchFormInput,
   type MatchFormValues,
+  type MatchOutcome,
 } from "@/lib/matches-validation";
+
+function collectFormErrors(errors: FieldErrors<MatchFormValues>): string[] {
+  const messages: string[] = [];
+
+  function walk(value: unknown): void {
+    if (!value || typeof value !== "object") return;
+    if (
+      "message" in value &&
+      typeof (value as { message?: unknown }).message === "string"
+    ) {
+      const message = (value as { message: string }).message;
+      if (!messages.includes(message)) messages.push(message);
+      return;
+    }
+    for (const nested of Object.values(value)) {
+      walk(nested);
+    }
+  }
+
+  walk(errors);
+  return messages;
+}
 
 type MatchFormProps = {
   mode: "create" | "edit";
@@ -60,6 +86,7 @@ export function MatchForm({
 }: MatchFormProps) {
   const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);
+  const [submitErrors, setSubmitErrors] = useState<string[]>([]);
   const [isPending, startTransition] = useTransition();
 
   const form = useForm<MatchFormValues>({
@@ -107,8 +134,38 @@ export function MatchForm({
       ? formatScoreFromSegments(scoreSegments ?? [])
       : null;
 
+  const liveScoreErrors = useMemo(() => {
+    if (!showCompetitiveFields || !useStructuredScore) return [];
+    if (outcome !== "win" && outcome !== "loss") return [];
+    return checkMatchIntegrity({
+      outcome: outcome as MatchOutcome,
+      segments: scoreSegments ?? [],
+    })
+      .filter((issue) => issue.severity === "error")
+      .map((issue) => issue.message);
+  }, [showCompetitiveFields, useStructuredScore, outcome, scoreSegments]);
+
+  const outcomeFieldError =
+    typeof form.formState.errors.outcome?.message === "string"
+      ? form.formState.errors.outcome.message
+      : null;
+
+  const alertMessages =
+    liveScoreErrors.length > 0 ? liveScoreErrors : submitErrors;
+
+  function onInvalid(errors: FieldErrors<MatchFormValues>) {
+    const messages = collectFormErrors(errors);
+    setSubmitErrors(messages);
+    requestAnimationFrame(() => {
+      document
+        .getElementById("match-form-errors")
+        ?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  }
+
   function onSubmit(values: MatchFormValues) {
     setServerError(null);
+    setSubmitErrors([]);
     startTransition(async () => {
       const result =
         mode === "create"
@@ -128,9 +185,14 @@ export function MatchForm({
   return (
     <Form {...form}>
       <form
-        onSubmit={form.handleSubmit(onSubmit)}
+        onSubmit={form.handleSubmit(onSubmit, onInvalid)}
         className="mx-auto max-w-4xl space-y-6"
       >
+        <FormValidationAlert
+          id="match-form-errors"
+          messages={alertMessages}
+        />
+
         {serverError ? (
           <p
             className="rounded-md border border-destructive/50 bg-destructive/10 px-3 py-2 text-sm text-destructive"
@@ -205,7 +267,13 @@ export function MatchForm({
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Result</FormLabel>
-                <div className="flex flex-wrap gap-2">
+                <div
+                  className={`flex flex-wrap gap-2 rounded-md p-1 ${
+                    outcomeFieldError
+                      ? "ring-2 ring-destructive/60 ring-offset-2"
+                      : ""
+                  }`}
+                >
                   {OUTCOMES.map((value) => (
                     <label
                       key={value}
