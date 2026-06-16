@@ -10,6 +10,12 @@ import {
 export const MATCH_TYPES = ["practice", "single", "doubles"] as const;
 export type MatchType = (typeof MATCH_TYPES)[number];
 
+export const MATCH_TYPE_LABELS: Record<MatchType, string> = {
+  practice: "Practice",
+  single: "Singles",
+  doubles: "Doubles",
+};
+
 export const OUTCOMES = ["win", "loss", "non_finished"] as const;
 export type MatchOutcome = (typeof OUTCOMES)[number];
 

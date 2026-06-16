@@ -22,6 +22,9 @@ type BrowserSpeechRecognition = {
   onend: (() => void) | null;
 };
 
+/** Total listening window — roughly double typical browser silence cutoff. */
+const LISTENING_DURATION_MS = 120_000;
+
 function getSpeechRecognitionCtor():
   | (new () => BrowserSpeechRecognition)
   | undefined {
@@ -37,11 +40,23 @@ export function MatchAudioNotes({ locale, onTranscript }: MatchAudioNotesProps) 
   const [recording, setRecording] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
   const recognitionRef = useRef<BrowserSpeechRecognition | null>(null);
+  const finalTextRef = useRef("");
+  const listenUntilRef = useRef(0);
+  const userStoppedRef = useRef(false);
 
-  const stopRecording = useCallback(() => {
-    recognitionRef.current?.stop();
+  const finishRecording = useCallback(() => {
     recognitionRef.current = null;
     setRecording(false);
+    const trimmed = finalTextRef.current.trim();
+    if (trimmed) {
+      onTranscript(trimmed);
+      setStatus("Transcription added to notes.");
+    }
+  }, [onTranscript]);
+
+  const stopRecording = useCallback(() => {
+    userStoppedRef.current = true;
+    recognitionRef.current?.stop();
   }, []);
 
   const startRecording = useCallback(() => {
@@ -54,40 +69,51 @@ export function MatchAudioNotes({ locale, onTranscript }: MatchAudioNotesProps) 
       return;
     }
 
+    finalTextRef.current = "";
+    userStoppedRef.current = false;
+    listenUntilRef.current = Date.now() + LISTENING_DURATION_MS;
+
     const recognition = new SpeechRecognitionCtor();
     recognition.lang = speechRecognitionLang(locale);
     recognition.continuous = true;
-    recognition.interimResults = false;
+    recognition.interimResults = true;
 
-    let finalText = "";
     recognition.onresult = (event) => {
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const result = event.results[i];
         if (result?.isFinal) {
-          finalText += result[0]?.transcript ?? "";
+          finalTextRef.current += result[0]?.transcript ?? "";
         }
       }
     };
 
     recognition.onerror = () => {
+      userStoppedRef.current = true;
       setStatus("Could not transcribe audio. Try again or type your notes.");
-      stopRecording();
+      finishRecording();
     };
 
     recognition.onend = () => {
-      setRecording(false);
-      const trimmed = finalText.trim();
-      if (trimmed) {
-        onTranscript(trimmed);
-        setStatus("Transcription added to notes.");
+      if (
+        !userStoppedRef.current &&
+        Date.now() < listenUntilRef.current &&
+        recognitionRef.current
+      ) {
+        try {
+          recognition.start();
+          return;
+        } catch {
+          // Browser refused restart — fall through to finish.
+        }
       }
+      finishRecording();
     };
 
     recognitionRef.current = recognition;
     recognition.start();
     setRecording(true);
     setStatus("Listening… speak in your app language, then stop.");
-  }, [locale, onTranscript, stopRecording]);
+  }, [locale, onTranscript, finishRecording]);
 
   return (
     <div className="flex flex-col gap-2">

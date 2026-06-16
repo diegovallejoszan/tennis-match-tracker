@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { db, players } from "@/db";
 import { auth } from "@/lib/auth";
 import { fetchGroupedMatchesForUser } from "@/lib/grouped-matches";
+import { MATCH_TYPE_LABELS } from "@/lib/matches-validation";
 
 type MatchesPageProps = {
   searchParams: Promise<{
@@ -19,11 +20,7 @@ type MatchesPageProps = {
   }>;
 };
 
-const typeLabels: Record<string, string> = {
-  practice: "Practice",
-  single: "Single",
-  doubles: "Doubles",
-};
+const typeLabels: Record<string, string> = { ...MATCH_TYPE_LABELS };
 
 export default async function MatchesPage({ searchParams }: MatchesPageProps) {
   const session = await auth();
@@ -74,7 +71,7 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
           >
             <option value="">All</option>
             <option value="practice">Practice</option>
-            <option value="single">Single</option>
+            <option value="single">Singles</option>
             <option value="doubles">Doubles</option>
           </select>
         </label>

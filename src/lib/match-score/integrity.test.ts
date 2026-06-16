@@ -4,6 +4,7 @@ import {
   checkMatchIntegrity,
   getLiveIntegrityMessages,
   hasBlockingIntegrityIssues,
+  suggestOutcomeFromSegments,
 } from "./integrity";
 import type { ScoreSegmentInput } from "./types";
 
@@ -81,5 +82,34 @@ describe("getLiveIntegrityMessages", () => {
         ],
       }),
     ).toEqual([]);
+  });
+});
+
+describe("suggestOutcomeFromSegments", () => {
+  it("returns empty when score is blank", () => {
+    expect(suggestOutcomeFromSegments([])).toBe("");
+  });
+
+  it("suggests win for a completed straight-sets score", () => {
+    expect(suggestOutcomeFromSegments(winSets)).toBe("win");
+  });
+
+  it("suggests non_finished for a tied match in progress", () => {
+    expect(
+      suggestOutcomeFromSegments([
+        { segmentType: "set", userGamesOrPoints: 6, opponentGamesOrPoints: 4 },
+        { segmentType: "set", userGamesOrPoints: 4, opponentGamesOrPoints: 6 },
+      ]),
+    ).toBe("non_finished");
+  });
+
+  it("suggests win when an unfinished set is decided by tie break", () => {
+    expect(
+      suggestOutcomeFromSegments([
+        { segmentType: "set", userGamesOrPoints: 6, opponentGamesOrPoints: 5 },
+        { segmentType: "tie_break", userGamesOrPoints: 7, opponentGamesOrPoints: 3 },
+        { segmentType: "set", userGamesOrPoints: 6, opponentGamesOrPoints: 2 },
+      ]),
+    ).toBe("win");
   });
 });

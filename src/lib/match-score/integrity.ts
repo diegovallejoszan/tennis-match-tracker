@@ -118,3 +118,30 @@ export function getLiveIntegrityMessages(
   }
   return [];
 }
+
+/**
+ * Suggests a match result from structured score segments. Returns empty string
+ * when there is not enough score data to infer a result.
+ */
+export function suggestOutcomeFromSegments(
+  segments: ScoreSegmentInput[],
+): MatchOutcome | "" {
+  if (!hasEnteredScoreData(segments)) return "";
+
+  const blockingErrors = validateAllSegments(segments).filter(
+    (i) => i.severity === "error",
+  );
+  if (blockingErrors.length > 0) return "non_finished";
+
+  const { user, opponent } = countSetsWon(segments);
+  if (user === opponent) return "non_finished";
+
+  if (user >= 2 && user > opponent) return "win";
+  if (opponent >= 2 && opponent > user) return "loss";
+
+  if (user + opponent === 1) {
+    return user > opponent ? "win" : "loss";
+  }
+
+  return "non_finished";
+}

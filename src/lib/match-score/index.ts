@@ -4,6 +4,7 @@ export {
   getLiveIntegrityMessages,
   hasBlockingIntegrityIssues,
   hasEnteredScoreData,
+  suggestOutcomeFromSegments,
 } from "./integrity";
 export * from "./types";
 export * from "./validate";

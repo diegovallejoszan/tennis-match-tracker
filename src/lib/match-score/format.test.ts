@@ -31,4 +31,24 @@ describe("formatScoreFromSegments", () => {
     ];
     expect(formatScoreFromSegments(segments)).toBe("[10-8]");
   });
+
+  it("merges unfinished set with tie break", () => {
+    const segments: ScoreSegmentInput[] = [
+      { segmentType: "set", userGamesOrPoints: 6, opponentGamesOrPoints: 5 },
+      { segmentType: "tie_break", userGamesOrPoints: 7, opponentGamesOrPoints: 4 },
+    ];
+    expect(formatScoreFromSegments(segments)).toBe("7-5(4)");
+  });
+
+  it("merges unfinished long set with super tie break", () => {
+    const segments: ScoreSegmentInput[] = [
+      { segmentType: "long_set", userGamesOrPoints: 8, opponentGamesOrPoints: 8 },
+      {
+        segmentType: "super_tie_break",
+        userGamesOrPoints: 10,
+        opponentGamesOrPoints: 7,
+      },
+    ];
+    expect(formatScoreFromSegments(segments)).toBe("9-8[10-7]");
+  });
 });

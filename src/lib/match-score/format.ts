@@ -1,9 +1,5 @@
 import type { ScoreSegmentInput, SegmentType } from "./types";
 
-function isTieScore(u: number, o: number, target: number): boolean {
-  return u === target && o === target;
-}
-
 function formatSetGames(u: number, o: number): string {
   return `${u}-${o}`;
 }
@@ -25,12 +21,7 @@ export function formatScoreFromSegments(segments: ScoreSegmentInput[]): string {
 
     if (
       (current.segmentType === "set" || current.segmentType === "long_set") &&
-      next?.segmentType === "tie_break" &&
-      isTieScore(
-        current.userGamesOrPoints,
-        current.opponentGamesOrPoints,
-        current.segmentType === "long_set" ? 9 : 6,
-      )
+      next?.segmentType === "tie_break"
     ) {
       const u = current.userGamesOrPoints;
       const o = current.opponentGamesOrPoints;
@@ -43,6 +34,22 @@ export function formatScoreFromSegments(segments: ScoreSegmentInput[]): string {
       parts.push(
         `${setUser}-${setOpp}${formatTieBreakSuffix(loserTbPoints)}`,
       );
+      i += 2;
+      continue;
+    }
+
+    if (
+      (current.segmentType === "set" || current.segmentType === "long_set") &&
+      next?.segmentType === "super_tie_break"
+    ) {
+      const u = current.userGamesOrPoints;
+      const o = current.opponentGamesOrPoints;
+      const tbU = next.userGamesOrPoints;
+      const tbO = next.opponentGamesOrPoints;
+      const userWonTb = tbU > tbO;
+      const setUser = userWonTb ? u + 1 : u;
+      const setOpp = userWonTb ? o : o + 1;
+      parts.push(`${setUser}-${setOpp}[${tbU}-${tbO}]`);
       i += 2;
       continue;
     }

@@ -3,7 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import type { FieldErrors } from "react-hook-form";
 import { useForm, useWatch } from "react-hook-form";
 
@@ -26,8 +26,10 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { formatScoreFromSegments } from "@/lib/match-score";
 import type { AppLocale } from "@/lib/locale";
+import { suggestOutcomeFromSegments } from "@/lib/match-score/integrity";
 import {
   MATCH_TYPES,
+  MATCH_TYPE_LABELS,
   matchFormSchema,
   OUTCOMES,
   type MatchFormInput,
@@ -64,12 +66,6 @@ type MatchFormProps = {
   userLocale?: AppLocale;
 };
 
-const matchTypeLabels: Record<(typeof MATCH_TYPES)[number], string> = {
-  practice: "Practice",
-  single: "Single",
-  doubles: "Doubles",
-};
-
 const outcomeLabels: Record<(typeof OUTCOMES)[number], string> = {
   win: "Win",
   loss: "Loss",
@@ -88,6 +84,8 @@ export function MatchForm({
   const [submitErrors, setSubmitErrors] = useState<string[]>([]);
   const [attemptedSubmit, setAttemptedSubmit] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const outcomeUserSetRef = useRef(false);
+  const skipSuggestOnceRef = useRef(mode === "edit");
 
   const form = useForm<MatchFormValues>({
     resolver: zodResolver(matchFormSchema),
@@ -109,6 +107,7 @@ export function MatchForm({
     }
     if (matchType === "practice") {
       form.setValue("outcome", "");
+      outcomeUserSetRef.current = false;
     }
   }, [matchType, form]);
 
@@ -125,6 +124,27 @@ export function MatchForm({
 
   const showCompetitiveFields =
     matchType === "single" || matchType === "doubles";
+
+  useEffect(() => {
+    if (skipSuggestOnceRef.current) {
+      skipSuggestOnceRef.current = false;
+      return;
+    }
+    if (!showCompetitiveFields || !useStructuredScore) return;
+    if (outcomeUserSetRef.current) return;
+
+    const suggested = suggestOutcomeFromSegments(scoreSegments ?? []);
+    if (suggested !== "" && suggested !== outcome) {
+      form.setValue("outcome", suggested);
+    }
+  }, [
+    scoreSegments,
+    showCompetitiveFields,
+    useStructuredScore,
+    outcome,
+    form,
+  ]);
+
   const scoreRequired =
     showCompetitiveFields &&
     outcome !== "non_finished" &&
@@ -258,7 +278,7 @@ export function MatchForm({
                       checked={field.value === type}
                       onChange={field.onChange}
                     />
-                    {matchTypeLabels[type]}
+                    {MATCH_TYPE_LABELS[type]}
                   </label>
                 ))}
               </div>
@@ -266,42 +286,6 @@ export function MatchForm({
             </FormItem>
           )}
         />
-
-        {showCompetitiveFields ? (
-          <FormField
-            control={form.control}
-            name="outcome"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Result</FormLabel>
-                <div
-                  className={`flex flex-wrap gap-2 rounded-md p-1 ${
-                    highlightOutcome
-                      ? "ring-2 ring-destructive/60 ring-offset-2"
-                      : ""
-                  }`}
-                >
-                  {OUTCOMES.map((value) => (
-                    <label
-                      key={value}
-                      className="flex cursor-pointer items-center gap-2 rounded-md border border-border px-3 py-2 text-sm"
-                    >
-                      <input
-                        type="radio"
-                        name={field.name}
-                        value={value}
-                        checked={field.value === value}
-                        onChange={() => field.onChange(value)}
-                      />
-                      {outcomeLabels[value]}
-                    </label>
-                  ))}
-                </div>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        ) : null}
 
         {matchType === "doubles" ? (
           <FormField
@@ -464,6 +448,49 @@ export function MatchForm({
           </p>
         ) : null}
 
+        {showCompetitiveFields ? (
+          <FormField
+            control={form.control}
+            name="outcome"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Result</FormLabel>
+                <p className="text-[0.8rem] text-muted-foreground">
+                  Suggested from your score when using structured input — you can
+                  change it.
+                </p>
+                <div
+                  className={`flex flex-wrap gap-2 rounded-md p-1 ${
+                    highlightOutcome
+                      ? "ring-2 ring-destructive/60 ring-offset-2"
+                      : ""
+                  }`}
+                >
+                  {OUTCOMES.map((value) => (
+                    <label
+                      key={value}
+                      className="flex cursor-pointer items-center gap-2 rounded-md border border-border px-3 py-2 text-sm"
+                    >
+                      <input
+                        type="radio"
+                        name={field.name}
+                        value={value}
+                        checked={field.value === value}
+                        onChange={() => {
+                          outcomeUserSetRef.current = true;
+                          field.onChange(value);
+                        }}
+                      />
+                      {outcomeLabels[value]}
+                    </label>
+                  ))}
+                </div>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        ) : null}
+
         <FormField
           control={form.control}
           name="notes"
@@ -501,7 +528,7 @@ export function MatchForm({
               ? "Saving..."
               : mode === "create"
                 ? "Create match"
-                : "Save changes"}
+                : "Save and Close"}
           </Button>
           <Button type="button" variant="outline" asChild>
             <Link href="/matches">Cancel</Link>

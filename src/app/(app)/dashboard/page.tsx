@@ -18,16 +18,13 @@ import {
   winRatePercent,
 } from "@/lib/dashboard-aggregates";
 import { fetchGroupedMatchesForUser, type GroupedMatch } from "@/lib/grouped-matches";
+import { MATCH_TYPE_LABELS } from "@/lib/matches-validation";
 
 type DashboardPageProps = {
   searchParams: Promise<{ from?: string; to?: string }>;
 };
 
-const typeLabels: Record<string, string> = {
-  practice: "Practice",
-  single: "Single",
-  doubles: "Doubles",
-};
+const typeLabels: Record<string, string> = { ...MATCH_TYPE_LABELS };
 
 function toStatsShape(matches: GroupedMatch[]) {
   return matches.map((m) => ({

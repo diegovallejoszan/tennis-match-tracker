@@ -11,6 +11,7 @@ function validateStandardSet(
   o: number,
   target: number,
   label: string,
+  followedByTieBreak = false,
 ): IntegrityIssue[] {
   const issues: IntegrityIssue[] = [];
   if (u < 0 || o < 0) {
@@ -21,6 +22,11 @@ function validateStandardSet(
     });
     return issues;
   }
+
+  if (followedByTieBreak) {
+    return issues;
+  }
+
   if (u > target + 2 || o > target + 2) {
     issues.push({
       code: "games_too_high",
@@ -113,6 +119,7 @@ function validateTieBreak(
 export function validateSegment(
   segment: ScoreSegmentInput,
   index: number,
+  options?: { followedByTieBreak?: boolean },
 ): IntegrityIssue[] {
   const { segmentType, userGamesOrPoints: u, opponentGamesOrPoints: o } =
     segment;
@@ -120,9 +127,21 @@ export function validateSegment(
 
   switch (segmentType) {
     case "set":
-      return validateStandardSet(u, o, 6, label);
+      return validateStandardSet(
+        u,
+        o,
+        6,
+        label,
+        options?.followedByTieBreak,
+      );
     case "long_set":
-      return validateStandardSet(u, o, 9, label);
+      return validateStandardSet(
+        u,
+        o,
+        9,
+        label,
+        options?.followedByTieBreak,
+      );
     case "tie_break":
       return validateTieBreak(u, o, 7);
     case "super_tie_break":
@@ -143,29 +162,16 @@ export function validateAllSegments(
 ): IntegrityIssue[] {
   const issues: IntegrityIssue[] = [];
   segments.forEach((seg, i) => {
-    issues.push(...validateSegment(seg, i));
+    const next = segments[i + 1];
+    const decidedByBreak =
+      next?.segmentType === "tie_break" ||
+      next?.segmentType === "super_tie_break";
+    issues.push(
+      ...validateSegment(seg, i, {
+        followedByTieBreak: decidedByBreak,
+      }),
+    );
   });
-
-  for (let i = 0; i < segments.length; i++) {
-    const seg = segments[i]!;
-    if (seg.segmentType === "tie_break" && i > 0) {
-      const prev = segments[i - 1]!;
-      const target = prev.segmentType === "long_set" ? 9 : 6;
-      if (
-        (prev.segmentType === "set" || prev.segmentType === "long_set") &&
-        !(
-          prev.userGamesOrPoints === target &&
-          prev.opponentGamesOrPoints === target
-        )
-      ) {
-        issues.push({
-          code: "tb_without_tie",
-          message: `Segment ${i + 1}: tie break should follow a ${target}-${target} set`,
-          severity: "warning",
-        });
-      }
-    }
-  }
 
   return issues;
 }
@@ -181,7 +187,8 @@ export function countSetsWon(
     const next = segments[i + 1];
     if (
       (current.segmentType === "set" || current.segmentType === "long_set") &&
-      next?.segmentType === "tie_break"
+      (next?.segmentType === "tie_break" ||
+        next?.segmentType === "super_tie_break")
     ) {
       const tbU = next.userGamesOrPoints;
       const tbO = next.opponentGamesOrPoints;
