@@ -10,6 +10,10 @@ import { useForm, useWatch } from "react-hook-form";
 import { createMatchAction, updateMatchAction } from "@/app/actions/matches";
 import { FormValidationAlert } from "@/components/matches/form-validation-alert";
 import { MatchAudioNotes } from "@/components/matches/match-audio-notes";
+import {
+  QuickAddPlayerSheet,
+  type QuickAddPlayerRole,
+} from "@/components/matches/quick-add-player-sheet";
 import { ScoreSegmentsEditor } from "@/components/matches/score-segments-editor";
 import { getLiveIntegrityMessages } from "@/lib/match-score/integrity";
 import { Button } from "@/components/ui/button";
@@ -84,6 +88,9 @@ export function MatchForm({
   const [submitErrors, setSubmitErrors] = useState<string[]>([]);
   const [attemptedSubmit, setAttemptedSubmit] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const [playerList, setPlayerList] = useState(players);
+  const [quickAddOpen, setQuickAddOpen] = useState(false);
+  const [quickAddRole, setQuickAddRole] = useState<QuickAddPlayerRole>("opponent");
   const outcomeUserSetRef = useRef(false);
   const skipSuggestOnceRef = useRef(mode === "edit");
 
@@ -175,6 +182,40 @@ export function MatchForm({
 
   const highlightOutcome =
     liveScoreErrors.length > 0 || Boolean(outcomeFieldError);
+
+  function openQuickAdd(role: QuickAddPlayerRole) {
+    setQuickAddRole(role);
+    setQuickAddOpen(true);
+  }
+
+  function handlePlayerCreated(
+    player: { id: string; name: string },
+    role: QuickAddPlayerRole,
+  ) {
+    setPlayerList((current) => {
+      if (current.some((entry) => entry.id === player.id)) return current;
+      return [...current, player].sort((a, b) =>
+        a.name.localeCompare(b.name, undefined, { sensitivity: "base" }),
+      );
+    });
+
+    if (role === "partner") {
+      form.setValue("partnerId", player.id);
+      const opponents = form.getValues("opponentIds");
+      if (opponents.includes(player.id)) {
+        form.setValue(
+          "opponentIds",
+          opponents.filter((id) => id !== player.id),
+        );
+      }
+      return;
+    }
+
+    const opponents = form.getValues("opponentIds");
+    if (!opponents.includes(player.id)) {
+      form.setValue("opponentIds", [...opponents, player.id]);
+    }
+  }
 
   function onInvalid(errors: FieldErrors<MatchFormValues>) {
     setAttemptedSubmit(true);
@@ -293,14 +334,24 @@ export function MatchForm({
             name="partnerId"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Partner</FormLabel>
-                {players.length === 0 ? (
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <FormLabel className="!mt-0">Partner</FormLabel>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => openQuickAdd("partner")}
+                  >
+                    Add new partner
+                  </Button>
+                </div>
+                {playerList.length === 0 ? (
                   <p className="text-sm text-muted-foreground">
-                    Add players first to select a partner.
+                    No players yet. Add a partner to continue.
                   </p>
                 ) : (
                   <div className="grid gap-2 sm:grid-cols-2">
-                    {players.map((player) => (
+                    {playerList.map((player) => (
                       <label
                         key={player.id}
                         className="flex items-center gap-2 rounded-md border border-border px-3 py-2 text-sm"
@@ -328,20 +379,30 @@ export function MatchForm({
           name="opponentIds"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>
-                {matchType === "doubles"
-                  ? "Opponents"
-                  : matchType === "single"
-                    ? "Opponent(s)"
-                    : "Opponents (optional)"}
-              </FormLabel>
-              {players.length === 0 ? (
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <FormLabel className="!mt-0">
+                  {matchType === "doubles"
+                    ? "Opponents"
+                    : matchType === "single"
+                      ? "Opponent(s)"
+                      : "Opponents (optional)"}
+                </FormLabel>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => openQuickAdd("opponent")}
+                >
+                  Add new opponent
+                </Button>
+              </div>
+              {playerList.length === 0 ? (
                 <p className="text-sm text-muted-foreground">
-                  No players yet. Add players first to tag opponents in matches.
+                  No players yet. Add an opponent to tag them in this match.
                 </p>
               ) : (
                 <div className="grid gap-2 sm:grid-cols-2">
-                  {players.map((player) => {
+                  {playerList.map((player) => {
                     const checked = field.value.includes(player.id);
                     const disabledForPartner =
                       matchType === "doubles" &&
@@ -379,6 +440,13 @@ export function MatchForm({
               <FormMessage />
             </FormItem>
           )}
+        />
+
+        <QuickAddPlayerSheet
+          open={quickAddOpen}
+          onOpenChange={setQuickAddOpen}
+          role={quickAddRole}
+          onCreated={handlePlayerCreated}
         />
 
         {showCompetitiveFields ? (

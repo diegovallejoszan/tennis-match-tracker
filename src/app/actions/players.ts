@@ -9,6 +9,10 @@ import { redirect } from "next/navigation";
 
 export type PlayerActionError = { error: string };
 export type PlayerActionOk = { ok: true };
+export type PlayerCreateActionOk = {
+  ok: true;
+  player: { id: string; name: string };
+};
 
 async function requireUserId(): Promise<string | null> {
   const session = await auth();
@@ -17,7 +21,7 @@ async function requireUserId(): Promise<string | null> {
 
 export async function createPlayerAction(
   input: unknown,
-): Promise<PlayerActionError | PlayerActionOk> {
+): Promise<PlayerActionError | PlayerCreateActionOk> {
   const userId = await requireUserId();
   if (!userId) return { error: "You must be signed in." };
 
@@ -26,10 +30,19 @@ export async function createPlayerAction(
     return { error: "Please fix the highlighted fields." };
   }
 
-  await db.insert(players).values(toDbPlayerValues(parsed.data, userId));
+  const inserted = await db
+    .insert(players)
+    .values(toDbPlayerValues(parsed.data, userId))
+    .returning({ id: players.id, name: players.name });
+
+  const player = inserted[0];
+  if (!player) {
+    return { error: "Failed to create player." };
+  }
 
   revalidatePath("/players");
-  return { ok: true };
+  revalidatePath("/matches/new");
+  return { ok: true, player };
 }
 
 export async function updatePlayerAction(

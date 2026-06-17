@@ -1,13 +1,24 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 
 const mocks = vi.hoisted(() => {
-  const valuesFn = vi.fn().mockResolvedValue(undefined);
+  const insertReturningFn = vi
+    .fn()
+    .mockResolvedValue([{ id: "player-new", name: "Casey" }]);
+  const valuesFn = vi.fn(() => ({ returning: insertReturningFn }));
   const insertFn = vi.fn(() => ({ values: valuesFn }));
   const returningFn = vi.fn().mockResolvedValue([{ id: "p1" }]);
   const whereFn = vi.fn().mockReturnValue({ returning: returningFn });
   const setFn = vi.fn().mockReturnValue({ where: whereFn });
   const updateFn = vi.fn().mockReturnValue({ set: setFn });
-  return { valuesFn, insertFn, returningFn, whereFn, setFn, updateFn };
+  return {
+    valuesFn,
+    insertFn,
+    insertReturningFn,
+    returningFn,
+    whereFn,
+    setFn,
+    updateFn,
+  };
 });
 
 vi.mock("next/cache", () => ({
@@ -50,7 +61,9 @@ describe("createPlayerAction", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(auth).mockResolvedValue({ user: { id: "user-1" } } as never);
-    mocks.valuesFn.mockResolvedValue(undefined);
+    mocks.insertReturningFn.mockResolvedValue([
+      { id: "player-new", name: "Casey" },
+    ]);
   });
 
   it("returns error when not signed in", async () => {
@@ -68,7 +81,10 @@ describe("createPlayerAction", () => {
 
   it("inserts a row and returns ok for valid payload", async () => {
     const r = await createPlayerAction(validPayload);
-    expect(r).toEqual({ ok: true });
+    expect(r).toEqual({
+      ok: true,
+      player: { id: "player-new", name: "Casey" },
+    });
     expect(mocks.insertFn).toHaveBeenCalledTimes(1);
     expect(mocks.valuesFn).toHaveBeenCalledWith(
       expect.objectContaining({
