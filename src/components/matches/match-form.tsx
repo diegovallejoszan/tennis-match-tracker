@@ -243,7 +243,7 @@ export function MatchForm({
         return;
       }
 
-      router.push(mode === "create" ? "/matches" : `/matches/${matchId}`);
+      router.push("/matches");
       router.refresh();
     });
   }
