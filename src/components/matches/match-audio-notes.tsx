@@ -24,6 +24,8 @@ type BrowserSpeechRecognition = {
 
 /** Total listening window — roughly double typical browser silence cutoff. */
 const LISTENING_DURATION_MS = 120_000;
+/** Brief pause before restarting so the browser can tear down the prior session. */
+const RESTART_DELAY_MS = 150;
 
 function getSpeechRecognitionCtor():
   | (new () => BrowserSpeechRecognition)
@@ -36,15 +38,43 @@ function getSpeechRecognitionCtor():
   return w.SpeechRecognition ?? w.webkitSpeechRecognition;
 }
 
+function appendTranscript(existing: string, addition: string): string {
+  const next = addition.trim();
+  if (!next) return existing;
+  if (!existing.trim()) return next;
+  return `${existing.trimEnd()} ${next}`;
+}
+
 export function MatchAudioNotes({ locale, onTranscript }: MatchAudioNotesProps) {
   const [recording, setRecording] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
   const recognitionRef = useRef<BrowserSpeechRecognition | null>(null);
   const finalTextRef = useRef("");
+  const sessionTextRef = useRef("");
   const listenUntilRef = useRef(0);
   const userStoppedRef = useRef(false);
+  const finishedRef = useRef(false);
+  const restartTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const clearRestartTimer = useCallback(() => {
+    if (restartTimerRef.current) {
+      clearTimeout(restartTimerRef.current);
+      restartTimerRef.current = null;
+    }
+  }, []);
+
+  const commitSessionText = useCallback(() => {
+    finalTextRef.current = appendTranscript(
+      finalTextRef.current,
+      sessionTextRef.current,
+    );
+    sessionTextRef.current = "";
+  }, []);
 
   const finishRecording = useCallback(() => {
+    if (finishedRef.current) return;
+    finishedRef.current = true;
+    clearRestartTimer();
     recognitionRef.current = null;
     setRecording(false);
     const trimmed = finalTextRef.current.trim();
@@ -52,12 +82,13 @@ export function MatchAudioNotes({ locale, onTranscript }: MatchAudioNotesProps) 
       onTranscript(trimmed);
       setStatus("Transcription added to notes.");
     }
-  }, [onTranscript]);
+  }, [clearRestartTimer, onTranscript]);
 
   const stopRecording = useCallback(() => {
     userStoppedRef.current = true;
+    clearRestartTimer();
     recognitionRef.current?.stop();
-  }, []);
+  }, [clearRestartTimer]);
 
   const startRecording = useCallback(() => {
     const SpeechRecognitionCtor = getSpeechRecognitionCtor();
@@ -69,51 +100,78 @@ export function MatchAudioNotes({ locale, onTranscript }: MatchAudioNotesProps) 
       return;
     }
 
+    clearRestartTimer();
     finalTextRef.current = "";
+    sessionTextRef.current = "";
     userStoppedRef.current = false;
+    finishedRef.current = false;
     listenUntilRef.current = Date.now() + LISTENING_DURATION_MS;
 
-    const recognition = new SpeechRecognitionCtor();
-    recognition.lang = speechRecognitionLang(locale);
-    recognition.continuous = true;
-    recognition.interimResults = true;
+    const startSession = () => {
+      if (userStoppedRef.current) return;
 
-    recognition.onresult = (event) => {
-      for (let i = event.resultIndex; i < event.results.length; i++) {
-        const result = event.results[i];
-        if (result?.isFinal) {
-          finalTextRef.current += result[0]?.transcript ?? "";
+      const recognition = new SpeechRecognitionCtor();
+      recognition.lang = speechRecognitionLang(locale);
+      recognition.continuous = true;
+      recognition.interimResults = false;
+      sessionTextRef.current = "";
+
+      recognition.onresult = (event) => {
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const result = event.results[i];
+          if (result?.isFinal) {
+            sessionTextRef.current = appendTranscript(
+              sessionTextRef.current,
+              result[0]?.transcript ?? "",
+            );
+          }
         }
-      }
-    };
+      };
 
-    recognition.onerror = () => {
-      userStoppedRef.current = true;
-      setStatus("Could not transcribe audio. Try again or type your notes.");
-      finishRecording();
-    };
+      recognition.onerror = () => {
+        userStoppedRef.current = true;
+        clearRestartTimer();
+        commitSessionText();
+        setStatus("Could not transcribe audio. Try again or type your notes.");
+        finishRecording();
+      };
 
-    recognition.onend = () => {
-      if (
-        !userStoppedRef.current &&
-        Date.now() < listenUntilRef.current &&
-        recognitionRef.current
-      ) {
-        try {
-          recognition.start();
+      recognition.onend = () => {
+        commitSessionText();
+
+        if (
+          !userStoppedRef.current &&
+          Date.now() < listenUntilRef.current
+        ) {
+          restartTimerRef.current = setTimeout(() => {
+            restartTimerRef.current = null;
+            startSession();
+          }, RESTART_DELAY_MS);
           return;
-        } catch {
-          // Browser refused restart — fall through to finish.
         }
+
+        finishRecording();
+      };
+
+      recognitionRef.current = recognition;
+      try {
+        recognition.start();
+      } catch {
+        userStoppedRef.current = true;
+        setStatus("Could not start speech recognition. Try again.");
+        finishRecording();
       }
-      finishRecording();
     };
 
-    recognitionRef.current = recognition;
-    recognition.start();
+    startSession();
     setRecording(true);
     setStatus("Listening… speak in your app language, then stop.");
-  }, [locale, onTranscript, finishRecording]);
+  }, [
+    locale,
+    clearRestartTimer,
+    commitSessionText,
+    finishRecording,
+  ]);
 
   return (
     <div className="flex flex-col gap-2">
