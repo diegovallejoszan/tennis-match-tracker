@@ -55,8 +55,8 @@ export default async function AccountPage() {
           <CardHeader>
             <CardTitle>Language</CardTitle>
             <CardDescription>
-              Used for speech-to-text on match notes and for AI recommendations
-              in a later update.
+              Used for speech-to-text on match notes and for AI match preparation
+              advice in a later update.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -68,8 +68,8 @@ export default async function AccountPage() {
           <CardHeader>
             <CardTitle>Profile</CardTitle>
             <CardDescription>
-              Your play style, strengths, and weaknesses help contextualize match
-              prep and notes. All fields are optional.
+              Your play style, strengths, and weaknesses are sent to the AI when
+              you request match preparation advice (Phase 5). All fields are optional.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">

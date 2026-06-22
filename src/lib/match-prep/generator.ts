@@ -1,6 +1,7 @@
 import type { CourtSurface, MatchFormat, OpponentType, PlayerLevel, Tactic } from "./tactics";
 import { TACTIC_LIBRARY } from "./tactic-library";
 
+/** Inputs for selecting tactics to inject into an LLM prompt (not shown in the UI). */
 export type MatchPrepContext = {
   opponentType: OpponentType;
   format: MatchFormat;
@@ -138,6 +139,10 @@ function tacticApplies(t: Tactic, ctx: MatchPrepContext): boolean {
   return true;
 }
 
+/**
+ * Tactics from the internal knowledge base relevant to the detected opponent archetype.
+ * Used by `knowledge-base.ts` when building LLM context — not rendered to users directly.
+ */
 export function getMatchPrepTactics(ctx: MatchPrepContext): Tactic[] {
   const applicable = TACTIC_LIBRARY.filter(
     (t) => t.opponentType === ctx.opponentType && tacticApplies(t, ctx),

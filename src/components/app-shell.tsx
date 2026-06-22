@@ -34,14 +34,19 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { signOutAction } from "@/app/actions/auth";
+import { isMatchPrepEnabled } from "@/lib/app-phase";
 
-const navItems = [
+const allNavItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/players", label: "Players", icon: Users },
   { href: "/matches", label: "Matches", icon: Trophy },
-  { href: "/prepare", label: "Prepare", icon: Target },
+  { href: "/prepare", label: "Prepare", icon: Target, requiresMatchPrep: true },
   { href: "/account", label: "My Account", icon: UserCircle },
 ] as const;
+
+const navItems = allNavItems.filter(
+  (item) => !("requiresMatchPrep" in item && item.requiresMatchPrep) || isMatchPrepEnabled(),
+);
 
 function NavLinks({
   className,

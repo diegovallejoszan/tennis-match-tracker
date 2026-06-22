@@ -4,6 +4,16 @@
 
 ---
 
+## Active phase: **4** (Dashboard)
+
+The app is currently shipping **Phase 4** only. Match preparation is **not** exposed in the UI (no **Prepare** nav item, `/prepare` redirects to dashboard).
+
+The **tactical knowledge base** (`src/lib/match-prep/`, `docs/match-prep/`) is implemented as **internal LLM context** for Phase 5 — users do not browse tactic cards or sources in the app. See [docs/match-prep/README.md](match-prep/README.md).
+
+Controlled by `CURRENT_APP_PHASE` in [src/lib/app-phase.ts](../src/lib/app-phase.ts).
+
+---
+
 ## Current State (Phase 0 -- complete)
 
 The project at `c:\apps\tennis-match-tracker` already has a solid baseline:
@@ -29,7 +39,7 @@ Key files: [package.json](package.json), [tsconfig.json](tsconfig.json), [src/ap
 | Database | **PostgreSQL** on Railway | Managed, one-click provision, matches requirement |
 | Auth | **NextAuth v5 (Auth.js)** with Google provider | First-party Next.js integration, Google OAuth only |
 | Charts | **Recharts** (or tremor) | React-native, composable, works with Tailwind |
-| AI (Phase 5) | **OpenAI API** (or similar LLM) via server action | Game-plan paragraph generation from match data |
+| AI (Phase 5) | **OpenAI API** (or similar LLM) via server action | Match-prep advice using profiles, match history, and the internal tactical knowledge base as prompt context |
 | Hosting | **Railway** | Full-stack deploy with GitHub auto-deploys |
 
 ---
@@ -70,7 +80,7 @@ flowchart LR
 
 - Install **shadcn/ui** (CLI init), pick a theme, add components: Button, Card, Input, Sheet (mobile nav), Avatar, DropdownMenu
 - Build a responsive app shell in [src/app/layout.tsx](src/app/layout.tsx): sidebar on desktop, bottom nav or hamburger on mobile
-- Create placeholder pages: `/dashboard`, `/players`, `/matches`, `/prepare`
+- Create placeholder pages: `/dashboard`, `/players`, `/matches` (`/prepare` added in Phase 5)
 
 ### 1b. Authentication
 
@@ -171,9 +181,9 @@ export const matchPlayers = pgTable("match_players", {
 
 ---
 
-## Phase 4 -- Dashboard
+## Phase 4 -- Dashboard *(current release)*
 
-**Goal**: Visual overview of your match history and performance trends.
+**Goal**: Visual overview of your match history and performance trends. **No match preparation UI in this phase.**
 
 **Branch**: `feature/phase-4-dashboard`
 
@@ -185,23 +195,93 @@ export const matchPlayers = pgTable("match_players", {
 - Filter by date range
 - Data fetched via server components + Drizzle queries
 - Responsive: cards stack vertically on mobile
+- **Prepare** hidden from navigation; `/prepare` redirects to dashboard
+
+### Internal groundwork (not user-facing)
+
+- Tactical knowledge base under `src/lib/match-prep/` (sources, tactic library, LLM context builder)
+- `buildMatchPrepPromptContext()` assembles opponent profile, H2H history, last 5 user matches, and knowledge-base markdown for future LLM calls
 
 ---
 
-## Phase 5 -- Match Preparation (AI)
+## Phase 5 -- Match Preparation (LLM)
 
-**Goal**: Select an opponent and get an AI-generated game plan paragraph.
+**Goal**: User selects an opponent and upcoming match date, requests AI advice, and can review past advice without re-calling the API.
 
 **Branch**: `feature/phase-5-match-prep`
 
-### Features
+### User experience
 
-- `/prepare` page: select an opponent from dropdown
-- On selection, gather context: opponent characteristics, past match scores, your notes from those matches
-- Send context to an LLM (OpenAI API via server action) with a prompt like: "Given this opponent profile and our match history, suggest a game plan"
-- Display the generated game plan paragraph
-- Option to save the game plan to a new `game_plans` table for future reference
-- Environment variable: `OPENAI_API_KEY` (added to Railway)
+- Enable **Prepare** in app navigation (`CURRENT_APP_PHASE >= 5`)
+- `/prepare` page:
+  1. Select **opponent** (from players list)
+  2. Select **date** of the upcoming match
+  3. Click **Get advice** → server action calls the LLM
+  4. Display **tactical advice** and a **game plan** (markdown or structured sections)
+  5. **History**: list past advice for this opponent / date, open any saved entry without a new API call
+
+### LLM request — context payload
+
+The API call must include everything available (advice is still generated if some sections are empty):
+
+| Context | Source |
+|---------|--------|
+| Opponent profile | `players` — play style, strengths, weaknesses, notes |
+| Your profile | `users` — profile play style, strengths, weaknesses |
+| Matches vs opponent | `matches` + `match_players` filtered by opponent |
+| Your last 5 matches | Recent matches for pattern detection |
+| Tactical knowledge base | `formatKnowledgeBaseForLlm()` — filtered tactics + source registry (not shown raw to user) |
+
+Implementation: [src/lib/match-prep/build-prep-prompt-context.ts](../src/lib/match-prep/build-prep-prompt-context.ts), [src/lib/match-prep/knowledge-base.ts](../src/lib/match-prep/knowledge-base.ts).
+
+```mermaid
+flowchart LR
+  user[User on /prepare] --> action[generateMatchPrepAdviceAction]
+  action --> gather[Gather DB context]
+  gather --> kb[Inject knowledge base excerpt]
+  kb --> llm[LLM API]
+  llm --> save[Save match_prep_advices row]
+  save --> ui[Show advice + history]
+```
+
+### Tactical knowledge base (evolvable)
+
+- **Not** a user-facing library — tactics and sources are **prompt context** so the LLM gives grounded, useful answers
+- Curated sources in `sources.ts` (ITF, USTA, coaching publications, club manuals, etc.)
+- Tactic entries in `tactic-library.ts` with citations, archetypes, and situations
+- `KNOWLEDGE_BASE_VERSION` bumped when tactics/sources change materially
+- New references: add markdown under `docs/match-prep/`, register in `sources.ts`, add paraphrased tactics to `tactic-library.ts`
+- See [docs/match-prep/README.md](match-prep/README.md)
+
+### Schema — saved advice
+
+```typescript
+// src/db/schema/match-prep-advice.ts (Phase 5)
+export const matchPrepAdvices = pgTable("match_prep_advices", {
+  id: text("id").primaryKey(),
+  userId: text("user_id").notNull().references(() => users.id),
+  opponentId: text("opponent_id").references(() => players.id),
+  plannedMatchDate: date("planned_match_date").notNull(),
+  adviceMarkdown: text("advice_markdown").notNull(),
+  /** Snapshot of prompt context metadata for audit / replay */
+  contextSnapshot: jsonb("context_snapshot"),
+  knowledgeBaseVersion: varchar("knowledge_base_version", { length: 20 }),
+  modelId: varchar("model_id", { length: 100 }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+```
+
+### Server / env
+
+- Server action: `generateMatchPrepAdviceAction({ opponentId, plannedMatchDate })`
+- Environment variable: `OPENAI_API_KEY` (Railway staging + production)
+- Rate limiting on the advice endpoint (Phase 6 polish)
+
+### Tests
+
+- Prompt context builder (missing sections, knowledge base inclusion)
+- Action validation and persistence
+- Optional: mocked LLM response snapshot
 
 ---
 
@@ -237,10 +317,10 @@ gantt
   Match_Registration :p3, after p2, 5d
 
   section Phase4
-  Dashboard :p4, after p3, 4d
+  Dashboard_no_prep_UI :p4, after p3, 4d
 
   section Phase5
-  AI_Match_Prep :p5, after p4, 4d
+  LLM_Match_Prep_plus_saved_advice :p5, after p4, 5d
 
   section Phase6
   Polish :p6, after p5, 3d
@@ -258,6 +338,6 @@ Each phase produces a usable, deployed increment. You can start registering play
 - [x] **Phase 1d** — Set up Drizzle ORM, initial auth schema, first migration
 - [x] **Phase 2** — Players CRUD: schema, server actions, list/create/edit pages, tests
 - [x] **Phase 3** — Match registration: schema, form with opponents/score/notes, list/detail pages
-- [x] **Phase 4** — Dashboard: summary cards, Recharts charts, filters, responsive layout
-- [ ] **Phase 5** — Match preparation: opponent selector, AI game plan generation via OpenAI
+- [x] **Phase 4** — Dashboard: summary cards, Recharts charts, filters, responsive layout; Prepare hidden
+- [ ] **Phase 5** — LLM match prep: opponent + date, advice generation, saved advice history, knowledge base as prompt context
 - [ ] **Phase 6** — Polish: custom domain, loading states, error boundaries, Lighthouse audit
