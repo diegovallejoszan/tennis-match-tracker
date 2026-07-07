@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import {
   LayoutDashboard,
@@ -37,11 +38,11 @@ import { signOutAction } from "@/app/actions/auth";
 import { isMatchPrepEnabled } from "@/lib/app-phase";
 
 const allNavItems = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/players", label: "Players", icon: Users },
-  { href: "/matches", label: "Matches", icon: Trophy },
-  { href: "/prepare", label: "Prepare", icon: Target, requiresMatchPrep: true },
-  { href: "/account", label: "My Account", icon: UserCircle },
+  { href: "/dashboard", labelKey: "dashboard", icon: LayoutDashboard },
+  { href: "/players", labelKey: "players", icon: Users },
+  { href: "/matches", labelKey: "matches", icon: Trophy },
+  { href: "/prepare", labelKey: "prepare", icon: Target, requiresMatchPrep: true },
+  { href: "/account", labelKey: "account", icon: UserCircle },
 ] as const;
 
 const navItems = allNavItems.filter(
@@ -56,10 +57,11 @@ function NavLinks({
   onLinkClick?: () => void;
 }) {
   const pathname = usePathname();
+  const t = useTranslations("nav");
 
   return (
     <nav className={cn("flex flex-col gap-1", className)}>
-      {navItems.map(({ href, label, icon: Icon }) => (
+      {navItems.map(({ href, labelKey, icon: Icon }) => (
         <Link
           key={href}
           href={href}
@@ -72,7 +74,7 @@ function NavLinks({
           )}
         >
           <Icon className="h-5 w-5 shrink-0" />
-          {label}
+          {t(labelKey)}
         </Link>
       ))}
     </nav>
@@ -111,6 +113,7 @@ export function AppShell({
   session: Session | null;
 }) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const t = useTranslations("nav");
 
   return (
     <div className="min-h-screen bg-background">
@@ -118,7 +121,7 @@ export function AppShell({
       <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col border-r border-border bg-card md:flex">
         <div className="flex h-14 items-center gap-2 border-b border-border px-4">
           <Link href="/" className="font-semibold text-foreground">
-            Tennis Tracker
+            {t("brand")}
           </Link>
         </div>
         <div className="flex-1 overflow-y-auto p-3">
@@ -134,24 +137,24 @@ export function AppShell({
               >
                 <UserAvatar session={session} />
                 <span className="text-sm text-muted-foreground">
-                  {session?.user?.name ?? "Account"}
+                  {session?.user?.name ?? t("accountMenu")}
                 </span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="w-56">
-              <DropdownMenuLabel>My Account</DropdownMenuLabel>
+              <DropdownMenuLabel>{t("account")}</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
-                <Link href="/account">Profile & settings</Link>
+                <Link href="/account">{t("profileSettings")}</Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
-                <Link href="/dashboard">Dashboard</Link>
+                <Link href="/dashboard">{t("dashboard")}</Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <form action={signOutAction} className="w-full">
                   <button type="submit" className="flex w-full items-center gap-2">
                     <LogOut className="h-4 w-4" />
-                    Sign out
+                    {t("signOut")}
                   </button>
                 </form>
               </DropdownMenuItem>
@@ -164,7 +167,7 @@ export function AppShell({
       <header className="sticky top-0 z-30 flex h-14 items-center gap-2 border-b border-border bg-card px-4 md:hidden">
         <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
           <SheetTrigger asChild>
-            <Button variant="ghost" size="icon" aria-label="Open menu">
+            <Button variant="ghost" size="icon" aria-label={t("openMenu")}>
               <Menu className="h-5 w-5" />
             </Button>
           </SheetTrigger>
@@ -172,7 +175,7 @@ export function AppShell({
             <SheetHeader className="border-b border-border p-4 text-left">
               <SheetTitle>
                 <Link href="/" onClick={() => setMobileOpen(false)}>
-                  Tennis Tracker
+                  {t("brand")}
                 </Link>
               </SheetTitle>
             </SheetHeader>
@@ -184,27 +187,27 @@ export function AppShell({
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="w-full justify-start gap-3">
                     <UserAvatar session={session} />
-                    {session?.user?.name ?? "Account"}
+                    {session?.user?.name ?? t("accountMenu")}
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start" className="w-56">
-                  <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                  <DropdownMenuLabel>{t("account")}</DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
                     <Link href="/account" onClick={() => setMobileOpen(false)}>
-                      Profile & settings
+                      {t("profileSettings")}
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link href="/dashboard" onClick={() => setMobileOpen(false)}>
-                      Dashboard
+                      {t("dashboard")}
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <form action={signOutAction} className="w-full">
                       <button type="submit" className="flex w-full items-center gap-2">
                         <LogOut className="h-4 w-4" />
-                        Sign out
+                        {t("signOut")}
                       </button>
                     </form>
                   </DropdownMenuItem>
@@ -214,29 +217,29 @@ export function AppShell({
           </SheetContent>
         </Sheet>
         <Link href="/" className="font-semibold text-foreground">
-          Tennis Tracker
+          {t("brand")}
         </Link>
         <div className="ml-auto">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" aria-label="Account">
+              <Button variant="ghost" size="icon" aria-label={t("accountMenu")}>
                 <UserAvatar session={session} />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel>My Account</DropdownMenuLabel>
+              <DropdownMenuLabel>{t("account")}</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
-                <Link href="/account">Profile & settings</Link>
+                <Link href="/account">{t("profileSettings")}</Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
-                <Link href="/dashboard">Dashboard</Link>
+                <Link href="/dashboard">{t("dashboard")}</Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <form action={signOutAction} className="w-full">
                   <button type="submit" className="flex w-full items-center gap-2">
                     <LogOut className="h-4 w-4" />
-                    Sign out
+                    {t("signOut")}
                   </button>
                 </form>
               </DropdownMenuItem>

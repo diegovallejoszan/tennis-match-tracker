@@ -1,21 +1,55 @@
 /** Minimal match shape for dashboard math (keeps aggregates testable without DB). */
 export type MatchForDashboard = {
+  id?: string;
   date: string;
+  time?: string | null;
+  createdAt?: Date;
   matchType: string;
   outcome: string | null;
   opponents: Array<{ id: string; name: string }>;
+  partner?: { id: string; name: string } | null;
 };
+
+export type DashboardFilters = {
+  from?: string;
+  to?: string;
+  matchType?: string;
+  opponentId?: string;
+  /** all | finished (win/loss) | non_finished */
+  completionStatus?: string;
+};
+
+export function filterMatchesForDashboard(
+  matches: MatchForDashboard[],
+  filters: DashboardFilters,
+): MatchForDashboard[] {
+  return matches.filter((m) => {
+    if (filters.from && m.date < filters.from) return false;
+    if (filters.to && m.date > filters.to) return false;
+    if (filters.matchType && m.matchType !== filters.matchType) return false;
+    if (filters.opponentId) {
+      const asOpponent = m.opponents.some((o) => o.id === filters.opponentId);
+      const asPartner = m.partner?.id === filters.opponentId;
+      if (!asOpponent && !asPartner) return false;
+    }
+    if (filters.completionStatus === "finished") {
+      if (m.outcome !== "win" && m.outcome !== "loss") return false;
+    } else if (filters.completionStatus === "non_finished") {
+      if (m.outcome !== "non_finished") return false;
+    }
+    return true;
+  });
+}
 
 export function filterMatchesByDateRange(
   matches: MatchForDashboard[],
   from?: string,
   to?: string,
 ): MatchForDashboard[] {
-  return matches.filter((m) => {
-    if (from && m.date < from) return false;
-    if (to && m.date > to) return false;
-    return true;
-  });
+  const filters: DashboardFilters = {};
+  if (from) filters.from = from;
+  if (to) filters.to = to;
+  return filterMatchesForDashboard(matches, filters);
 }
 
 function currentYearMonth(d: Date): string {
@@ -49,6 +83,68 @@ export function winRatePercent(wins: number, losses: number): number | null {
   const total = wins + losses;
   if (total === 0) return null;
   return Math.round((wins / total) * 1000) / 10;
+}
+
+export type WinRateByType = {
+  wins: number;
+  losses: number;
+  rate: number | null;
+};
+
+/** Win rate for a single match type (singles or doubles). Excludes non_finished. */
+export function winRateForMatchType(
+  matches: MatchForDashboard[],
+  matchType: "single" | "doubles",
+): WinRateByType {
+  let wins = 0;
+  let losses = 0;
+  for (const m of matches) {
+    if (m.matchType !== matchType) continue;
+    if (m.outcome === "win") wins += 1;
+    else if (m.outcome === "loss") losses += 1;
+  }
+  return { wins, losses, rate: winRatePercent(wins, losses) };
+}
+
+export type SparklinePoint = {
+  id: string;
+  date: string;
+  time: string | null;
+  outcome: "win" | "loss" | "non_finished" | null;
+  matchType: string;
+  opponents: string[];
+  sortKey: string;
+};
+
+function sparklineSortKey(m: MatchForDashboard): string {
+  const time = m.time?.slice(0, 8) ?? "00:00:00";
+  const created = m.createdAt?.toISOString() ?? "";
+  return `${m.date}T${time}#${created}`;
+}
+
+/** Per-match points ordered chronologically for the Tufte sparkline. */
+export function buildSparklinePoints(
+  matches: MatchForDashboard[],
+): SparklinePoint[] {
+  const sorted = [...matches].sort((a, b) =>
+    sparklineSortKey(a).localeCompare(sparklineSortKey(b)),
+  );
+
+  return sorted.map((m, index) => {
+    const outcome =
+      m.outcome === "win" || m.outcome === "loss" || m.outcome === "non_finished"
+        ? m.outcome
+        : null;
+    return {
+      id: m.id ?? `idx-${index}`,
+      date: m.date,
+      time: m.time ?? null,
+      outcome,
+      matchType: m.matchType,
+      opponents: m.opponents.map((o) => o.name),
+      sortKey: sparklineSortKey(m),
+    };
+  });
 }
 
 export function mostFrequentOpponent(

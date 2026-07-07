@@ -1,0 +1,95 @@
+{
+  "app": {
+    "title": "Registro de Partidos de Tenis",
+    "description": "App para registrar partidos de tenis con enfoque en el aprendizaje."
+  },
+  "nav": {
+    "dashboard": "Panel",
+    "players": "Jugadores",
+    "matches": "Partidos",
+    "prepare": "Preparar",
+    "account": "Mi cuenta",
+    "brand": "Tennis Tracker",
+    "profileSettings": "Perfil y ajustes",
+    "signOut": "Cerrar sesión",
+    "openMenu": "Abrir menú",
+    "accountMenu": "Cuenta"
+  },
+  "common": {
+    "win": "Victoria",
+    "loss": "Derrota",
+    "notFinished": "Sin terminar",
+    "score": "Marcador",
+    "vs": "vs",
+    "viewAll": "Ver todos",
+    "addOne": "Añadir uno",
+    "all": "Todos",
+    "singles": "Individual",
+    "doubles": "Dobles",
+    "practice": "Entrenamiento"
+  },
+  "dashboard": {
+    "title": "Panel",
+    "logMatch": "Registrar partido",
+    "cards": {
+      "totalMatches": "Total de partidos",
+      "inRange": "Con los filtros actuales",
+      "singlesWinRate": "Victorias en individual",
+      "doublesWinRate": "Victorias en dobles",
+      "noResults": "Sin resultados competitivos en el rango",
+      "record": "{wins}V · {losses}D",
+      "matchesThisMonth": "Partidos este mes",
+      "monthHint": "Dentro de los filtros, mes calendario actual (UTC)",
+      "topOpponent": "Rival más frecuente",
+      "matchCount": "{count, plural, one {# partido en el rango} other {# partidos en el rango}}",
+      "noOpponents": "Sin rivales en el rango"
+    },
+    "filters": {
+      "from": "Desde",
+      "to": "Hasta",
+      "matchType": "Tipo de partido",
+      "allTypes": "Todos los tipos",
+      "practice": "Entrenamiento",
+      "singles": "Individual",
+      "doubles": "Dobles",
+      "opponent": "Rival",
+      "allOpponents": "Todos los rivales",
+      "completion": "Estado",
+      "allStatuses": "Todos los estados",
+      "finishedOnly": "Terminados (victoria/derrota)",
+      "notFinishedOnly": "Solo sin terminar",
+      "apply": "Aplicar filtros",
+      "clear": "Limpiar"
+    },
+    "charts": {
+      "wins": "Victorias",
+      "losses": "Derrotas",
+      "winRate": "Porcentaje de victorias",
+      "sparkline": {
+        "title": "Resultados en el tiempo",
+        "subtitle": "Cada partido en la línea — arriba victoria, abajo derrota, punto sin terminar.",
+        "empty": "Ningún partido coincide con los filtros actuales.",
+        "ariaLabel": "Gráfico de resultados por partido",
+        "win": "Victoria",
+        "loss": "Derrota",
+        "notFinished": "Sin terminar",
+        "vs": "vs",
+        "hint": "Pasa el cursor sobre un marcador para ver detalles"
+      },
+      "byType": {
+        "title": "Victorias / derrotas por tipo",
+        "subtitle": "Solo individual y dobles (partidos competitivos).",
+        "empty": "Sin partidos competitivos de individual o dobles en este rango."
+      },
+      "trend": {
+        "title": "Tendencia de rendimiento",
+        "subtitle": "Porcentaje de victorias por mes en partidos competitivos (individual y dobles).",
+        "empty": "Sin resultados competitivos en este rango."
+      }
+    },
+    "recent": {
+      "title": "Partidos recientes",
+      "empty": "No hay partidos en este rango."
+    }
+  }
+}

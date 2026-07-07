@@ -1,9 +1,10 @@
 import { eq } from "drizzle-orm";
 
 import { db, userPreferences } from "@/db";
+import type { AppLocale } from "@/lib/locale";
 import { resolveLocale } from "@/lib/locale";
 
-export async function getUserLocale(userId: string): Promise<string> {
+export async function getUserLocale(userId: string): Promise<AppLocale> {
   const [row] = await db
     .select({ locale: userPreferences.locale })
     .from(userPreferences)

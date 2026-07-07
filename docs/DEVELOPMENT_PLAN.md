@@ -4,13 +4,13 @@
 
 ---
 
-## Active phase: **4** (Dashboard)
+## Active phase: **5b in progress**
 
-The app is currently shipping **Phase 4** only. Match preparation is **not** exposed in the UI (no **Prepare** nav item, `/prepare` redirects to dashboard).
+**Phase 5a is deployed**: structured scoring, non-finished results, audio dictation, per-user locale preference, and match integrity checks are live in match registration.
 
-The **tactical knowledge base** (`src/lib/match-prep/`, `docs/match-prep/`) is implemented as **internal LLM context** for Phase 5 — users do not browse tactic cards or sources in the app. See [docs/match-prep/README.md](match-prep/README.md).
+**Phase 5b (current work)**: score-aware dashboard analytics (Tufte sparkline, singles/doubles win-rate cards, combinable filters) and app UI i18n (`en` / `es`). Dashboard and navigation are localized first; remaining pages follow in this phase.
 
-Controlled by `CURRENT_APP_PHASE` in [src/lib/app-phase.ts](../src/lib/app-phase.ts).
+Match preparation is still **not** exposed in the UI — it ships in **Phase 5c**.
 
 ---
 
@@ -38,8 +38,9 @@ Key files: [package.json](package.json), [tsconfig.json](tsconfig.json), [src/ap
 | ORM | **Drizzle ORM** + drizzle-kit | Type-safe SQL, lightweight, excellent TS inference, SQL-like syntax |
 | Database | **PostgreSQL** on Railway | Managed, one-click provision, matches requirement |
 | Auth | **NextAuth v5 (Auth.js)** with Google provider | First-party Next.js integration, Google OAuth only |
-| Charts | **Recharts** (or tremor) | React-native, composable, works with Tailwind |
-| AI (Phase 5) | **OpenAI API** (or similar LLM) via server action | Match-prep advice using profiles, match history, and the internal tactical knowledge base as prompt context |
+| Charts | **Recharts** (or tremor) | React-native, composable, works with Tailwind; Phase 5b adds a Tufte-style per-match sparkline |
+| i18n (Phase 5b) | **next-intl** (or equivalent) | Localize UI strings (`en` / `es`) driven by the per-user locale from Phase 5a |
+| AI (Phase 5c) | **OpenAI API** (or similar LLM) via server action | Match-prep advice using profiles, match history, and the internal tactical knowledge base as prompt context |
 | Hosting | **Railway** | Full-stack deploy with GitHub auto-deploys |
 
 ---
@@ -80,7 +81,7 @@ flowchart LR
 
 - Install **shadcn/ui** (CLI init), pick a theme, add components: Button, Card, Input, Sheet (mobile nav), Avatar, DropdownMenu
 - Build a responsive app shell in [src/app/layout.tsx](src/app/layout.tsx): sidebar on desktop, bottom nav or hamburger on mobile
-- Create placeholder pages: `/dashboard`, `/players`, `/matches` (`/prepare` added in Phase 5)
+- Create placeholder pages: `/dashboard`, `/players`, `/matches` (`/prepare` added in Phase 5c)
 
 ### 1b. Authentication
 
@@ -197,6 +198,8 @@ export const matchPlayers = pgTable("match_players", {
 - Responsive: cards stack vertically on mobile
 - **Prepare** hidden from navigation; `/prepare` redirects to dashboard
 
+> Phase 4 ships the **baseline** dashboard (aggregate monthly charts, single combined win rate). Score- and completion-aware analytics — singles/doubles win-rate cards, the Tufte-style per-match sparkline, and combinable filters — are upgraded in **Phase 5b**.
+
 ### Internal groundwork (not user-facing)
 
 - Tactical knowledge base under `src/lib/match-prep/` (sources, tactic library, LLM context builder)
@@ -204,11 +207,96 @@ export const matchPlayers = pgTable("match_players", {
 
 ---
 
-## Phase 5 -- Match Preparation (LLM)
+## Phase 5a -- Match Result Completion & Integrity *(shipped)*
+
+**Goal**: Make match registration robust for finished and non-finished matches, with structured scoring, audio notes, language-aware dictation, and integrity validation.
+
+**Branch**: `feature/phase-5a-match-results` (merged)
+
+### Schema (extends Phase 3)
+
+```typescript
+// src/db/schema/matches.ts (additions)
+// result:       "win" | "loss" | "non_finished"
+// score:        auto-generated display string (legacy matches keep user-typed free text)
+// notesAudioUrl: reference to a recorded audio note
+
+// src/db/schema/match-score-segments (one row per segment)
+// segmentOrder + segmentType ("set" | "long_set" | "tie_break" | "super_tie_break")
+// userGamesOrPoints + opponentGamesOrPoints
+
+// src/db/schema/user-preferences.ts
+// userId (PK) + locale ("en" | "es", default "en")
+```
+
+### Features (delivered)
+
+- **Match result status** (`win` | `loss` | `non_finished`):
+  - `non_finished` counts as **played** but is excluded from all win-rate numerators/denominators
+  - `outcome`/`score` columns widened; existing rows remain compatible
+- **Structured score registration** — segment-by-segment flow:
+  - Create each segment in order: Set (to 6), Long Set (to 9), Tie Break, or Super Tie Break
+  - Record games (or points, for tie breaks) for user and opponent per segment
+  - App auto-generates the canonical `score` display string (e.g. `6-4 7-6(5)`, `[10-8]`)
+- **Legacy score compatibility**:
+  - Old matches may only have the optional free-text `score`; UI and analytics tolerate both formats
+  - New/edited matches populate `score` automatically — users no longer type it manually
+- **User language preference (foundation)**:
+  - Persisted locale per user (`en` | `es`), selectable in **Account**
+  - Single source of truth reused by Phase 5b (UI i18n) and Phase 5c (AI output)
+- **Audio match notes**:
+  - Dictate notes in the match form via the browser Web Speech API, using the user's locale (`en-US` / `es-ES`)
+  - `notesAudioUrl` reserved for stored audio; typed notes remain supported (free-form language)
+- **Integrity controls and review**:
+  - Validate segments against tennis rules and detect result/score contradictions (e.g. `win` while the score implies a loss)
+  - Surface warnings before save; integrity panel on match detail
+  - Unit tests for score formatting, segment validation, and result/score consistency
+
+**Functional increment**: Users can fully register real-world matches — including interrupted/non-finished ones — with auditable score details and integrity validation.
+
+---
+
+## Phase 5b -- Score-Aware Analytics & App i18n
+
+**Goal**: Upgrade the dashboard to score- and completion-aware analytics (including Tufte-style per-match visualization) and localize the app UI, building on the Phase 5a data model and locale preference.
+
+**Branch**: `feature/phase-5b-analytics-i18n`
+
+### Score-aware analytics
+
+- **Separate win-rate cards** shown in parallel:
+  - Singles win rate
+  - Doubles win rate
+  - `non_finished` excluded from both (played, but never counted)
+- **Tufte-style "matches over time"** (replaces the aggregate monthly line chart), inspired by Edward Tufte's *Beautiful Evidence*:
+  - X axis = **each match**, ordered by date/time (not aggregated per month)
+  - **Upward** whisker/marker for a win
+  - **Downward** whisker/marker for a loss
+  - Neutral baseline marker for `non_finished`
+  - High-data-density, minimal styling (thin strokes, no chart junk)
+- **Combinable filters** that recompute the sparkline and cards live:
+  - Date range, match type (singles / doubles / practice), opponent, completion status
+  - Filters stack so the user can explore any subset
+- Analytics queries read **both** legacy free-text scores and structured segment data
+- Add query-layer aggregates/indexes if needed for efficient filtered analytics
+
+### App UI internationalization (i18n)
+
+- **In scope**: all user-facing UI strings — navigation, page titles, form labels, buttons, validation/error messages, dashboard cards, chart labels, empty states
+- **Out of scope**: user-generated content (typed notes, transcribed audio, opponent names, legacy scores) — kept in whatever language the user wrote/spoke
+- Reuse the locale preference from Phase 5a (same selector; no duplicate setting)
+- Implementation: Next.js i18n (e.g. `next-intl`) with `en` / `es` message catalogs; locale drives the HTML `lang` attribute and date/number formatting
+- Tests for locale switching and key UI strings in both languages
+
+**Functional increment**: Users can use the app in their language and read a dashboard whose metrics and per-match visualization correctly reflect structured scores and completion state.
+
+---
+
+## Phase 5c -- Match Preparation (LLM)
 
 **Goal**: User selects an opponent and upcoming match date, requests AI advice, and can review past advice without re-calling the API.
 
-**Branch**: `feature/phase-5-match-prep`
+**Branch**: `feature/phase-5c-match-prep`
 
 ### User experience
 
@@ -256,7 +344,7 @@ flowchart LR
 ### Schema — saved advice
 
 ```typescript
-// src/db/schema/match-prep-advice.ts (Phase 5)
+// src/db/schema/match-prep-advice.ts (Phase 5c)
 export const matchPrepAdvices = pgTable("match_prep_advices", {
   id: text("id").primaryKey(),
   userId: text("user_id").notNull().references(() => users.id),
@@ -289,6 +377,12 @@ export const matchPrepAdvices = pgTable("match_prep_advices", {
 
 **Branch**: `feature/phase-6-polish`
 
+- Create app branding assets:
+  - Primary logo (SVG + PNG variants) for the app header/auth screens and social preview
+  - Favicon set for browser tabs/bookmarks (`favicon.ico`, `icon.svg`, and touch icon)
+- Wire branding into app entry points:
+  - Logo in main navigation/header and login/landing surfaces
+  - Configure favicon/icons in Next.js App Router metadata (`src/app/`) and validate across desktop/mobile browsers
 - Custom domain setup on Railway
 - SEO metadata and Open Graph tags
 - Loading skeletons / Suspense boundaries for every page
@@ -319,14 +413,20 @@ gantt
   section Phase4
   Dashboard_no_prep_UI :p4, after p3, 4d
 
-  section Phase5
-  LLM_Match_Prep_plus_saved_advice :p5, after p4, 5d
+  section Phase5a
+  Match_Results_Integrity :done, p5a, after p4, 5d
+
+  section Phase5b
+  Analytics_and_i18n :p5b, after p5a, 4d
+
+  section Phase5c
+  LLM_Match_Prep_plus_saved_advice :p5c, after p5b, 5d
 
   section Phase6
-  Polish :p6, after p5, 3d
+  Polish :p6, after p5c, 3d
 ```
 
-Each phase produces a usable, deployed increment. You can start registering players after Phase 2, recording matches after Phase 3, and so on.
+Each phase produces a usable, deployed increment. You can register players after Phase 2, record matches after Phase 3, register structured scores and non-finished results after Phase 5a, read score-aware analytics in a localized UI after Phase 5b, and use AI match preparation after Phase 5c.
 
 ---
 
@@ -339,5 +439,7 @@ Each phase produces a usable, deployed increment. You can start registering play
 - [x] **Phase 2** — Players CRUD: schema, server actions, list/create/edit pages, tests
 - [x] **Phase 3** — Match registration: schema, form with opponents/score/notes, list/detail pages
 - [x] **Phase 4** — Dashboard: summary cards, Recharts charts, filters, responsive layout; Prepare hidden
-- [ ] **Phase 5** — LLM match prep: opponent + date, advice generation, saved advice history, knowledge base as prompt context
-- [ ] **Phase 6** — Polish: custom domain, loading states, error boundaries, Lighthouse audit
+- [x] **Phase 5a** — Match results & integrity: non-finished result, structured score segments (set/long set/tie break/super tie break), auto-generated score string, legacy compatibility, user locale, audio dictation, integrity validation and tests
+- [ ] **Phase 5b** — Score-aware analytics & i18n: singles/doubles win-rate cards, Tufte-style per-match sparkline (up = win, down = loss, neutral = non-finished), combinable filters, full UI i18n (en/es) using the Phase 5a locale
+- [ ] **Phase 5c** — LLM match prep: opponent + date, advice generation, saved advice history, knowledge base as prompt context
+- [ ] **Phase 6** — Polish: app logo + favicon, custom domain, loading states, error boundaries, Lighthouse audit

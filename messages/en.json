@@ -1,0 +1,95 @@
+{
+  "app": {
+    "title": "Tennis Match Tracker",
+    "description": "Learning-first tennis match tracking app."
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "players": "Players",
+    "matches": "Matches",
+    "prepare": "Prepare",
+    "account": "My Account",
+    "brand": "Tennis Tracker",
+    "profileSettings": "Profile & settings",
+    "signOut": "Sign out",
+    "openMenu": "Open menu",
+    "accountMenu": "Account"
+  },
+  "common": {
+    "win": "Win",
+    "loss": "Loss",
+    "notFinished": "Not finished",
+    "score": "Score",
+    "vs": "vs",
+    "viewAll": "View all",
+    "addOne": "Add one",
+    "all": "All",
+    "singles": "Singles",
+    "doubles": "Doubles",
+    "practice": "Practice"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "logMatch": "Log a match",
+    "cards": {
+      "totalMatches": "Total matches",
+      "inRange": "In selected filters",
+      "singlesWinRate": "Singles win rate",
+      "doublesWinRate": "Doubles win rate",
+      "noResults": "No competitive results in range",
+      "record": "{wins}W · {losses}L",
+      "matchesThisMonth": "Matches this month",
+      "monthHint": "Within filters, current calendar month (UTC)",
+      "topOpponent": "Top opponent",
+      "matchCount": "{count, plural, one {# match in range} other {# matches in range}}",
+      "noOpponents": "No opponents in range"
+    },
+    "filters": {
+      "from": "From",
+      "to": "To",
+      "matchType": "Match type",
+      "allTypes": "All types",
+      "practice": "Practice",
+      "singles": "Singles",
+      "doubles": "Doubles",
+      "opponent": "Opponent",
+      "allOpponents": "All opponents",
+      "completion": "Completion",
+      "allStatuses": "All statuses",
+      "finishedOnly": "Finished (win/loss)",
+      "notFinishedOnly": "Not finished only",
+      "apply": "Apply filters",
+      "clear": "Clear"
+    },
+    "charts": {
+      "wins": "Wins",
+      "losses": "Losses",
+      "winRate": "Win rate",
+      "sparkline": {
+        "title": "Match results over time",
+        "subtitle": "Each match on the timeline — up for wins, down for losses, dot for not finished.",
+        "empty": "No matches match the current filters.",
+        "ariaLabel": "Per-match result sparkline",
+        "win": "Win",
+        "loss": "Loss",
+        "notFinished": "Not finished",
+        "vs": "vs",
+        "hint": "Hover a marker for match details"
+      },
+      "byType": {
+        "title": "Win / loss by match type",
+        "subtitle": "Singles and doubles only (competitive matches).",
+        "empty": "No competitive singles or doubles in this range."
+      },
+      "trend": {
+        "title": "Performance trend",
+        "subtitle": "Win rate by month among competitive matches (singles and doubles).",
+        "empty": "No competitive results in this range yet."
+      }
+    },
+    "recent": {
+      "title": "Recent matches",
+      "empty": "No matches in this range."
+    }
+  }
+}
