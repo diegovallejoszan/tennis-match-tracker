@@ -3,6 +3,7 @@
 import * as React from "react"
 import * as LabelPrimitive from "@radix-ui/react-label"
 import { Slot } from "@radix-ui/react-slot"
+import { useTranslations } from "next-intl"
 import {
   Controller,
   FormProvider,
@@ -14,6 +15,7 @@ import {
 
 import { cn } from "@/lib/utils"
 import { Label } from "@/components/ui/label"
+import { translateKnownError } from "@/lib/translate-error"
 
 const Form = FormProvider
 
@@ -147,7 +149,17 @@ const FormMessage = React.forwardRef<
   React.HTMLAttributes<HTMLParagraphElement>
 >(({ className, children, ...props }, ref) => {
   const { error, formMessageId } = useFormField()
-  const body = error ? String(error?.message ?? "") : children
+  const tErrors = useTranslations("errors")
+  const raw = error ? String(error?.message ?? "") : ""
+  const body = error
+    ? translateKnownError(raw, (key, values) =>
+        // Dynamic keys from translate-error map; values are optional ICU params.
+        (tErrors as (k: string, v?: Record<string, string | number>) => string)(
+          key,
+          values,
+        ),
+      )
+    : children
 
   if (!body) {
     return null

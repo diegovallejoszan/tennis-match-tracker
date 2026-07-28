@@ -209,26 +209,33 @@ export function toDbPlayerValues(data: PlayerFormValues, userId: string) {
   };
 }
 
-/** Abbreviated weekday labels for days with any availability (legacy + nested slots). */
-export function getAvailableDayAbbrevList(
+/** Weekday keys for days with any availability (legacy + nested slots). */
+export function getAvailableDayKeys(
   raw: Record<string, unknown> | null,
-): string[] {
+): Weekday[] {
   if (!raw || Object.keys(raw).length === 0) return [];
 
-  const out: string[] = [];
+  const out: Weekday[] = [];
   for (const d of WEEKDAYS) {
     const v = raw[d];
     if (v === true) {
-      out.push(weekdayLabels[d]);
+      out.push(d);
       continue;
     }
     if (!v || typeof v !== "object" || Array.isArray(v)) continue;
     const o = v as Record<string, unknown>;
     if (TIME_SLOTS.some((s) => o[s] === true)) {
-      out.push(weekdayLabels[d]);
+      out.push(d);
     }
   }
   return out;
+}
+
+/** @deprecated Prefer getAvailableDayKeys + i18n labels. */
+export function getAvailableDayAbbrevList(
+  raw: Record<string, unknown> | null,
+): string[] {
+  return getAvailableDayKeys(raw).map((d) => weekdayLabels[d]);
 }
 
 /** Short line for player cards (legacy + new JSON shapes). */

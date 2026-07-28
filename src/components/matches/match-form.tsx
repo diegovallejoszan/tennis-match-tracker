@@ -3,6 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import type { FieldErrors } from "react-hook-form";
 import { useForm, useWatch } from "react-hook-form";
@@ -33,12 +34,16 @@ import type { AppLocale } from "@/lib/locale";
 import { suggestOutcomeFromSegments } from "@/lib/match-score/integrity";
 import {
   MATCH_TYPES,
-  MATCH_TYPE_LABELS,
   matchFormSchema,
   OUTCOMES,
   type MatchFormInput,
   type MatchFormValues,
+  type MatchType,
 } from "@/lib/matches-validation";
+import {
+  translateKnownError,
+  translateKnownErrors,
+} from "@/lib/translate-error";
 
 function collectFormErrors(errors: FieldErrors<MatchFormValues>): string[] {
   const messages: string[] = [];
@@ -70,10 +75,10 @@ type MatchFormProps = {
   userLocale?: AppLocale;
 };
 
-const outcomeLabels: Record<(typeof OUTCOMES)[number], string> = {
-  win: "Win",
-  loss: "Loss",
-  non_finished: "Not finished",
+const MATCH_TYPE_KEYS: Record<MatchType, "practice" | "singles" | "doubles"> = {
+  practice: "practice",
+  single: "singles",
+  doubles: "doubles",
 };
 
 export function MatchForm({
@@ -84,6 +89,9 @@ export function MatchForm({
   userLocale = "en",
 }: MatchFormProps) {
   const router = useRouter();
+  const t = useTranslations("matches.form");
+  const tCommon = useTranslations("common");
+  const tErrors = useTranslations("errors");
   const [serverError, setServerError] = useState<string | null>(null);
   const [submitErrors, setSubmitErrors] = useState<string[]>([]);
   const [attemptedSubmit, setAttemptedSubmit] = useState(false);
@@ -178,7 +186,9 @@ export function MatchForm({
       ? form.formState.errors.outcome.message
       : null;
 
-  const alertMessages = attemptedSubmit ? submitErrors : [];
+  const alertMessages = attemptedSubmit
+    ? translateKnownErrors(submitErrors, tErrors)
+    : [];
 
   const highlightOutcome =
     liveScoreErrors.length > 0 || Boolean(outcomeFieldError);
@@ -257,6 +267,7 @@ export function MatchForm({
         {attemptedSubmit ? (
           <FormValidationAlert
             id="match-form-errors"
+            title={t("fixBeforeSaving")}
             messages={alertMessages}
           />
         ) : null}
@@ -266,7 +277,7 @@ export function MatchForm({
             className="rounded-md border border-destructive/50 bg-destructive/10 px-3 py-2 text-sm text-destructive"
             role="alert"
           >
-            {serverError}
+            {translateKnownError(serverError, tErrors)}
           </p>
         ) : null}
 
@@ -276,7 +287,7 @@ export function MatchForm({
             name="date"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Date</FormLabel>
+                <FormLabel>{t("date")}</FormLabel>
                 <FormControl>
                   <Input type="date" {...field} />
                 </FormControl>
@@ -290,7 +301,7 @@ export function MatchForm({
             name="time"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Time (optional)</FormLabel>
+                <FormLabel>{t("timeOptional")}</FormLabel>
                 <FormControl>
                   <Input type="time" {...field} />
                 </FormControl>
@@ -305,7 +316,7 @@ export function MatchForm({
           name="matchType"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Match type</FormLabel>
+              <FormLabel>{t("matchType")}</FormLabel>
               <div className="flex flex-wrap gap-2">
                 {MATCH_TYPES.map((type) => (
                   <label
@@ -319,7 +330,7 @@ export function MatchForm({
                       checked={field.value === type}
                       onChange={field.onChange}
                     />
-                    {MATCH_TYPE_LABELS[type]}
+                    {t(MATCH_TYPE_KEYS[type])}
                   </label>
                 ))}
               </div>
@@ -335,19 +346,19 @@ export function MatchForm({
             render={({ field }) => (
               <FormItem>
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <FormLabel className="!mt-0">Partner</FormLabel>
+                  <FormLabel className="!mt-0">{t("partner")}</FormLabel>
                   <Button
                     type="button"
                     variant="outline"
                     size="sm"
                     onClick={() => openQuickAdd("partner")}
                   >
-                    Add new partner
+                    {t("addNewPartner")}
                   </Button>
                 </div>
                 {playerList.length === 0 ? (
                   <p className="text-sm text-muted-foreground">
-                    No players yet. Add a partner to continue.
+                    {t("noPlayersPartner")}
                   </p>
                 ) : (
                   <div className="grid gap-2 sm:grid-cols-2">
@@ -382,10 +393,10 @@ export function MatchForm({
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <FormLabel className="!mt-0">
                   {matchType === "doubles"
-                    ? "Opponents"
+                    ? t("opponents")
                     : matchType === "single"
-                      ? "Opponent(s)"
-                      : "Opponents (optional)"}
+                      ? t("opponentSingular")
+                      : t("opponentsOptional")}
                 </FormLabel>
                 <Button
                   type="button"
@@ -393,12 +404,12 @@ export function MatchForm({
                   size="sm"
                   onClick={() => openQuickAdd("opponent")}
                 >
-                  Add new opponent
+                  {t("addNewOpponent")}
                 </Button>
               </div>
               {playerList.length === 0 ? (
                 <p className="text-sm text-muted-foreground">
-                  No players yet. Add an opponent to tag them in this match.
+                  {t("noPlayersOpponent")}
                 </p>
               ) : (
                 <div className="grid gap-2 sm:grid-cols-2">
@@ -464,7 +475,7 @@ export function MatchForm({
                   />
                 </FormControl>
                 <FormLabel className="!mt-0 font-normal">
-                  Register score segment by segment (recommended)
+                  {t("structuredScore")}
                 </FormLabel>
               </FormItem>
             )}
@@ -487,21 +498,21 @@ export function MatchForm({
             render={({ field }) => (
               <FormItem className="max-w-lg">
                 <FormLabel>
-                  Score (legacy text)
+                  {t("legacyScore")}
                   {scoreRequired ? (
                     <span className="font-normal text-muted-foreground">
                       {" "}
-                      (required)
+                      {t("legacyRequired")}
                     </span>
                   ) : (
                     <span className="font-normal text-muted-foreground">
                       {" "}
-                      (optional for not finished)
+                      {t("legacyOptional")}
                     </span>
                   )}
                 </FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g. 6-4 6-3" {...field} />
+                  <Input placeholder={t("legacyPlaceholder")} {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -511,7 +522,7 @@ export function MatchForm({
 
         {generatedPreview ? (
           <p className="text-sm text-muted-foreground">
-            Display score:{" "}
+            {t("displayScore")}{" "}
             <span className="font-mono text-foreground">{generatedPreview}</span>
           </p>
         ) : null}
@@ -522,10 +533,9 @@ export function MatchForm({
             name="outcome"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Result</FormLabel>
+                <FormLabel>{t("result")}</FormLabel>
                 <p className="text-[0.8rem] text-muted-foreground">
-                  Suggested from your score when using structured input — you can
-                  change it.
+                  {t("resultHelp")}
                 </p>
                 <div
                   className={`flex flex-wrap gap-2 rounded-md p-1 ${
@@ -549,7 +559,9 @@ export function MatchForm({
                           field.onChange(value);
                         }}
                       />
-                      {outcomeLabels[value]}
+                      {value === "non_finished"
+                        ? t("notFinished")
+                        : t(value)}
                     </label>
                   ))}
                 </div>
@@ -564,10 +576,9 @@ export function MatchForm({
           name="notes"
           render={({ field }) => (
             <FormItem className="max-w-2xl">
-              <FormLabel>Notes</FormLabel>
+              <FormLabel>{t("notes")}</FormLabel>
               <p className="text-[0.8rem] text-muted-foreground">
-                Learnings, observations, or anything else worth remembering about
-                this match.
+                {t("notesHelp")}
               </p>
               <MatchAudioNotes
                 locale={userLocale}
@@ -580,7 +591,7 @@ export function MatchForm({
               />
               <FormControl>
                 <Textarea
-                  placeholder="Optional"
+                  placeholder={t("notesPlaceholder")}
                   className="min-h-[120px] resize-y"
                   {...field}
                 />
@@ -593,13 +604,13 @@ export function MatchForm({
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
           <Button type="submit" disabled={isPending}>
             {isPending
-              ? "Saving..."
+              ? t("saving")
               : mode === "create"
-                ? "Create match"
-                : "Save and Close"}
+                ? t("createMatch")
+                : t("saveAndClose")}
           </Button>
           <Button type="button" variant="outline" asChild>
-            <Link href="/matches">Cancel</Link>
+            <Link href="/matches">{tCommon("cancel")}</Link>
           </Button>
         </div>
       </form>

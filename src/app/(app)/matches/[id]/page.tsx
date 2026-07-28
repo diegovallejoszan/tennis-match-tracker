@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 
 import { and, asc, eq } from "drizzle-orm";
 
@@ -27,6 +28,8 @@ export default async function MatchDetailPage({ params }: MatchDetailPageProps) 
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
 
+  const t = await getTranslations("matches");
+  const tCommon = await getTranslations("common");
   const { id } = await params;
 
   const [matchRow, playerRows, opponentRows, teammateRows, segmentRows, locale] =
@@ -111,13 +114,13 @@ export default async function MatchDetailPage({ params }: MatchDetailPageProps) 
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
           <Button variant="ghost" size="sm" asChild>
-            <Link href="/matches">← Back</Link>
+            <Link href="/matches">← {tCommon("back")}</Link>
           </Button>
-          <h1 className="text-2xl font-semibold">Match details</h1>
+          <h1 className="text-2xl font-semibold">{t("matchDetails")}</h1>
         </div>
         <form action={deleteMatchAction.bind(null, row.id)}>
           <Button type="submit" variant="destructive" size="sm">
-            Delete match
+            {t("deleteMatch")}
           </Button>
         </form>
       </div>

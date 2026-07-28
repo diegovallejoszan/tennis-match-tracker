@@ -1,7 +1,8 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect, useState, useTransition } from "react";
+import { useTranslations } from "next-intl";
+import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -25,6 +26,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { defaultPlayerFormValues } from "@/lib/players-validation";
+import { translateKnownError } from "@/lib/translate-error";
 
 const quickAddPlayerSchema = z.object({
   name: z
@@ -45,43 +47,29 @@ type QuickAddPlayerSheetProps = {
   onCreated: (player: { id: string; name: string }, role: QuickAddPlayerRole) => void;
 };
 
-const roleCopy: Record<
-  QuickAddPlayerRole,
-  { title: string; description: string; submit: string }
-> = {
-  partner: {
-    title: "Add new partner",
-    description: "Create a player and select them as your doubles partner.",
-    submit: "Create and select partner",
-  },
-  opponent: {
-    title: "Add new opponent",
-    description: "Create a player and add them to this match.",
-    submit: "Create and add opponent",
-  },
-};
-
 export function QuickAddPlayerSheet({
   open,
   onOpenChange,
   role,
   onCreated,
 }: QuickAddPlayerSheetProps) {
+  const t = useTranslations("quickAdd");
+  const tErrors = useTranslations("errors");
   const [serverError, setServerError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
-  const copy = roleCopy[role];
 
   const form = useForm<QuickAddPlayerValues>({
     resolver: zodResolver(quickAddPlayerSchema),
     defaultValues: { name: "" },
   });
 
-  useEffect(() => {
-    if (!open) {
+  function handleOpenChange(next: boolean) {
+    if (!next) {
       form.reset({ name: "" });
       setServerError(null);
     }
-  }, [open, form]);
+    onOpenChange(next);
+  }
 
   function onSubmit(values: QuickAddPlayerValues) {
     setServerError(null);
@@ -97,16 +85,22 @@ export function QuickAddPlayerSheet({
       }
 
       onCreated(result.player, role);
-      onOpenChange(false);
+      handleOpenChange(false);
     });
   }
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
+    <Sheet open={open} onOpenChange={handleOpenChange}>
       <SheetContent side="bottom" className="max-h-[85vh] overflow-y-auto">
         <SheetHeader>
-          <SheetTitle>{copy.title}</SheetTitle>
-          <SheetDescription>{copy.description}</SheetDescription>
+          <SheetTitle>
+            {role === "partner" ? t("partnerTitle") : t("opponentTitle")}
+          </SheetTitle>
+          <SheetDescription>
+            {role === "partner"
+              ? t("partnerDescription")
+              : t("opponentDescription")}
+          </SheetDescription>
         </SheetHeader>
 
         <Form {...form}>
@@ -119,7 +113,7 @@ export function QuickAddPlayerSheet({
                 className="rounded-md border border-destructive/50 bg-destructive/10 px-3 py-2 text-sm text-destructive"
                 role="alert"
               >
-                {serverError}
+                {translateKnownError(serverError, tErrors)}
               </p>
             ) : null}
 
@@ -128,10 +122,10 @@ export function QuickAddPlayerSheet({
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Player name</FormLabel>
+                  <FormLabel>{t("playerName")}</FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="e.g. Alex"
+                      placeholder={t("namePlaceholder")}
                       autoComplete="off"
                       autoFocus
                       {...field}
@@ -146,13 +140,17 @@ export function QuickAddPlayerSheet({
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => onOpenChange(false)}
+                onClick={() => handleOpenChange(false)}
                 disabled={isPending}
               >
-                Cancel
+                {t("cancel")}
               </Button>
               <Button type="submit" disabled={isPending}>
-                {isPending ? "Creating..." : copy.submit}
+                {isPending
+                  ? t("creating")
+                  : role === "partner"
+                    ? t("partnerSubmit")
+                    : t("opponentSubmit")}
               </Button>
             </SheetFooter>
           </form>

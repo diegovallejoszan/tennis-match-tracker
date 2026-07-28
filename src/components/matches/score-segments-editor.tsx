@@ -1,6 +1,7 @@
 "use client";
 
 import { Plus, Trash2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import type { Control } from "react-hook-form";
 import { useFieldArray, useFormState, useWatch } from "react-hook-form";
@@ -15,19 +16,26 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import {
-  defaultSegment,
-  formatScoreFromSegments,
-  segmentTypeLabel,
-} from "@/lib/match-score";
-import { SEGMENT_TYPES } from "@/lib/match-score/types";
+import { defaultSegment, formatScoreFromSegments } from "@/lib/match-score";
+import { SEGMENT_TYPES, type SegmentType } from "@/lib/match-score/types";
 import type { MatchFormValues } from "@/lib/matches-validation";
+import { translateKnownError, translateKnownErrors } from "@/lib/translate-error";
 
 type ScoreSegmentsEditorProps = {
   control: Control<MatchFormValues>;
   scoreRequired: boolean;
   showValidationErrors: boolean;
   liveConflictMessages: string[];
+};
+
+const SEGMENT_TYPE_KEYS: Record<
+  SegmentType,
+  "setTo6" | "longSetTo9" | "tieBreak" | "superTieBreak"
+> = {
+  set: "setTo6",
+  long_set: "longSetTo9",
+  tie_break: "tieBreak",
+  super_tie_break: "superTieBreak",
 };
 
 /**
@@ -81,6 +89,9 @@ export function ScoreSegmentsEditor({
   showValidationErrors,
   liveConflictMessages,
 }: ScoreSegmentsEditorProps) {
+  const t = useTranslations("scoreSegments");
+  const tErrors = useTranslations("errors");
+
   const { fields, append, remove } = useFieldArray({
     control,
     name: "scoreSegments",
@@ -99,29 +110,31 @@ export function ScoreSegmentsEditor({
       ? formatScoreFromSegments(watchedSegments)
       : null;
 
+  function segmentLabel(type: SegmentType) {
+    return t(SEGMENT_TYPE_KEYS[type]);
+  }
+
   return (
     <div className="space-y-4 rounded-lg border border-border p-4">
       {liveConflictMessages.length > 0 ? (
         <FormValidationAlert
-          title="Result doesn't match score"
-          messages={liveConflictMessages}
+          title={t("resultMismatchTitle")}
+          messages={translateKnownErrors(liveConflictMessages, tErrors)}
         />
       ) : null}
 
       {submitSegmentError ? (
         <FormValidationAlert
-          title="Score issue"
-          messages={[submitSegmentError]}
+          title={t("scoreIssueTitle")}
+          messages={[translateKnownError(submitSegmentError, tErrors)]}
         />
       ) : null}
 
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="text-sm font-medium">Structured score</p>
+          <p className="text-sm font-medium">{t("title")}</p>
           <p className="text-xs text-muted-foreground">
-            {scoreRequired
-              ? "Add each set or tie break in order. Required for completed matches."
-              : "Optional for matches not finished."}
+            {scoreRequired ? t("requiredHelp") : t("optionalHelp")}
           </p>
         </div>
         {preview ? (
@@ -132,9 +145,7 @@ export function ScoreSegmentsEditor({
       {fields.length === 0 ? (
         <div className="rounded-md border border-dashed border-border bg-muted/20 px-4 py-6 text-center">
           <p className="text-sm text-muted-foreground">
-            {scoreRequired
-              ? "Add your first set to record the score."
-              : "Add sets or tie breaks if you want to note the partial score."}
+            {scoreRequired ? t("emptyRequired") : t("emptyOptional")}
           </p>
           <Button
             type="button"
@@ -142,7 +153,7 @@ export function ScoreSegmentsEditor({
             onClick={() => append(defaultSegment("set"))}
           >
             <Plus className="mr-2 h-4 w-4" />
-            Add first set
+            {t("addFirstSet")}
           </Button>
         </div>
       ) : null}
@@ -159,7 +170,7 @@ export function ScoreSegmentsEditor({
                 name={`scoreSegments.${index}.segmentType`}
                 render={({ field: typeField }) => (
                   <FormItem className="flex-1">
-                    <FormLabel className="sr-only">Segment type</FormLabel>
+                    <FormLabel className="sr-only">{t("segmentType")}</FormLabel>
                     <FormControl>
                       <select
                         className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-1 text-base"
@@ -168,7 +179,7 @@ export function ScoreSegmentsEditor({
                       >
                         {SEGMENT_TYPES.map((type) => (
                           <option key={type} value={type}>
-                            {segmentTypeLabel(type)}
+                            {segmentLabel(type)}
                           </option>
                         ))}
                       </select>
@@ -183,7 +194,7 @@ export function ScoreSegmentsEditor({
                 variant="ghost"
                 size="icon"
                 className="h-11 w-11 shrink-0 text-muted-foreground"
-                aria-label={`Remove segment ${index + 1}`}
+                aria-label={t("removeSegment", { index: index + 1 })}
                 onClick={() => remove(index)}
               >
                 <Trash2 className="h-4 w-4" />
@@ -197,11 +208,11 @@ export function ScoreSegmentsEditor({
                 render={({ field: userField }) => (
                   <FormItem>
                     <FormLabel className="text-xs text-muted-foreground">
-                      You
+                      {t("you")}
                     </FormLabel>
                     <FormControl>
                       <ScoreNumberInput
-                        ariaLabel={`Your score for segment ${index + 1}`}
+                        ariaLabel={t("yourScoreAria", { index: index + 1 })}
                         value={userField.value}
                         onChange={userField.onChange}
                       />
@@ -217,11 +228,11 @@ export function ScoreSegmentsEditor({
                 render={({ field: oppField }) => (
                   <FormItem>
                     <FormLabel className="text-xs text-muted-foreground">
-                      Opponent
+                      {t("opponent")}
                     </FormLabel>
                     <FormControl>
                       <ScoreNumberInput
-                        ariaLabel={`Opponent score for segment ${index + 1}`}
+                        ariaLabel={t("opponentScoreAria", { index: index + 1 })}
                         value={oppField.value}
                         onChange={oppField.onChange}
                       />
@@ -246,7 +257,7 @@ export function ScoreSegmentsEditor({
               onClick={() => append(defaultSegment(type))}
             >
               <Plus className="mr-1 h-3 w-3" />
-              {segmentTypeLabel(type)}
+              {segmentLabel(type)}
             </Button>
           ))}
         </div>

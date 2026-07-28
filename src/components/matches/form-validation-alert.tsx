@@ -2,13 +2,14 @@ import { AlertCircle } from "lucide-react";
 
 type FormValidationAlertProps = {
   id?: string;
-  title?: string;
+  /** Callers should pass a translated title (e.g. from matches.form / scoreSegments). */
+  title: string;
   messages: string[];
 };
 
 export function FormValidationAlert({
   id,
-  title = "Please fix the following before saving",
+  title,
   messages,
 }: FormValidationAlertProps) {
   if (messages.length === 0) return null;

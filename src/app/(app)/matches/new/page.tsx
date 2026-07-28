@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 
 import { asc, eq } from "drizzle-orm";
 
@@ -14,6 +15,9 @@ import { getUserLocale } from "@/lib/user-locale-db";
 export default async function NewMatchPage() {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
+
+  const t = await getTranslations("matches");
+  const tCommon = await getTranslations("common");
 
   const [playerRows, locale] = await Promise.all([
     db
@@ -30,9 +34,9 @@ export default async function NewMatchPage() {
     <div className="p-4 md:p-6">
       <div className="mb-6 flex items-center gap-3">
         <Button variant="ghost" size="sm" asChild>
-          <Link href="/matches">← Back</Link>
+          <Link href="/matches">← {tCommon("back")}</Link>
         </Button>
-        <h1 className="text-2xl font-semibold">New match</h1>
+        <h1 className="text-2xl font-semibold">{t("newMatchTitle")}</h1>
       </div>
       <MatchForm
         mode="create"

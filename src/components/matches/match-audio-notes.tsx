@@ -1,6 +1,7 @@
 "use client";
 
 import { Mic, Square } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useCallback, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -21,6 +22,13 @@ type BrowserSpeechRecognition = {
   onerror: (() => void) | null;
   onend: (() => void) | null;
 };
+
+type StatusKey =
+  | "listening"
+  | "added"
+  | "unsupported"
+  | "failed"
+  | "startFailed";
 
 /** Total listening window — roughly double typical browser silence cutoff. */
 const LISTENING_DURATION_MS = 120_000;
@@ -46,8 +54,9 @@ function appendTranscript(existing: string, addition: string): string {
 }
 
 export function MatchAudioNotes({ locale, onTranscript }: MatchAudioNotesProps) {
+  const t = useTranslations("audioNotes");
   const [recording, setRecording] = useState(false);
-  const [status, setStatus] = useState<string | null>(null);
+  const [statusKey, setStatusKey] = useState<StatusKey | null>(null);
   const recognitionRef = useRef<BrowserSpeechRecognition | null>(null);
   const finalTextRef = useRef("");
   const sessionTextRef = useRef("");
@@ -80,7 +89,7 @@ export function MatchAudioNotes({ locale, onTranscript }: MatchAudioNotesProps) 
     const trimmed = finalTextRef.current.trim();
     if (trimmed) {
       onTranscript(trimmed);
-      setStatus("Transcription added to notes.");
+      setStatusKey("added");
     }
   }, [clearRestartTimer, onTranscript]);
 
@@ -94,9 +103,7 @@ export function MatchAudioNotes({ locale, onTranscript }: MatchAudioNotesProps) 
     const SpeechRecognitionCtor = getSpeechRecognitionCtor();
 
     if (!SpeechRecognitionCtor) {
-      setStatus(
-        "Speech recognition is not supported in this browser. Type your notes instead.",
-      );
+      setStatusKey("unsupported");
       return;
     }
 
@@ -132,7 +139,7 @@ export function MatchAudioNotes({ locale, onTranscript }: MatchAudioNotesProps) 
         userStoppedRef.current = true;
         clearRestartTimer();
         commitSessionText();
-        setStatus("Could not transcribe audio. Try again or type your notes.");
+        setStatusKey("failed");
         finishRecording();
       };
 
@@ -158,14 +165,14 @@ export function MatchAudioNotes({ locale, onTranscript }: MatchAudioNotesProps) 
         recognition.start();
       } catch {
         userStoppedRef.current = true;
-        setStatus("Could not start speech recognition. Try again.");
+        setStatusKey("startFailed");
         finishRecording();
       }
     };
 
     startSession();
     setRecording(true);
-    setStatus("Listening… speak in your app language, then stop.");
+    setStatusKey("listening");
   }, [
     locale,
     clearRestartTimer,
@@ -179,21 +186,21 @@ export function MatchAudioNotes({ locale, onTranscript }: MatchAudioNotesProps) 
         {recording ? (
           <Button type="button" variant="destructive" size="sm" onClick={stopRecording}>
             <Square className="mr-1 h-3 w-3" />
-            Stop recording
+            {t("stop")}
           </Button>
         ) : (
           <Button type="button" variant="outline" size="sm" onClick={startRecording}>
             <Mic className="mr-1 h-3 w-3" />
-            Dictate notes
+            {t("dictate")}
           </Button>
         )}
         <span className="text-xs text-muted-foreground">
-          Uses browser speech-to-text ({speechRecognitionLang(locale)}).
+          {t("usesBrowser", { lang: speechRecognitionLang(locale) })}
         </span>
       </div>
-      {status ? (
+      {statusKey ? (
         <p className="text-xs text-muted-foreground" role="status">
-          {status}
+          {t(statusKey)}
         </p>
       ) : null}
     </div>

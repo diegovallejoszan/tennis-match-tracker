@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 
 import { auth } from "@/lib/auth";
 import { deletePlayerAction } from "@/app/actions/players";
@@ -20,6 +21,8 @@ export default async function EditPlayerPage({ params }: EditPlayerPageProps) {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
 
+  const t = await getTranslations("players");
+  const tCommon = await getTranslations("common");
   const { id } = await params;
 
   const [row] = await db
@@ -46,13 +49,13 @@ export default async function EditPlayerPage({ params }: EditPlayerPageProps) {
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
           <Button variant="ghost" size="sm" asChild>
-            <Link href="/players">← Back</Link>
+            <Link href="/players">← {tCommon("back")}</Link>
           </Button>
-          <h1 className="text-2xl font-semibold">Edit player</h1>
+          <h1 className="text-2xl font-semibold">{t("editPlayerTitle")}</h1>
         </div>
         <form action={deletePlayerAction.bind(null, row.id)} className="sm:ml-auto">
           <Button type="submit" variant="destructive" size="sm">
-            Delete player
+            {t("deletePlayer")}
           </Button>
         </form>
       </div>

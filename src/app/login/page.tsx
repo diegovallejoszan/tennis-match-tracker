@@ -1,10 +1,13 @@
-import { auth, signIn } from "@/lib/auth";
 import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
+
+import { auth, signIn } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default async function LoginPage() {
   const session = await auth();
+  const t = await getTranslations("auth.login");
 
   if (session?.user) {
     redirect("/auth/after-login");
@@ -14,9 +17,9 @@ export default async function LoginPage() {
     <div className="flex min-h-[60vh] flex-col items-center justify-center p-4">
       <Card className="w-full max-w-sm">
         <CardHeader>
-          <CardTitle>Sign in</CardTitle>
+          <CardTitle>{t("title")}</CardTitle>
           <p className="text-sm text-muted-foreground">
-            Sign in with your Google account to use Tennis Match Tracker.
+            {t("description")}
           </p>
         </CardHeader>
         <CardContent>
@@ -27,7 +30,7 @@ export default async function LoginPage() {
             }}
           >
             <Button type="submit" className="w-full" size="lg">
-              Sign in with Google
+              {t("button")}
             </Button>
           </form>
         </CardContent>

@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 
-import { getAvailableDayAbbrevList } from "@/lib/players-validation";
+import { getAvailableDayKeys } from "@/lib/players-validation";
 
 type PlayersPageProps = {
   searchParams: Promise<{ q?: string }>;
@@ -93,7 +93,7 @@ export default async function PlayersPage({ searchParams }: PlayersPageProps) {
       ) : (
         <ul className="grid min-w-0 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {rows.map((p) => {
-            const availableDays = getAvailableDayAbbrevList(
+            const availableDays = getAvailableDayKeys(
               p.availability as Record<string, unknown> | null,
             );
 
@@ -142,7 +142,7 @@ export default async function PlayersPage({ searchParams }: PlayersPageProps) {
                                 key={day}
                                 className="rounded-md bg-muted px-1.5 py-0.5 text-xs font-medium text-foreground"
                               >
-                                {day}
+                                {t(`form.weekdays.${day}`)}
                               </span>
                             ))}
                           </div>

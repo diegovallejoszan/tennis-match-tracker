@@ -1,7 +1,9 @@
-import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import { db, users } from "@/db";
+import { getTranslations } from "next-intl/server";
 import { eq } from "drizzle-orm";
+
+import { auth } from "@/lib/auth";
+import { db, users } from "@/db";
 
 import { ProfileForm } from "@/components/account/profile-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,6 +11,8 @@ import { dbColumnsToProfileFormDefaults } from "@/lib/user-profile-validation";
 
 export default async function CreateAccountPage() {
   const session = await auth();
+  const t = await getTranslations("auth.onboarding");
+  const tCommon = await getTranslations("common");
 
   if (!session?.user?.id) {
     redirect("/login");
@@ -43,17 +47,15 @@ export default async function CreateAccountPage() {
     <div className="flex min-h-[60vh] flex-col items-center justify-center p-4">
       <Card className="w-full max-w-xl">
         <CardHeader>
-          <CardTitle>Create your account</CardTitle>
+          <CardTitle>{t("title")}</CardTitle>
           <p className="text-sm text-muted-foreground">
-            You’re signed in with Google. Complete your account to start using
-            Tennis Match Tracker. Profile details below are optional—you can
-            update them anytime under My Account.
+            {t("description")}
           </p>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="rounded-lg border border-border bg-muted/50 p-3 text-sm">
             <p className="font-medium text-foreground">
-              {session.user.name ?? "User"}
+              {session.user.name ?? tCommon("user")}
             </p>
             <p className="text-muted-foreground">{session.user.email ?? ""}</p>
           </div>

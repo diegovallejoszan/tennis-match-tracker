@@ -3,6 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 
@@ -28,19 +29,9 @@ import {
   type PlayerFormValues,
   playerFormSchema,
   TIME_SLOTS,
-  timeSlotLabels,
   WEEKDAYS,
 } from "@/lib/players-validation";
-
-const weekdayLabels: Record<(typeof WEEKDAYS)[number], string> = {
-  mon: "Mon",
-  tue: "Tue",
-  wed: "Wed",
-  thu: "Thu",
-  fri: "Fri",
-  sat: "Sat",
-  sun: "Sun",
-};
+import { translateKnownError } from "@/lib/translate-error";
 
 type PlayerFormProps = {
   mode: "create" | "edit";
@@ -50,6 +41,9 @@ type PlayerFormProps = {
 
 export function PlayerForm({ mode, playerId, defaultValues }: PlayerFormProps) {
   const router = useRouter();
+  const t = useTranslations("players.form");
+  const tCommon = useTranslations("common");
+  const tErrors = useTranslations("errors");
   const [serverError, setServerError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
@@ -85,7 +79,7 @@ export function PlayerForm({ mode, playerId, defaultValues }: PlayerFormProps) {
             className="rounded-md border border-destructive/50 bg-destructive/10 px-3 py-2 text-sm text-destructive"
             role="alert"
           >
-            {serverError}
+            {translateKnownError(serverError, tErrors)}
           </p>
         ) : null}
 
@@ -94,9 +88,9 @@ export function PlayerForm({ mode, playerId, defaultValues }: PlayerFormProps) {
           name="name"
           render={({ field }) => (
             <FormItem className="max-w-lg">
-              <FormLabel>Name</FormLabel>
+              <FormLabel>{t("name")}</FormLabel>
               <FormControl>
-                <Input placeholder="Opponent or partner name" {...field} />
+                <Input placeholder={t("namePlaceholder")} {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -108,9 +102,9 @@ export function PlayerForm({ mode, playerId, defaultValues }: PlayerFormProps) {
           name="phone"
           render={({ field }) => (
             <FormItem className="max-w-lg">
-              <FormLabel>Phone</FormLabel>
+              <FormLabel>{t("phone")}</FormLabel>
               <FormControl>
-                <Input type="tel" placeholder="Optional" {...field} />
+                <Input type="tel" placeholder={t("phonePlaceholder")} {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -119,10 +113,9 @@ export function PlayerForm({ mode, playerId, defaultValues }: PlayerFormProps) {
 
         <div className="space-y-3">
           <div>
-            <Label className="text-base">Availability</Label>
+            <Label className="text-base">{t("availability")}</Label>
             <p className="text-[0.8rem] text-muted-foreground">
-              Days and times they can typically play (optional). Check each cell
-              for when they are free.
+              {t("availabilityHelp")}
             </p>
           </div>
           <div className="overflow-x-auto rounded-md border border-border">
@@ -133,7 +126,7 @@ export function PlayerForm({ mode, playerId, defaultValues }: PlayerFormProps) {
                     scope="col"
                     className="sticky left-0 z-10 bg-muted/40 px-2 py-2 text-left font-medium"
                   >
-                    Day
+                    {t("day")}
                   </th>
                   {TIME_SLOTS.map((slot) => (
                     <th
@@ -141,7 +134,7 @@ export function PlayerForm({ mode, playerId, defaultValues }: PlayerFormProps) {
                       scope="col"
                       className="px-1 py-2 text-center font-normal leading-tight"
                     >
-                      {timeSlotLabels[slot]}
+                      {t(`timeSlots.${slot}`)}
                     </th>
                   ))}
                 </tr>
@@ -153,7 +146,7 @@ export function PlayerForm({ mode, playerId, defaultValues }: PlayerFormProps) {
                       scope="row"
                       className="sticky left-0 z-10 bg-background px-2 py-2 text-left font-medium"
                     >
-                      {weekdayLabels[day]}
+                      {t(`weekdays.${day}`)}
                     </th>
                     {TIME_SLOTS.map((slot) => (
                       <td key={slot} className="px-1 py-1 text-center">
@@ -166,7 +159,7 @@ export function PlayerForm({ mode, playerId, defaultValues }: PlayerFormProps) {
                                 <Checkbox
                                   checked={field.value}
                                   onCheckedChange={field.onChange}
-                                  aria-label={`${weekdayLabels[day]} ${timeSlotLabels[slot]}`}
+                                  aria-label={`${t(`weekdays.${day}`)} ${t(`timeSlots.${slot}`)}`}
                                 />
                               </FormControl>
                             </FormItem>
@@ -186,9 +179,9 @@ export function PlayerForm({ mode, playerId, defaultValues }: PlayerFormProps) {
           name="playStyle"
           render={({ field }) => (
             <FormItem className="max-w-lg">
-              <FormLabel>Play style</FormLabel>
+              <FormLabel>{t("playStyle")}</FormLabel>
               <FormControl>
-                <Input placeholder="e.g. aggressive baseliner" {...field} />
+                <Input placeholder={t("playStylePlaceholder")} {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -200,10 +193,10 @@ export function PlayerForm({ mode, playerId, defaultValues }: PlayerFormProps) {
           name="strengths"
           render={({ field }) => (
             <FormItem className="max-w-lg">
-              <FormLabel>Strengths</FormLabel>
+              <FormLabel>{t("strengths")}</FormLabel>
               <FormControl>
                 <Textarea
-                  placeholder="What they do well"
+                  placeholder={t("strengthsPlaceholder")}
                   className="min-h-[80px] resize-y"
                   {...field}
                 />
@@ -218,10 +211,10 @@ export function PlayerForm({ mode, playerId, defaultValues }: PlayerFormProps) {
           name="weaknesses"
           render={({ field }) => (
             <FormItem className="max-w-lg">
-              <FormLabel>Weaknesses</FormLabel>
+              <FormLabel>{t("weaknesses")}</FormLabel>
               <FormControl>
                 <Textarea
-                  placeholder="Areas to exploit or watch for"
+                  placeholder={t("weaknessesPlaceholder")}
                   className="min-h-[80px] resize-y"
                   {...field}
                 />
@@ -236,10 +229,10 @@ export function PlayerForm({ mode, playerId, defaultValues }: PlayerFormProps) {
           name="notes"
           render={({ field }) => (
             <FormItem className="max-w-lg">
-              <FormLabel>Notes</FormLabel>
+              <FormLabel>{t("notes")}</FormLabel>
               <FormControl>
                 <Textarea
-                  placeholder="Anything else to remember"
+                  placeholder={t("notesPlaceholder")}
                   className="min-h-[80px] resize-y"
                   {...field}
                 />
@@ -252,13 +245,13 @@ export function PlayerForm({ mode, playerId, defaultValues }: PlayerFormProps) {
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
           <Button type="submit" disabled={isPending}>
             {isPending
-              ? "Saving…"
+              ? tCommon("saving")
               : mode === "create"
-                ? "Add player"
-                : "Save changes"}
+                ? t("addPlayer")
+                : t("saveChanges")}
           </Button>
           <Button type="button" variant="outline" asChild>
-            <Link href="/players">Cancel</Link>
+            <Link href="/players">{tCommon("cancel")}</Link>
           </Button>
         </div>
       </form>
