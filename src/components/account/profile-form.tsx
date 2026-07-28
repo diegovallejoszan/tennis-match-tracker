@@ -2,6 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 
@@ -33,6 +34,7 @@ type ProfileFormProps = {
 
 export function ProfileForm({ variant, defaultValues }: ProfileFormProps) {
   const router = useRouter();
+  const t = useTranslations("account");
   const [serverError, setServerError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -84,7 +86,7 @@ export function ProfileForm({ variant, defaultValues }: ProfileFormProps) {
             className="rounded-md border border-border bg-muted/50 px-3 py-2 text-sm text-foreground"
             role="status"
           >
-            Profile saved.
+            {t("saved")}
           </p>
         ) : null}
 
@@ -93,17 +95,14 @@ export function ProfileForm({ variant, defaultValues }: ProfileFormProps) {
           name="playStyle"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Your play style</FormLabel>
+              <FormLabel>{t("playStyle")}</FormLabel>
               <FormControl>
                 <Input
-                  placeholder="e.g. aggressive baseliner (optional)"
+                  placeholder={t("playStylePlaceholder")}
                   {...field}
                 />
               </FormControl>
-              <FormDescription>
-                How you usually play—optional; you can add or change this
-                anytime.
-              </FormDescription>
+              <FormDescription>{t("playStyleHelp")}</FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -114,10 +113,10 @@ export function ProfileForm({ variant, defaultValues }: ProfileFormProps) {
           name="strengths"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Your strengths</FormLabel>
+              <FormLabel>{t("strengths")}</FormLabel>
               <FormControl>
                 <Textarea
-                  placeholder="What you do well on court (optional)"
+                  placeholder={t("strengthsPlaceholder")}
                   className="min-h-[88px] resize-y"
                   {...field}
                 />
@@ -132,10 +131,10 @@ export function ProfileForm({ variant, defaultValues }: ProfileFormProps) {
           name="weaknesses"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Your weaknesses</FormLabel>
+              <FormLabel>{t("weaknesses")}</FormLabel>
               <FormControl>
                 <Textarea
-                  placeholder="Areas you’re working on (optional)"
+                  placeholder={t("weaknessesPlaceholder")}
                   className="min-h-[88px] resize-y"
                   {...field}
                 />
@@ -147,10 +146,10 @@ export function ProfileForm({ variant, defaultValues }: ProfileFormProps) {
 
         <Button type="submit" className="w-full sm:w-auto" disabled={isPending}>
           {isPending
-            ? "Saving…"
+            ? t("saving")
             : variant === "onboarding"
-              ? "Create my account"
-              : "Save changes"}
+              ? t("createAccount")
+              : t("save")}
         </Button>
       </form>
     </Form>

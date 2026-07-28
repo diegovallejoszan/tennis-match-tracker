@@ -26,7 +26,15 @@
     "all": "All",
     "singles": "Singles",
     "doubles": "Doubles",
-    "practice": "Practice"
+    "practice": "Practice",
+    "from": "From",
+    "to": "To",
+    "applyFilters": "Apply filters",
+    "clear": "Clear",
+    "search": "Search",
+    "edit": "Edit",
+    "open": "Open",
+    "user": "User"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -74,7 +82,7 @@
         "loss": "Loss",
         "notFinished": "Not finished",
         "vs": "vs",
-        "hint": "Hover a marker for match details"
+        "hint": "Tap or hover a marker for match details"
       },
       "byType": {
         "title": "Win / loss by match type",
@@ -91,5 +99,55 @@
       "title": "Recent matches",
       "empty": "No matches in this range."
     }
+  },
+  "players": {
+    "title": "Players",
+    "addPlayer": "Add player",
+    "searchLabel": "Search players by name",
+    "searchPlaceholder": "Search by name…",
+    "search": "Search",
+    "emptyTitle": "No players yet",
+    "emptySearch": "No names match your search. Try a different term or clear the filter.",
+    "emptyDefault": "Add opponents and partners you play with to track them here.",
+    "addFirst": "Add your first player",
+    "editPlayer": "Edit player"
+  },
+  "matches": {
+    "title": "Matches",
+    "newMatch": "New match",
+    "type": "Type",
+    "playerFilter": "Player (opponent or partner)",
+    "emptyTitle": "No matches yet",
+    "emptyDescription": "Add your first match to track score, opponents, and notes.",
+    "createFirst": "Create first match",
+    "columns": {
+      "date": "Date",
+      "type": "Type",
+      "result": "Result",
+      "score": "Score",
+      "partner": "Partner",
+      "opponents": "Opponents",
+      "notes": "Notes",
+      "actions": "Actions"
+    }
+  },
+  "account": {
+    "title": "My Account",
+    "languageTitle": "Language",
+    "languageDescription": "Used for the app interface, speech-to-text on match notes, and AI match preparation advice.",
+    "profileTitle": "Profile",
+    "profileDescription": "Your play style, strengths, and weaknesses are sent to the AI when you request match preparation advice. All fields are optional.",
+    "googleIdentityHint": "Name and email come from Google. To change them, update your Google account.",
+    "playStyle": "Your play style",
+    "playStylePlaceholder": "e.g. aggressive baseliner (optional)",
+    "playStyleHelp": "How you usually play—optional; you can add or change this anytime.",
+    "strengths": "Your strengths",
+    "strengthsPlaceholder": "What you do well on court (optional)",
+    "weaknesses": "Your weaknesses",
+    "weaknessesPlaceholder": "Areas to improve (optional)",
+    "save": "Save changes",
+    "saving": "Saving…",
+    "createAccount": "Create my account",
+    "saved": "Profile saved."
   }
 }

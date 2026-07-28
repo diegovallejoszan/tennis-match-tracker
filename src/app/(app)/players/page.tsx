@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 
 import { CalendarDays, Phone, ShieldAlert, Swords } from "lucide-react";
 
@@ -29,6 +30,7 @@ export default async function PlayersPage({ searchParams }: PlayersPageProps) {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
 
+  const t = await getTranslations("players");
   const { q } = await searchParams;
   const query = typeof q === "string" ? q : "";
   const safeTerm = query.trim().replace(/[%_\\]/g, "");
@@ -47,9 +49,9 @@ export default async function PlayersPage({ searchParams }: PlayersPageProps) {
   return (
     <div className="p-4 md:p-6">
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <h1 className="text-2xl font-semibold">Players</h1>
+        <h1 className="text-2xl font-semibold">{t("title")}</h1>
         <Button asChild>
-          <Link href="/players/new">Add player</Link>
+          <Link href="/players/new">{t("addPlayer")}</Link>
         </Button>
       </div>
 
@@ -59,34 +61,32 @@ export default async function PlayersPage({ searchParams }: PlayersPageProps) {
         role="search"
       >
         <label htmlFor="player-search" className="sr-only">
-          Search players by name
+          {t("searchLabel")}
         </label>
         <Input
           id="player-search"
           name="q"
           type="search"
-          placeholder="Search by name…"
+          placeholder={t("searchPlaceholder")}
           defaultValue={query}
           className="flex-1"
         />
         <Button type="submit" variant="secondary">
-          Search
+          {t("search")}
         </Button>
       </form>
 
       {rows.length === 0 ? (
         <Card>
           <CardHeader>
-            <CardTitle>No players yet</CardTitle>
+            <CardTitle>{t("emptyTitle")}</CardTitle>
             <CardDescription>
-              {safeTerm
-                ? "No names match your search. Try a different term or clear the filter."
-                : "Add opponents and partners you play with to track them here."}
+              {safeTerm ? t("emptySearch") : t("emptyDefault")}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <Button asChild>
-              <Link href="/players/new">Add your first player</Link>
+              <Link href="/players/new">{t("addFirst")}</Link>
             </Button>
           </CardContent>
         </Card>
@@ -176,7 +176,7 @@ export default async function PlayersPage({ searchParams }: PlayersPageProps) {
 
                   <CardFooter className="pt-0">
                     <Button variant="outline" size="sm" asChild className="w-full">
-                      <Link href={`/players/${p.id}/edit`}>Edit player</Link>
+                      <Link href={`/players/${p.id}/edit`}>{t("editPlayer")}</Link>
                     </Button>
                   </CardFooter>
                 </Card>

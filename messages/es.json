@@ -26,7 +26,15 @@
     "all": "Todos",
     "singles": "Individual",
     "doubles": "Dobles",
-    "practice": "Entrenamiento"
+    "practice": "Entrenamiento",
+    "from": "Desde",
+    "to": "Hasta",
+    "applyFilters": "Aplicar filtros",
+    "clear": "Limpiar",
+    "search": "Buscar",
+    "edit": "Editar",
+    "open": "Abrir",
+    "user": "Usuario"
   },
   "dashboard": {
     "title": "Panel",
@@ -74,7 +82,7 @@
         "loss": "Derrota",
         "notFinished": "Sin terminar",
         "vs": "vs",
-        "hint": "Pasa el cursor sobre un marcador para ver detalles"
+        "hint": "Toca o pasa el cursor sobre un marcador para ver detalles"
       },
       "byType": {
         "title": "Victorias / derrotas por tipo",
@@ -91,5 +99,55 @@
       "title": "Partidos recientes",
       "empty": "No hay partidos en este rango."
     }
+  },
+  "players": {
+    "title": "Jugadores",
+    "addPlayer": "Añadir jugador",
+    "searchLabel": "Buscar jugadores por nombre",
+    "searchPlaceholder": "Buscar por nombre…",
+    "search": "Buscar",
+    "emptyTitle": "Aún no hay jugadores",
+    "emptySearch": "Ningún nombre coincide con tu búsqueda. Prueba otro término o limpia el filtro.",
+    "emptyDefault": "Añade rivales y compañeros con los que juegas para llevarlos aquí.",
+    "addFirst": "Añade tu primer jugador",
+    "editPlayer": "Editar jugador"
+  },
+  "matches": {
+    "title": "Partidos",
+    "newMatch": "Nuevo partido",
+    "type": "Tipo",
+    "playerFilter": "Jugador (rival o compañero)",
+    "emptyTitle": "Aún no hay partidos",
+    "emptyDescription": "Añade tu primer partido para registrar marcador, rivales y notas.",
+    "createFirst": "Crear primer partido",
+    "columns": {
+      "date": "Fecha",
+      "type": "Tipo",
+      "result": "Resultado",
+      "score": "Marcador",
+      "partner": "Compañero",
+      "opponents": "Rivales",
+      "notes": "Notas",
+      "actions": "Acciones"
+    }
+  },
+  "account": {
+    "title": "Mi cuenta",
+    "languageTitle": "Idioma",
+    "languageDescription": "Se usa para la interfaz de la app, el dictado de notas de partidos y las recomendaciones de preparación con IA.",
+    "profileTitle": "Perfil",
+    "profileDescription": "Tu estilo de juego, fortalezas y debilidades se envían a la IA cuando pides consejos de preparación. Todos los campos son opcionales.",
+    "googleIdentityHint": "El nombre y el correo vienen de Google. Para cambiarlos, actualiza tu cuenta de Google.",
+    "playStyle": "Tu estilo de juego",
+    "playStylePlaceholder": "p. ej. baseliner agresivo (opcional)",
+    "playStyleHelp": "Cómo sueles jugar — opcional; puedes añadirlo o cambiarlo cuando quieras.",
+    "strengths": "Tus fortalezas",
+    "strengthsPlaceholder": "Lo que se te da bien en la pista (opcional)",
+    "weaknesses": "Tus debilidades",
+    "weaknessesPlaceholder": "Áreas a mejorar (opcional)",
+    "save": "Guardar cambios",
+    "saving": "Guardando…",
+    "createAccount": "Crear mi cuenta",
+    "saved": "Perfil guardado."
   }
 }

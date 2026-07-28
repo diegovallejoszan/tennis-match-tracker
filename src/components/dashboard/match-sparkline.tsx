@@ -12,6 +12,8 @@ type MatchSparklineProps = {
 const WHISKER_LEN = 26;
 const CHART_HEIGHT = 100;
 const MIN_POINT_GAP = 10;
+/** Invisible hit area width so thin whiskers are easy to tap on mobile. */
+const HIT_WIDTH = 28;
 
 function formatPointDate(date: string, time: string | null): string {
   const [y, mo, d] = date.split("-");
@@ -22,7 +24,7 @@ function formatPointDate(date: string, time: string | null): string {
 
 export function MatchSparkline({ points }: MatchSparklineProps) {
   const t = useTranslations("dashboard.charts.sparkline");
-  const [hovered, setHovered] = useState<number | null>(null);
+  const [activeIndex, setActiveIndex] = useState<number | null>(null);
 
   const layout = useMemo(() => {
     const count = points.length;
@@ -40,14 +42,24 @@ export function MatchSparkline({ points }: MatchSparklineProps) {
     );
   }
 
-  const active = hovered !== null ? points[hovered] : null;
+  const active = activeIndex !== null ? points[activeIndex] : null;
+
+  function selectPoint(index: number) {
+    setActiveIndex((prev) => (prev === index ? null : index));
+  }
+
+  function outcomeLabel(outcome: SparklinePoint["outcome"]): string {
+    if (outcome === "win") return t("win");
+    if (outcome === "loss") return t("loss");
+    return t("notFinished");
+  }
 
   return (
     <div className="space-y-2">
       <div className="relative overflow-x-auto">
         <svg
           viewBox={`0 0 ${layout.width} ${CHART_HEIGHT}`}
-          className="min-w-full text-foreground"
+          className="min-w-full touch-manipulation text-foreground"
           role="img"
           aria-label={t("ariaLabel")}
         >
@@ -62,18 +74,35 @@ export function MatchSparkline({ points }: MatchSparklineProps) {
           />
           {points.map((point, index) => {
             const x = layout.gap * (index + 1);
-            const isHovered = hovered === index;
-            const strokeWidth = isHovered ? 2 : 1.25;
+            const isActive = activeIndex === index;
+            const strokeWidth = isActive ? 2.25 : 1.25;
+
+            const hitRect = (
+              <rect
+                x={x - HIT_WIDTH / 2}
+                y={0}
+                width={HIT_WIDTH}
+                height={CHART_HEIGHT}
+                fill="transparent"
+                className="cursor-pointer"
+                onClick={() => selectPoint(index)}
+                onMouseEnter={() => setActiveIndex(index)}
+                role="button"
+                tabIndex={0}
+                aria-label={`${formatPointDate(point.date, point.time)} · ${outcomeLabel(point.outcome)}`}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    selectPoint(index);
+                  }
+                }}
+              />
+            );
 
             if (point.outcome === "win") {
               const yTop = layout.baseline - WHISKER_LEN;
               return (
-                <g
-                  key={point.id}
-                  onMouseEnter={() => setHovered(index)}
-                  onMouseLeave={() => setHovered(null)}
-                  className="cursor-default"
-                >
+                <g key={point.id}>
                   <line
                     x1={x}
                     y1={layout.baseline}
@@ -81,6 +110,7 @@ export function MatchSparkline({ points }: MatchSparklineProps) {
                     y2={yTop}
                     stroke="#16a34a"
                     strokeWidth={strokeWidth}
+                    pointerEvents="none"
                   />
                   <line
                     x1={x - 4}
@@ -89,7 +119,9 @@ export function MatchSparkline({ points }: MatchSparklineProps) {
                     y2={yTop}
                     stroke="#16a34a"
                     strokeWidth={strokeWidth}
+                    pointerEvents="none"
                   />
+                  {hitRect}
                 </g>
               );
             }
@@ -97,12 +129,7 @@ export function MatchSparkline({ points }: MatchSparklineProps) {
             if (point.outcome === "loss") {
               const yBottom = layout.baseline + WHISKER_LEN;
               return (
-                <g
-                  key={point.id}
-                  onMouseEnter={() => setHovered(index)}
-                  onMouseLeave={() => setHovered(null)}
-                  className="cursor-default"
-                >
+                <g key={point.id}>
                   <line
                     x1={x}
                     y1={layout.baseline}
@@ -110,6 +137,7 @@ export function MatchSparkline({ points }: MatchSparklineProps) {
                     y2={yBottom}
                     stroke="#dc2626"
                     strokeWidth={strokeWidth}
+                    pointerEvents="none"
                   />
                   <line
                     x1={x - 4}
@@ -118,49 +146,58 @@ export function MatchSparkline({ points }: MatchSparklineProps) {
                     y2={yBottom}
                     stroke="#dc2626"
                     strokeWidth={strokeWidth}
+                    pointerEvents="none"
                   />
+                  {hitRect}
                 </g>
               );
             }
 
             return (
-              <circle
-                key={point.id}
-                cx={x}
-                cy={layout.baseline}
-                r={isHovered ? 4 : 3}
-                fill="currentColor"
-                opacity={0.45}
-                onMouseEnter={() => setHovered(index)}
-                onMouseLeave={() => setHovered(null)}
-                className="cursor-default"
-              />
+              <g key={point.id}>
+                <circle
+                  cx={x}
+                  cy={layout.baseline}
+                  r={isActive ? 4 : 3}
+                  fill="currentColor"
+                  opacity={0.45}
+                  pointerEvents="none"
+                />
+                {hitRect}
+              </g>
             );
           })}
         </svg>
       </div>
 
-      <div className="flex min-h-[1.25rem] items-center justify-between text-xs text-muted-foreground">
-        <span>
-          {active
-            ? `${formatPointDate(active.date, active.time)} · ${
-                active.outcome === "win"
-                  ? t("win")
-                  : active.outcome === "loss"
-                    ? t("loss")
-                    : t("notFinished")
-              }${
-                active.opponents.length > 0
-                  ? ` · ${t("vs")} ${active.opponents.join(", ")}`
-                  : ""
-              }`
-            : t("hint")}
-        </span>
-        <span className="flex shrink-0 gap-3 tabular-nums">
-          <span className="text-emerald-600">↑ {t("win")}</span>
-          <span className="text-red-600">↓ {t("loss")}</span>
-          <span>· {t("notFinished")}</span>
-        </span>
+      <div
+        className={`rounded-md border px-3 py-2 text-sm ${
+          active
+            ? "border-border bg-muted/40 text-foreground"
+            : "border-transparent text-muted-foreground"
+        }`}
+        aria-live="polite"
+      >
+        {active ? (
+          <p>
+            <span className="font-medium">
+              {formatPointDate(active.date, active.time)}
+            </span>
+            {" · "}
+            {outcomeLabel(active.outcome)}
+            {active.opponents.length > 0
+              ? ` · ${t("vs")} ${active.opponents.join(", ")}`
+              : ""}
+          </p>
+        ) : (
+          <p className="text-xs">{t("hint")}</p>
+        )}
+      </div>
+
+      <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
+        <span className="text-emerald-600">↑ {t("win")}</span>
+        <span className="text-red-600">↓ {t("loss")}</span>
+        <span>· {t("notFinished")}</span>
       </div>
     </div>
   );

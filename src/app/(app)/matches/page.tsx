@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 
 import { eq } from "drizzle-orm";
 
@@ -9,7 +10,6 @@ import { Input } from "@/components/ui/input";
 import { db, players } from "@/db";
 import { auth } from "@/lib/auth";
 import { fetchGroupedMatchesForUser } from "@/lib/grouped-matches";
-import { MATCH_TYPE_LABELS } from "@/lib/matches-validation";
 
 type MatchesPageProps = {
   searchParams: Promise<{
@@ -20,12 +20,12 @@ type MatchesPageProps = {
   }>;
 };
 
-const typeLabels: Record<string, string> = { ...MATCH_TYPE_LABELS };
-
 export default async function MatchesPage({ searchParams }: MatchesPageProps) {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
 
+  const t = await getTranslations("matches");
+  const tCommon = await getTranslations("common");
   const { type = "", from = "", to = "", opponentId = "" } = await searchParams;
 
   const [playerRows, groupedMatches] = await Promise.all([
@@ -49,12 +49,18 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
     return true;
   });
 
+  const typeLabels: Record<string, string> = {
+    practice: tCommon("practice"),
+    single: tCommon("singles"),
+    doubles: tCommon("doubles"),
+  };
+
   return (
     <div className="p-4 md:p-6">
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <h1 className="text-2xl font-semibold">Matches</h1>
+        <h1 className="text-2xl font-semibold">{t("title")}</h1>
         <Button asChild>
-          <Link href="/matches/new">New match</Link>
+          <Link href="/matches/new">{t("newMatch")}</Link>
         </Button>
       </div>
 
@@ -63,37 +69,37 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
         className="mb-6 grid gap-3 rounded-lg border border-border p-4 md:grid-cols-4"
       >
         <label className="space-y-1 text-sm">
-          <span>Type</span>
+          <span>{t("type")}</span>
           <select
             name="type"
             defaultValue={type}
             className="w-full rounded-md border border-input bg-background px-3 py-2"
           >
-            <option value="">All</option>
-            <option value="practice">Practice</option>
-            <option value="single">Singles</option>
-            <option value="doubles">Doubles</option>
+            <option value="">{tCommon("all")}</option>
+            <option value="practice">{tCommon("practice")}</option>
+            <option value="single">{tCommon("singles")}</option>
+            <option value="doubles">{tCommon("doubles")}</option>
           </select>
         </label>
 
         <label className="space-y-1 text-sm">
-          <span>From</span>
+          <span>{tCommon("from")}</span>
           <Input type="date" name="from" defaultValue={from} />
         </label>
 
         <label className="space-y-1 text-sm">
-          <span>To</span>
+          <span>{tCommon("to")}</span>
           <Input type="date" name="to" defaultValue={to} />
         </label>
 
         <label className="space-y-1 text-sm">
-          <span>Player (opponent or partner)</span>
+          <span>{t("playerFilter")}</span>
           <select
             name="opponentId"
             defaultValue={opponentId}
             className="w-full rounded-md border border-input bg-background px-3 py-2"
           >
-            <option value="">All</option>
+            <option value="">{tCommon("all")}</option>
             {playerRows.map((player) => (
               <option key={player.id} value={player.id}>
                 {player.name}
@@ -104,19 +110,19 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
 
         <div className="md:col-span-4">
           <Button type="submit" variant="secondary">
-            Apply filters
+            {tCommon("applyFilters")}
           </Button>
         </div>
       </form>
 
       {filtered.length === 0 ? (
         <div className="rounded-lg border border-border p-6">
-          <h2 className="text-lg font-semibold">No matches yet</h2>
+          <h2 className="text-lg font-semibold">{t("emptyTitle")}</h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Add your first match to track score, opponents, and notes.
+            {t("emptyDescription")}
           </p>
           <Button asChild className="mt-4">
-            <Link href="/matches/new">Create first match</Link>
+            <Link href="/matches/new">{t("createFirst")}</Link>
           </Button>
         </div>
       ) : (
@@ -125,28 +131,28 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
             <thead>
               <tr className="border-b border-border bg-muted/40 text-left">
                 <th scope="col" className="whitespace-nowrap px-3 py-3 font-medium">
-                  Date
+                  {t("columns.date")}
                 </th>
                 <th scope="col" className="whitespace-nowrap px-3 py-3 font-medium">
-                  Type
+                  {t("columns.type")}
                 </th>
                 <th scope="col" className="whitespace-nowrap px-3 py-3 font-medium">
-                  Result
+                  {t("columns.result")}
                 </th>
                 <th scope="col" className="whitespace-nowrap px-3 py-3 font-medium">
-                  Score
+                  {t("columns.score")}
                 </th>
                 <th scope="col" className="min-w-[140px] px-3 py-3 font-medium">
-                  Partner
+                  {t("columns.partner")}
                 </th>
                 <th scope="col" className="min-w-[160px] px-3 py-3 font-medium">
-                  Opponents
+                  {t("columns.opponents")}
                 </th>
                 <th scope="col" className="min-w-[200px] px-3 py-3 font-medium">
-                  Notes
+                  {t("columns.notes")}
                 </th>
                 <th scope="col" className="whitespace-nowrap px-3 py-3 font-medium">
-                  <span className="sr-only">Actions</span>
+                  <span className="sr-only">{t("columns.actions")}</span>
                 </th>
               </tr>
             </thead>
@@ -176,13 +182,15 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
                   </td>
                   <td className="whitespace-nowrap px-3 py-3 align-top">
                     {match.outcome === "win" ? (
-                      <Badge className="bg-emerald-600 hover:bg-emerald-600">Win</Badge>
+                      <Badge className="bg-emerald-600 hover:bg-emerald-600">
+                        {tCommon("win")}
+                      </Badge>
                     ) : null}
                     {match.outcome === "loss" ? (
-                      <Badge variant="destructive">Loss</Badge>
+                      <Badge variant="destructive">{tCommon("loss")}</Badge>
                     ) : null}
                     {match.outcome === "non_finished" ? (
-                      <Badge variant="outline">Not finished</Badge>
+                      <Badge variant="outline">{tCommon("notFinished")}</Badge>
                     ) : null}
                     {!match.outcome ? (
                       <span className="text-muted-foreground">—</span>
@@ -222,7 +230,7 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
                   </td>
                   <td className="whitespace-nowrap px-3 py-3 align-top">
                     <Button variant="link" size="sm" className="h-auto p-0" asChild>
-                      <Link href={`/matches/${match.id}`}>Open</Link>
+                      <Link href={`/matches/${match.id}`}>{tCommon("open")}</Link>
                     </Button>
                   </td>
                 </tr>

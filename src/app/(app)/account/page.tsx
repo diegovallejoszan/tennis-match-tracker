@@ -1,5 +1,6 @@
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { db, users } from "@/db";
 import { eq } from "drizzle-orm";
 
@@ -19,6 +20,9 @@ import { getUserLocale } from "@/lib/user-locale-db";
 export default async function AccountPage() {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
+
+  const t = await getTranslations("account");
+  const tCommon = await getTranslations("common");
 
   const [userRows, localeRaw] = await Promise.all([
     db
@@ -48,16 +52,13 @@ export default async function AccountPage() {
 
   return (
     <div className="p-4 md:p-6">
-      <h1 className="mb-6 text-2xl font-semibold">My Account</h1>
+      <h1 className="mb-6 text-2xl font-semibold">{t("title")}</h1>
 
       <div className="flex max-w-xl flex-col gap-6">
         <Card>
           <CardHeader>
-            <CardTitle>Language</CardTitle>
-            <CardDescription>
-              Used for speech-to-text on match notes and for AI match preparation
-              advice in a later update.
-            </CardDescription>
+            <CardTitle>{t("languageTitle")}</CardTitle>
+            <CardDescription>{t("languageDescription")}</CardDescription>
           </CardHeader>
           <CardContent>
             <LocaleSettings currentLocale={locale} />
@@ -66,19 +67,17 @@ export default async function AccountPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Profile</CardTitle>
-            <CardDescription>
-              Your play style, strengths, and weaknesses are sent to the AI when
-              you request match preparation advice (Phase 5). All fields are optional.
-            </CardDescription>
+            <CardTitle>{t("profileTitle")}</CardTitle>
+            <CardDescription>{t("profileDescription")}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="rounded-lg border border-border bg-muted/50 p-3 text-sm">
-              <p className="font-medium text-foreground">{user.name ?? "User"}</p>
+              <p className="font-medium text-foreground">
+                {user.name ?? tCommon("user")}
+              </p>
               <p className="text-muted-foreground">{user.email ?? ""}</p>
               <p className="mt-2 text-xs text-muted-foreground">
-                Name and email come from Google. To change them, update your
-                Google account.
+                {t("googleIdentityHint")}
               </p>
             </div>
             <ProfileForm variant="settings" defaultValues={defaultValues} />

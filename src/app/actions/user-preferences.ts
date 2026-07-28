@@ -46,5 +46,6 @@ export async function updateLocaleAction(
   revalidatePath("/account");
   revalidatePath("/dashboard");
   revalidatePath("/matches");
+  revalidatePath("/players");
   return { ok: true };
 }
