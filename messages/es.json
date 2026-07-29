@@ -71,7 +71,7 @@
     "cards": {
       "totalMatches": "Total de partidos",
       "inRange": "Con los filtros actuales",
-      "singlesWinRate": "Victorias en Singles",
+      "singlesWinRate": "Victorias en singles",
       "doublesWinRate": "Victorias en dobles",
       "noResults": "Sin resultados competitivos en el rango",
       "record": "{wins}V · {losses}D",
@@ -121,12 +121,12 @@
       },
       "byType": {
         "title": "Victorias / derrotas por tipo",
-        "subtitle": "Solo Singles y dobles (partidos competitivos).",
-        "empty": "Sin partidos competitivos de Singles o dobles en este rango."
+        "subtitle": "Solo singles y dobles (partidos competitivos).",
+        "empty": "Sin partidos competitivos de singles o dobles en este rango."
       },
       "trend": {
         "title": "Tendencia de rendimiento",
-        "subtitle": "Porcentaje de victorias por mes en partidos competitivos (Singles y dobles).",
+        "subtitle": "Porcentaje de victorias por mes en partidos competitivos (singles y dobles).",
         "empty": "Sin resultados competitivos en este rango."
       }
     },
