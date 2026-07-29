@@ -8,9 +8,11 @@ import { deleteMatchAction } from "@/app/actions/matches";
 import { MatchForm } from "@/components/matches/match-form";
 import { MatchIntegrityPanel } from "@/components/matches/match-integrity-panel";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { db, matchPlayers, matchScoreSegments, matches, players } from "@/db";
 import { auth } from "@/lib/auth";
 import { isAppLocale, type AppLocale } from "@/lib/locale";
+import { formatScoreFromSegments } from "@/lib/match-score/format";
 import type { ScoreSegmentInput } from "@/lib/match-score/types";
 import {
   defaultMatchFormValues,
@@ -22,15 +24,21 @@ import { getUserLocale } from "@/lib/user-locale-db";
 
 type MatchDetailPageProps = {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ edit?: string }>;
 };
 
-export default async function MatchDetailPage({ params }: MatchDetailPageProps) {
+export default async function MatchDetailPage({
+  params,
+  searchParams,
+}: MatchDetailPageProps) {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
 
   const t = await getTranslations("matches");
   const tCommon = await getTranslations("common");
   const { id } = await params;
+  const { edit } = await searchParams;
+  const isEditing = edit === "1";
 
   const [matchRow, playerRows, opponentRows, teammateRows, segmentRows, locale] =
     await Promise.all([
@@ -108,6 +116,30 @@ export default async function MatchDetailPage({ params }: MatchDetailPageProps) 
   const userLocale: AppLocale = isAppLocale(locale) ? locale : "en";
   const integrityOutcome: MatchOutcome | null =
     outcome === "" ? null : outcome;
+  const playerNames = new Map(playerRows.map((player) => [player.id, player.name]));
+  const opponentNames = opponentRows
+    .map((entry) => playerNames.get(entry.playerId))
+    .filter((name): name is string => Boolean(name));
+  const partnerName = teammateRows[0]
+    ? playerNames.get(teammateRows[0].playerId)
+    : null;
+  const displayScore = useStructuredScore
+    ? formatScoreFromSegments(scoreSegments)
+    : row.score;
+  const typeLabel =
+    row.matchType === "single"
+      ? tCommon("singles")
+      : row.matchType === "doubles"
+        ? tCommon("doubles")
+        : tCommon("practice");
+  const outcomeLabel =
+    outcome === "win"
+      ? tCommon("win")
+      : outcome === "loss"
+        ? tCommon("loss")
+        : outcome === "non_finished"
+          ? tCommon("notFinished")
+          : "—";
 
   return (
     <div className="p-4 md:p-6">
@@ -118,26 +150,91 @@ export default async function MatchDetailPage({ params }: MatchDetailPageProps) 
           </Button>
           <h1 className="text-2xl font-semibold">{t("matchDetails")}</h1>
         </div>
-        <form action={deleteMatchAction.bind(null, row.id)}>
-          <Button type="submit" variant="destructive" size="sm">
-            {t("deleteMatch")}
-          </Button>
-        </form>
+        <div className="flex gap-2">
+          {isEditing ? (
+            <Button variant="outline" asChild>
+              <Link href={`/matches/${row.id}`}>{tCommon("cancel")}</Link>
+            </Button>
+          ) : (
+            <>
+              <Button asChild>
+                <Link href={`/matches/${row.id}?edit=1`}>{tCommon("edit")}</Link>
+              </Button>
+              <form action={deleteMatchAction.bind(null, row.id)}>
+                <Button type="submit" variant="destructive">
+                  {t("deleteMatch")}
+                </Button>
+              </form>
+            </>
+          )}
+        </div>
       </div>
 
-      <MatchIntegrityPanel
-        outcome={integrityOutcome}
-        segments={scoreSegments}
-        legacyScore={useStructuredScore ? null : row.score}
-      />
+      {isEditing ? (
+        <MatchForm
+          mode="edit"
+          matchId={row.id}
+          defaultValues={defaultValues}
+          players={playerRows}
+          userLocale={userLocale}
+          cancelHref={`/matches/${row.id}`}
+        />
+      ) : (
+        <div className="max-w-2xl space-y-4">
+          <MatchIntegrityPanel
+            outcome={integrityOutcome}
+            segments={scoreSegments}
+            legacyScore={useStructuredScore ? null : row.score}
+          />
+          <Card>
+            <CardContent className="grid gap-5 pt-6 sm:grid-cols-2">
+              <Detail label={t("form.date")} value={row.date} />
+              <Detail
+                label={t("form.timeOptional")}
+                value={row.time?.slice(0, 5) || "—"}
+              />
+              <Detail label={t("form.matchType")} value={typeLabel} />
+              <Detail label={t("form.result")} value={outcomeLabel} />
+              <Detail
+                label={t("columns.score")}
+                value={displayScore || "—"}
+              />
+              <Detail
+                label={t("columns.partner")}
+                value={partnerName || "—"}
+              />
+              <Detail
+                label={t("columns.opponents")}
+                value={opponentNames.join(", ") || "—"}
+              />
+              <Detail
+                label={t("columns.notes")}
+                value={row.notes || "—"}
+                className="sm:col-span-2"
+              />
+            </CardContent>
+          </Card>
+        </div>
+      )}
+    </div>
+  );
+}
 
-      <MatchForm
-        mode="edit"
-        matchId={row.id}
-        defaultValues={defaultValues}
-        players={playerRows}
-        userLocale={userLocale}
-      />
+function Detail({
+  label,
+  value,
+  className = "",
+}: {
+  label: string;
+  value: string;
+  className?: string;
+}) {
+  return (
+    <div className={className}>
+      <dt className="text-sm font-medium">{label}</dt>
+      <dd className="mt-1 whitespace-pre-wrap text-sm text-muted-foreground">
+        {value}
+      </dd>
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import { auth } from "@/lib/auth";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { db, users } from "@/db";
@@ -13,16 +14,23 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { isAppLocale, type AppLocale } from "@/lib/locale";
+import { Button } from "@/components/ui/button";
+import { isAppLocale, localeLabels, type AppLocale } from "@/lib/locale";
 import { dbColumnsToProfileFormDefaults } from "@/lib/user-profile-validation";
 import { getUserLocale } from "@/lib/user-locale-db";
 
-export default async function AccountPage() {
+type AccountPageProps = {
+  searchParams: Promise<{ edit?: string }>;
+};
+
+export default async function AccountPage({ searchParams }: AccountPageProps) {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
 
   const t = await getTranslations("account");
   const tCommon = await getTranslations("common");
+  const { edit } = await searchParams;
+  const isEditing = edit === "1";
 
   const [userRows, localeRaw] = await Promise.all([
     db
@@ -52,7 +60,18 @@ export default async function AccountPage() {
 
   return (
     <div className="p-4 md:p-6">
-      <h1 className="mb-6 text-2xl font-semibold">{t("title")}</h1>
+      <div className="mb-6 flex items-center justify-between gap-4">
+        <h1 className="text-2xl font-semibold">{t("title")}</h1>
+        {isEditing ? (
+          <Button variant="outline" asChild>
+            <Link href="/account">{tCommon("cancel")}</Link>
+          </Button>
+        ) : (
+          <Button asChild>
+            <Link href="/account?edit=1">{tCommon("edit")}</Link>
+          </Button>
+        )}
+      </div>
 
       <div className="flex max-w-xl flex-col gap-6">
         <Card>
@@ -61,7 +80,11 @@ export default async function AccountPage() {
             <CardDescription>{t("languageDescription")}</CardDescription>
           </CardHeader>
           <CardContent>
-            <LocaleSettings currentLocale={locale} />
+            {isEditing ? (
+              <LocaleSettings currentLocale={locale} />
+            ) : (
+              <p className="text-sm">{localeLabels[locale]}</p>
+            )}
           </CardContent>
         </Card>
 
@@ -80,7 +103,28 @@ export default async function AccountPage() {
                 {t("googleIdentityHint")}
               </p>
             </div>
-            <ProfileForm variant="settings" defaultValues={defaultValues} />
+            {isEditing ? (
+              <ProfileForm
+                variant="settings"
+                defaultValues={defaultValues}
+                cancelHref="/account"
+              />
+            ) : (
+              <dl className="space-y-5">
+                {[
+                  [t("playStyle"), defaultValues.playStyle],
+                  [t("strengths"), defaultValues.strengths],
+                  [t("weaknesses"), defaultValues.weaknesses],
+                ].map(([label, value]) => (
+                  <div key={label}>
+                    <dt className="text-sm font-medium">{label}</dt>
+                    <dd className="mt-1 whitespace-pre-wrap text-sm text-muted-foreground">
+                      {value || t("notProvided")}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            )}
           </CardContent>
         </Card>
       </div>

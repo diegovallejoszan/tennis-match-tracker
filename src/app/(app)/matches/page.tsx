@@ -6,7 +6,7 @@ import { eq } from "drizzle-orm";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { MatchesFilters } from "@/components/matches/matches-filters";
 import { db, players } from "@/db";
 import { auth } from "@/lib/auth";
 import { fetchGroupedMatchesForUser } from "@/lib/grouped-matches";
@@ -64,56 +64,10 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
         </Button>
       </div>
 
-      <form
-        method="get"
-        className="mb-6 grid gap-3 rounded-lg border border-border p-4 md:grid-cols-4"
-      >
-        <label className="space-y-1 text-sm">
-          <span>{t("type")}</span>
-          <select
-            name="type"
-            defaultValue={type}
-            className="w-full rounded-md border border-input bg-background px-3 py-2"
-          >
-            <option value="">{tCommon("all")}</option>
-            <option value="practice">{tCommon("practice")}</option>
-            <option value="single">{tCommon("singles")}</option>
-            <option value="doubles">{tCommon("doubles")}</option>
-          </select>
-        </label>
-
-        <label className="space-y-1 text-sm">
-          <span>{tCommon("from")}</span>
-          <Input type="date" name="from" defaultValue={from} />
-        </label>
-
-        <label className="space-y-1 text-sm">
-          <span>{tCommon("to")}</span>
-          <Input type="date" name="to" defaultValue={to} />
-        </label>
-
-        <label className="space-y-1 text-sm">
-          <span>{t("playerFilter")}</span>
-          <select
-            name="opponentId"
-            defaultValue={opponentId}
-            className="w-full rounded-md border border-input bg-background px-3 py-2"
-          >
-            <option value="">{tCommon("all")}</option>
-            {playerRows.map((player) => (
-              <option key={player.id} value={player.id}>
-                {player.name}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <div className="md:col-span-4">
-          <Button type="submit" variant="secondary">
-            {tCommon("applyFilters")}
-          </Button>
-        </div>
-      </form>
+      <MatchesFilters
+        filters={{ type, from, to, opponentId }}
+        players={playerRows}
+      />
 
       {filtered.length === 0 ? (
         <div className="rounded-lg border border-border p-6">

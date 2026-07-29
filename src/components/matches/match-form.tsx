@@ -73,6 +73,7 @@ type MatchFormProps = {
   defaultValues: MatchFormInput;
   players: Array<{ id: string; name: string }>;
   userLocale?: AppLocale;
+  cancelHref?: string;
 };
 
 const MATCH_TYPE_KEYS: Record<MatchType, "practice" | "singles" | "doubles"> = {
@@ -87,6 +88,7 @@ export function MatchForm({
   defaultValues,
   players,
   userLocale = "en",
+  cancelHref = "/matches",
 }: MatchFormProps) {
   const router = useRouter();
   const t = useTranslations("matches.form");
@@ -618,7 +620,7 @@ export function MatchForm({
                 : t("saveAndClose")}
           </Button>
           <Button type="button" variant="outline" asChild>
-            <Link href="/matches">{tCommon("cancel")}</Link>
+            <Link href={cancelHref}>{tCommon("cancel")}</Link>
           </Button>
         </div>
       </form>

@@ -1,6 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
@@ -30,11 +31,17 @@ import {
 type ProfileFormProps = {
   variant: "onboarding" | "settings";
   defaultValues: UserProfileFormValues;
+  cancelHref?: string;
 };
 
-export function ProfileForm({ variant, defaultValues }: ProfileFormProps) {
+export function ProfileForm({
+  variant,
+  defaultValues,
+  cancelHref,
+}: ProfileFormProps) {
   const router = useRouter();
   const t = useTranslations("account");
+  const tCommon = useTranslations("common");
   const [serverError, setServerError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -61,8 +68,12 @@ export function ProfileForm({ variant, defaultValues }: ProfileFormProps) {
         setServerError(result.error);
         return;
       }
-      setSaved(true);
-      router.refresh();
+      if (cancelHref) {
+        router.replace(cancelHref);
+      } else {
+        setSaved(true);
+        router.refresh();
+      }
     });
   }
 
@@ -144,13 +155,20 @@ export function ProfileForm({ variant, defaultValues }: ProfileFormProps) {
           )}
         />
 
-        <Button type="submit" className="w-full sm:w-auto" disabled={isPending}>
-          {isPending
-            ? t("saving")
-            : variant === "onboarding"
-              ? t("createAccount")
-              : t("save")}
-        </Button>
+        <div className="flex flex-col-reverse gap-2 sm:flex-row">
+          {cancelHref ? (
+            <Button type="button" variant="outline" asChild>
+              <Link href={cancelHref}>{tCommon("cancel")}</Link>
+            </Button>
+          ) : null}
+          <Button type="submit" className="w-full sm:w-auto" disabled={isPending}>
+            {isPending
+              ? t("saving")
+              : variant === "onboarding"
+                ? t("createAccount")
+                : t("save")}
+          </Button>
+        </div>
       </form>
     </Form>
   );

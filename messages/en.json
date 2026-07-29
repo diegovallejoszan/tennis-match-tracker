@@ -193,6 +193,10 @@
     "deleteMatch": "Delete match",
     "type": "Type",
     "playerFilter": "Player (opponent or partner)",
+    "filters": {
+      "toggle": "Filters",
+      "active": "On"
+    },
     "emptyTitle": "No matches yet",
     "emptyDescription": "Add your first match to track score, opponents, and notes.",
     "createFirst": "Create first match",
@@ -351,6 +355,7 @@
     "save": "Save changes",
     "saving": "Saving…",
     "createAccount": "Create my account",
-    "saved": "Profile saved."
+    "saved": "Profile saved.",
+    "notProvided": "Not provided"
   }
 }

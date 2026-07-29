@@ -193,6 +193,10 @@
     "deleteMatch": "Eliminar partido",
     "type": "Tipo",
     "playerFilter": "Jugador (rival o compañero)",
+    "filters": {
+      "toggle": "Filtros",
+      "active": "Activos"
+    },
     "emptyTitle": "Aún no hay partidos",
     "emptyDescription": "Añade tu primer partido para registrar marcador, rivales y notas.",
     "createFirst": "Crear primer partido",
@@ -351,6 +355,7 @@
     "save": "Guardar cambios",
     "saving": "Guardando…",
     "createAccount": "Crear mi cuenta",
-    "saved": "Perfil guardado."
+    "saved": "Perfil guardado.",
+    "notProvided": "Sin registrar"
   }
 }
