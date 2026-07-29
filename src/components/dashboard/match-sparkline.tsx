@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 import type { SparklinePoint } from "@/lib/dashboard-aggregates";
 
@@ -16,11 +16,16 @@ const MIN_POINT_GAP = 14;
 const HIT_WIDTH = 28;
 const ZERO_DOT_R = 3.5;
 
-function formatPointDate(date: string, time: string | null): string {
+function formatPointDate(date: string, locale: string): string {
   const [y, mo, d] = date.split("-");
   if (!y || !mo || !d) return date;
-  const base = `${mo}/${d}/${y.slice(2)}`;
-  return time ? `${base} ${time.slice(0, 5)}` : base;
+  const parsed = new Date(Number(y), Number(mo) - 1, Number(d));
+  if (Number.isNaN(parsed.getTime())) return date;
+  return new Intl.DateTimeFormat(locale, {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  }).format(parsed);
 }
 
 function outcomeColor(outcome: SparklinePoint["outcome"]): string {
@@ -31,6 +36,7 @@ function outcomeColor(outcome: SparklinePoint["outcome"]): string {
 
 export function MatchSparkline({ points }: MatchSparklineProps) {
   const t = useTranslations("dashboard.charts.sparkline");
+  const locale = useLocale();
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   /** Skip the synthetic mouseenter that follows a touch tap on mobile. */
@@ -203,7 +209,7 @@ export function MatchSparkline({ points }: MatchSparklineProps) {
                   tabIndex={0}
                   role="button"
                   aria-pressed={selectedIndex === index}
-                  aria-label={`${formatPointDate(point.date, point.time)} · ${outcomeLabel(point.outcome)}`}
+                  aria-label={`${formatPointDate(point.date, locale)} · ${outcomeLabel(point.outcome)}`}
                   onPointerUp={(event) => {
                     // Prefer pointerup so touch and mouse share one path.
                     if (event.pointerType === "touch") {
@@ -238,7 +244,7 @@ export function MatchSparkline({ points }: MatchSparklineProps) {
           <div className="space-y-0.5">
             <p>
               <span className="font-medium">
-                {formatPointDate(active.date, active.time)}
+                {formatPointDate(active.date, locale)}
               </span>
               {" · "}
               {outcomeLabel(active.outcome)}
