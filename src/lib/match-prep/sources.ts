@@ -51,9 +51,16 @@ export const TACTIC_SOURCES: readonly TacticSource[] = [
   {
     id: "on-court-guide-strategy-booklet",
     title: "The On-Court Guide to Tennis (strategy booklet)",
-    organization: "Coaching publication (compiled booklet)",
+    organization: "Jorge Capestany, USPTA Master Professional",
     trustTier: "tier2",
     url: "https://d15k2d11r6t6rl.cloudfront.net/public/users/Integrators/2484d7dc-15b0-483a-a94b-ebf5aae47a74/2509/Tennis/Tennis%20Strategy%20Booklet.pdf",
+  },
+  {
+    id: "gmu-singles-strategy",
+    title: "Singles Strategy",
+    organization: "George Mason University coaching notes",
+    trustTier: "tier2",
+    url: "https://mason.gmu.edu/~cmanni11/375/singles-strategy.pdf",
   },
   {
     id: "winning-ugly-gilbert",

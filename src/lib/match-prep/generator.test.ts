@@ -29,6 +29,18 @@ describe("classifyOpponentTypeFromText", () => {
     expect(classifyOpponentTypeFromText("zurdo")).toBe("all_court_player");
     expect(classifyOpponentTypeFromText("arquitecto del slice")).toBe("counterpuncher");
   });
+
+  it("maps labels from the singles strategy booklets", () => {
+    expect(classifyOpponentTypeFromText("runner / pusher")).toBe(
+      "moonballer_retriever",
+    );
+    expect(classifyOpponentTypeFromText("huge forehand")).toBe(
+      "aggressive_baseliner",
+    );
+    expect(classifyOpponentTypeFromText("strong groundstroke player")).toBe(
+      "aggressive_baseliner",
+    );
+  });
 });
 
 describe("getMatchPrepTactics", () => {
@@ -95,5 +107,51 @@ describe("getMatchPrepTactics", () => {
       playerLevel: "unknown",
     });
     expect(tactics.some((t) => t.id === "atm-basher-rhythmic-anesthesia")).toBe(true);
+  });
+
+  it("includes Capestany booklet tactics across opponent styles", () => {
+    const aggressive = getMatchPrepTactics({
+      opponentType: "aggressive_baseliner",
+      format: "singles",
+      surface: "unknown",
+      playerLevel: "unknown",
+    });
+    const netPlayer = getMatchPrepTactics({
+      opponentType: "serve_and_volleyer",
+      format: "singles",
+      surface: "unknown",
+      playerLevel: "unknown",
+    });
+
+    expect(
+      aggressive.some(
+        (t) => t.citation.sourceId === "on-court-guide-strategy-booklet",
+      ),
+    ).toBe(true);
+    expect(netPlayer.some((t) => t.id === "ocg-serve-volley-return-early-low")).toBe(
+      true,
+    );
+  });
+
+  it("includes GMU singles strategy tactics", () => {
+    const allCourt = getMatchPrepTactics({
+      opponentType: "all_court_player",
+      format: "singles",
+      surface: "unknown",
+      playerLevel: "unknown",
+    });
+    const counterpuncher = getMatchPrepTactics({
+      opponentType: "counterpuncher",
+      format: "singles",
+      surface: "unknown",
+      playerLevel: "unknown",
+    });
+
+    expect(
+      allCourt.some((t) => t.citation.sourceId === "gmu-singles-strategy"),
+    ).toBe(true);
+    expect(
+      counterpuncher.some((t) => t.id === "gmu-counterpuncher-change-dimensions"),
+    ).toBe(true);
   });
 });

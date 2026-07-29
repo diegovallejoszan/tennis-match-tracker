@@ -637,5 +637,139 @@ export const TACTIC_LIBRARY: readonly Tactic[] = [
     constraints: { format: "singles" },
     sourceId: "amateur-tactical-survival-manual",
   }),
+
+  // The On-Court Guide to Tennis — opponent-style counters
+  tactic({
+    id: "ocg-aggressive-baseliner-break-strike-zone",
+    opponentType: "aggressive_baseliner",
+    situation: "baseline_rally",
+    title: "Keep a power baseliner out of one comfortable strike zone",
+    recommendation:
+      "Alternate higher, slower balls with low slices and direct some serves into the body. Keep probing the steadier-looking wing until you identify which side actually breaks down.",
+    whyItWorks:
+      "Power baseliners groove when incoming pace and contact height stay constant. Changing height, speed, and spacing makes them generate their own pace from less comfortable positions.",
+    tags: ["variety", "slice", "body_serve", "strike_zone"],
+    constraints: { format: "singles" },
+    sourceId: "on-court-guide-strategy-booklet",
+  }),
+  tactic({
+    id: "ocg-serve-volley-return-early-low",
+    opponentType: "serve_and_volleyer",
+    situation: "return",
+    title: "Take the return early and make the first volley rise",
+    recommendation:
+      "Shorten the backswing, meet the return early, and favor a low crosscourt target or soft ball at the feet. Mix in topspin dips, occasional lobs, and chip-and-charge looks on second serves.",
+    whyItWorks:
+      "Earlier contact forces the server to volley from deeper in the court, while a low trajectory denies the comfortable volley above net height that a net rusher wants.",
+    tags: ["return", "take_time_away", "low_target", "variety"],
+    constraints: { format: "singles" },
+    sourceId: "on-court-guide-strategy-booklet",
+  }),
+  tactic({
+    id: "ocg-counterpuncher-remove-pace",
+    opponentType: "counterpuncher",
+    situation: "general",
+    title: "Remove borrowed pace and bring the counterpuncher forward",
+    recommendation:
+      "Mix slower serves and groundstrokes, use short balls to bring them off the baseline, and approach through the middle only after earning a favorable ball.",
+    whyItWorks:
+      "Counterpunchers prefer your pace and a visible target at net. Variation denies easy redirection, while bringing them forward asks them to create offense from a less familiar position.",
+    tags: ["change_pace", "bring_forward", "approach_middle"],
+    constraints: { format: "singles" },
+    sourceId: "on-court-guide-strategy-booklet",
+  }),
+  tactic({
+    id: "ocg-huge-forehand-open-backhand",
+    opponentType: "aggressive_baseliner",
+    situation: "baseline_rally",
+    title: "Stretch the forehand first, then lock the ball into the backhand corner",
+    recommendation:
+      "Use a wide ball to pull the forehand specialist away from center, then keep depth to the far backhand corner. Add low slices or a short ball to that side so running around the backhand becomes difficult.",
+    whyItWorks:
+      "Forehand-dominant players protect the backhand by moving around it. Moving them outward first opens more backhand court and makes the run-around forehand costly.",
+    tags: ["huge_forehand", "open_court", "play_to_weakness"],
+    constraints: { format: "singles" },
+    sourceId: "on-court-guide-strategy-booklet",
+  }),
+  tactic({
+    id: "ocg-use-only-match-owned-tactics",
+    opponentType: "all_court_player",
+    situation: "general",
+    title: "Choose counters you trust under pressure",
+    recommendation:
+      "From the available matchup ideas, select only patterns you would confidently use late in a deciding set. Keep the rest as future practice goals rather than experimenting during the match.",
+    whyItWorks:
+      "A theoretically correct tactic still fails if the required shot is outside your competitive skill set. Restricting the plan to owned patterns improves execution and decision quality.",
+    tags: ["game_plan", "self_awareness", "pressure_points"],
+    constraints: { format: "singles" },
+    sourceId: "on-court-guide-strategy-booklet",
+  }),
+
+  // GMU Singles Strategy — percentage play, return plans, and player types
+  tactic({
+    id: "gmu-baseline-build-weak-ball",
+    opponentType: "all_court_player",
+    situation: "baseline_rally",
+    title: "Build from deep crosscourt balls instead of forcing from defense",
+    recommendation:
+      "When behind the baseline or off balance, recover with height and depth—preferably crosscourt and toward the weaker wing. Change direction or attack only after the opponent gives you a weak ball.",
+    whyItWorks:
+      "Crosscourt provides more net and court margin. Refusing low-percentage attacks from defensive positions keeps the rally alive until court position and balance favor you.",
+    tags: ["crosscourt", "depth", "percentage_tennis", "defense"],
+    constraints: { format: "singles" },
+    sourceId: "gmu-singles-strategy",
+  }),
+  tactic({
+    id: "gmu-first-second-return-mindsets",
+    opponentType: "all_court_player",
+    situation: "return",
+    title: "Defend the first serve; pressure the second with court position",
+    recommendation:
+      "Against first serves, use a compact swing and prioritize a deep, playable return. Against second serves, step forward and use the extra time to pressure a large target rather than overswinging.",
+    whyItWorks:
+      "Separating the two return jobs matches risk to opportunity: the first serve demands neutralization, while the second serve offers court position and an early chance to take control.",
+    tags: ["return", "court_position", "risk_management"],
+    constraints: { format: "singles" },
+    sourceId: "gmu-singles-strategy",
+  }),
+  tactic({
+    id: "gmu-net-player-backhand-overhead",
+    opponentType: "serve_and_volleyer",
+    situation: "passing_defense",
+    title: "Make the net player hit an overhead while moving backward",
+    recommendation:
+      "When a clean pass is not available, send a deep lob toward the backhand side. Recover while they turn and move back, then prepare for a shorter defensive reply.",
+    whyItWorks:
+      "A backhand overhead while retreating is substantially less comfortable than a forward volley or forehand overhead and can neutralize an opponent who otherwise owns the net.",
+    tags: ["lob", "backhand_overhead", "net_defense"],
+    constraints: { format: "singles" },
+    sourceId: "gmu-singles-strategy",
+  }),
+  tactic({
+    id: "gmu-groundstroker-four-corner-finish",
+    opponentType: "aggressive_baseliner",
+    situation: "baseline_rally",
+    title: "Move the groundstroker before attacking a large corner",
+    recommendation:
+      "Use depth, height, and direction to make them hit outside their preferred position. When the weak ball arrives and you are balanced, attack one of the four large corner targets, then recover instead of admiring the shot.",
+    whyItWorks:
+      "Strong groundstrokers are most dangerous when balanced. Displacement produces the weak ball; a large finishing target preserves margin while exploiting the opening.",
+    tags: ["movement", "weak_ball", "large_targets", "recovery"],
+    constraints: { format: "singles" },
+    sourceId: "gmu-singles-strategy",
+  }),
+  tactic({
+    id: "gmu-counterpuncher-change-dimensions",
+    opponentType: "counterpuncher",
+    situation: "baseline_rally",
+    title: "Move the counterpuncher in four directions, not only side to side",
+    recommendation:
+      "Keep the ball in play first, then vary depth and height to move them forward and backward as well as left and right. Use controlled placement on weak balls instead of trying to overpower them.",
+    whyItWorks:
+      "Counterpunchers expect lateral running and profit from ambitious errors. Adding forward/back movement disrupts their recovery pattern while controlled attacks protect your consistency.",
+    tags: ["four_directions", "patience", "controlled_aggression"],
+    constraints: { format: "singles" },
+    sourceId: "gmu-singles-strategy",
+  }),
 ] as const;
 

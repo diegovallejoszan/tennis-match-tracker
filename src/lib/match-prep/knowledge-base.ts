@@ -7,7 +7,7 @@ import { TACTIC_SOURCES } from "./sources";
 import type { CourtSurface, MatchFormat, OpponentType, PlayerLevel } from "./tactics";
 
 /** Bump when tactics/sources change materially (audit trail for saved advice). */
-export const KNOWLEDGE_BASE_VERSION = "1.0.0";
+export const KNOWLEDGE_BASE_VERSION = "1.1.0";
 
 export type KnowledgeBaseQuery = {
   opponentPlayStyle?: string | null;

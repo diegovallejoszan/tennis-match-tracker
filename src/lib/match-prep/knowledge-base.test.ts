@@ -16,6 +16,14 @@ describe("formatKnowledgeBaseForLlm", () => {
     const md = formatKnowledgeBaseForLlm({ opponentPlayStyle: null });
     expect(md).toContain("All-court player");
   });
+
+  it("includes both singles strategy booklets in version 1.1", () => {
+    const md = formatKnowledgeBaseForLlm();
+
+    expect(KNOWLEDGE_BASE_VERSION).toBe("1.1.0");
+    expect(md).toContain("Jorge Capestany");
+    expect(md).toContain("George Mason University");
+  });
 });
 
 describe("formatMatchPrepPromptContext", () => {

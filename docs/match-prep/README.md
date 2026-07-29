@@ -34,6 +34,20 @@ The model returns a tailored game plan and tactical advice. Past responses are s
 
 Saved advice records should store `knowledgeBaseVersion` (Phase 5 schema) for auditability.
 
+## Singles strategy booklets
+
+Version 1.1 adds paraphrased, source-linked tactics from:
+
+- Jorge Capestany, *The On-Court Guide to Tennis*: matchup counters for
+  aggressive baseliners, forehand-dominant players, counterpunchers,
+  serve-and-volleyers, moonballers, and all-court players.
+- George Mason University coaching notes, *Singles Strategy*: percentage
+  baseline patterns, first- versus second-serve return plans, net defense, and
+  tactics for strong groundstrokers and counterpunchers.
+
+The library stores only concise paraphrases with source provenance; the PDFs
+remain the authoritative references.
+
 ## Phase 4 (current)
 
 - Knowledge base code lives in the repo but **Prepare** is hidden from navigation.  
