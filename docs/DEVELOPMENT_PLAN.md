@@ -4,13 +4,13 @@
 
 ---
 
-## Active phase: **5b in progress**
+## Active phase: **5b shipped → 5c next**
 
 **Phase 5a is deployed**: structured scoring, non-finished results, audio dictation, per-user locale preference, and match integrity checks are live in match registration.
 
-**Phase 5b (current work)**: score-aware dashboard analytics (Tufte sparkline, singles/doubles win-rate cards, combinable filters) and app UI i18n (`en` / `es`). Dashboard and navigation are localized first; remaining pages follow in this phase.
+**Phase 5b is deployed**: score-aware dashboard analytics (Tufte per-match sparkline with game-differential height, singles/doubles win-rate cards, combinable filters), full app UI i18n (`en` / `es`), read-only account/match detail views with explicit edit mode, and an expanded tactical knowledge base (v1.1) ready for Phase 5c.
 
-Match preparation is still **not** exposed in the UI — it ships in **Phase 5c**.
+**Phase 5c (next)**: LLM match preparation — expose Prepare in the UI, generate advice from profiles/history plus the knowledge base, and save advice for later review.
 
 ---
 
@@ -256,7 +256,7 @@ export const matchPlayers = pgTable("match_players", {
 
 ---
 
-## Phase 5b -- Score-Aware Analytics & App i18n
+## Phase 5b -- Score-Aware Analytics & App i18n *(shipped)*
 
 **Goal**: Upgrade the dashboard to score- and completion-aware analytics (including Tufte-style per-match visualization) and localize the app UI, building on the Phase 5a data model and locale preference.
 
@@ -270,9 +270,9 @@ export const matchPlayers = pgTable("match_players", {
   - `non_finished` excluded from both (played, but never counted)
 - **Tufte-style "matches over time"** (replaces the aggregate monthly line chart), inspired by Edward Tufte's *Beautiful Evidence*:
   - X axis = **each match**, ordered by date/time (not aggregated per month)
-  - **Upward** whisker/marker for a win
-  - **Downward** whisker/marker for a loss
-  - Neutral baseline marker for `non_finished`
+  - **Outcome color**: green win, red loss, muted unfinished
+  - **Bar height** = signed games differential (sets/long sets only; TB/STB points excluded)
+  - One-tap selection with score detail; mobile-friendly filters
   - High-data-density, minimal styling (thin strokes, no chart junk)
 - **Combinable filters** that recompute the sparkline and cards live:
   - Date range, match type (singles / doubles / practice), opponent, completion status
@@ -417,7 +417,7 @@ gantt
   Match_Results_Integrity :done, p5a, after p4, 5d
 
   section Phase5b
-  Analytics_and_i18n :p5b, after p5a, 4d
+  Analytics_and_i18n :done, p5b, after p5a, 4d
 
   section Phase5c
   LLM_Match_Prep_plus_saved_advice :p5c, after p5b, 5d
@@ -440,6 +440,6 @@ Each phase produces a usable, deployed increment. You can register players after
 - [x] **Phase 3** — Match registration: schema, form with opponents/score/notes, list/detail pages
 - [x] **Phase 4** — Dashboard: summary cards, Recharts charts, filters, responsive layout; Prepare hidden
 - [x] **Phase 5a** — Match results & integrity: non-finished result, structured score segments (set/long set/tie break/super tie break), auto-generated score string, legacy compatibility, user locale, audio dictation, integrity validation and tests
-- [ ] **Phase 5b** — Score-aware analytics & i18n: singles/doubles win-rate cards, Tufte-style per-match sparkline (up = win, down = loss, neutral = non-finished), combinable filters, full UI i18n (en/es) using the Phase 5a locale
+- [x] **Phase 5b** — Score-aware analytics & i18n: singles/doubles win-rate cards, Tufte-style per-match sparkline (outcome color + game-differential height), combinable filters, full UI i18n (en/es), read-only detail views, knowledge base v1.1
 - [ ] **Phase 5c** — LLM match prep: opponent + date, advice generation, saved advice history, knowledge base as prompt context
 - [ ] **Phase 6** — Polish: app logo + favicon, custom domain, loading states, error boundaries, Lighthouse audit
