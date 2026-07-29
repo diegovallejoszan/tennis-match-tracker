@@ -5,6 +5,7 @@ import {
   competitiveWinLoss,
   filterMatchesByDateRange,
   filterMatchesForDashboard,
+  gameDifferentialFromSegments,
   matchesPerMonth,
   mostFrequentOpponent,
   winLossByMatchType,
@@ -119,6 +120,94 @@ describe("buildSparklinePoints", () => {
     expect(points.map((p) => p.id)).toEqual(["m1", "m2", "m3", "m5", "m4"]);
     expect(points[3]?.outcome).toBe("non_finished");
     expect(points[0]?.outcome).toBe("win");
+  });
+
+  it("includes score and game differential from segments", () => {
+    const points = buildSparklinePoints([
+      {
+        id: "w",
+        date: "2026-05-01",
+        matchType: "single",
+        outcome: "win",
+        score: "9-5 6-4",
+        opponents: [],
+        scoreSegments: [
+          { segmentType: "long_set", userGamesOrPoints: 9, opponentGamesOrPoints: 5 },
+          { segmentType: "set", userGamesOrPoints: 6, opponentGamesOrPoints: 4 },
+        ],
+      },
+    ]);
+    expect(points[0]?.score).toBe("9-5 6-4");
+    expect(points[0]?.gameDifferential).toBe(6);
+  });
+});
+
+describe("gameDifferentialFromSegments", () => {
+  it("sums set game margins for a straight win", () => {
+    expect(
+      gameDifferentialFromSegments([
+        { segmentType: "long_set", userGamesOrPoints: 9, opponentGamesOrPoints: 5 },
+        { segmentType: "set", userGamesOrPoints: 6, opponentGamesOrPoints: 4 },
+      ]),
+    ).toBe(6);
+  });
+
+  it("ignores super-tie-break points after a decided set", () => {
+    expect(
+      gameDifferentialFromSegments([
+        { segmentType: "set", userGamesOrPoints: 6, opponentGamesOrPoints: 3 },
+        { segmentType: "set", userGamesOrPoints: 2, opponentGamesOrPoints: 6 },
+        {
+          segmentType: "super_tie_break",
+          userGamesOrPoints: 2,
+          opponentGamesOrPoints: 10,
+        },
+      ]),
+    ).toBe(-1);
+  });
+
+  it("awards the deciding set game from a tied set decided by super-tie-break", () => {
+    expect(
+      gameDifferentialFromSegments([
+        { segmentType: "set", userGamesOrPoints: 6, opponentGamesOrPoints: 6 },
+        {
+          segmentType: "super_tie_break",
+          userGamesOrPoints: 10,
+          opponentGamesOrPoints: 8,
+        },
+      ]),
+    ).toBe(1);
+  });
+
+  it("awards the deciding set game from a standard tie-break without counting TB points", () => {
+    expect(
+      gameDifferentialFromSegments([
+        { segmentType: "set", userGamesOrPoints: 6, opponentGamesOrPoints: 6 },
+        { segmentType: "tie_break", userGamesOrPoints: 7, opponentGamesOrPoints: 3 },
+      ]),
+    ).toBe(1);
+  });
+
+  it("returns zero for even game totals", () => {
+    expect(
+      gameDifferentialFromSegments([
+        { segmentType: "set", userGamesOrPoints: 1, opponentGamesOrPoints: 6 },
+        { segmentType: "set", userGamesOrPoints: 6, opponentGamesOrPoints: 1 },
+      ]),
+    ).toBe(0);
+  });
+
+  it("counts partial unfinished sets", () => {
+    expect(
+      gameDifferentialFromSegments([
+        { segmentType: "set", userGamesOrPoints: 4, opponentGamesOrPoints: 2 },
+      ]),
+    ).toBe(2);
+  });
+
+  it("returns zero for legacy / missing segments", () => {
+    expect(gameDifferentialFromSegments(undefined)).toBe(0);
+    expect(gameDifferentialFromSegments([])).toBe(0);
   });
 });
 

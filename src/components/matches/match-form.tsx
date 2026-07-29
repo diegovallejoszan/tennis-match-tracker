@@ -170,6 +170,7 @@ export function MatchForm({
       : null;
 
   const liveScoreErrors = useMemo(() => {
+    if (!attemptedSubmit) return [];
     if (!showCompetitiveFields || !useStructuredScore) return [];
     return getLiveIntegrityMessages({
       outcome:
@@ -178,7 +179,13 @@ export function MatchForm({
           : null,
       segments: scoreSegments ?? [],
     });
-  }, [showCompetitiveFields, useStructuredScore, outcome, scoreSegments]);
+  }, [
+    attemptedSubmit,
+    showCompetitiveFields,
+    useStructuredScore,
+    outcome,
+    scoreSegments,
+  ]);
 
   const outcomeFieldError =
     attemptedSubmit &&
@@ -191,7 +198,8 @@ export function MatchForm({
     : [];
 
   const highlightOutcome =
-    liveScoreErrors.length > 0 || Boolean(outcomeFieldError);
+    attemptedSubmit &&
+    (liveScoreErrors.length > 0 || Boolean(outcomeFieldError));
 
   function openQuickAdd(role: QuickAddPlayerRole) {
     setQuickAddRole(role);

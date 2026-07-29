@@ -1,6 +1,7 @@
-import { desc, eq } from "drizzle-orm";
+import { asc, desc, eq, inArray } from "drizzle-orm";
 
-import { db, matchPlayers, matches, players } from "@/db";
+import { db, matchPlayers, matchScoreSegments, matches, players } from "@/db";
+import type { ScoreSegmentInput, SegmentType } from "@/lib/match-score/types";
 
 export type GroupedMatch = {
   id: string;
@@ -13,6 +14,7 @@ export type GroupedMatch = {
   createdAt: Date;
   partner: { id: string; name: string } | null;
   opponents: Array<{ id: string; name: string }>;
+  scoreSegments: ScoreSegmentInput[];
 };
 
 /**
@@ -56,6 +58,7 @@ export async function fetchGroupedMatchesForUser(
         createdAt: row.createdAt,
         partner: null,
         opponents: [],
+        scoreSegments: [],
       });
     }
 
@@ -73,6 +76,31 @@ export async function fetchGroupedMatchesForUser(
       row.playerName !== null
     ) {
       entry.partner = { id: row.playerId, name: row.playerName };
+    }
+  }
+
+  const matchIds = [...grouped.keys()];
+  if (matchIds.length > 0) {
+    const segmentRows = await db
+      .select({
+        matchId: matchScoreSegments.matchId,
+        segmentOrder: matchScoreSegments.segmentOrder,
+        segmentType: matchScoreSegments.segmentType,
+        userGamesOrPoints: matchScoreSegments.userGamesOrPoints,
+        opponentGamesOrPoints: matchScoreSegments.opponentGamesOrPoints,
+      })
+      .from(matchScoreSegments)
+      .where(inArray(matchScoreSegments.matchId, matchIds))
+      .orderBy(asc(matchScoreSegments.segmentOrder));
+
+    for (const seg of segmentRows) {
+      const entry = grouped.get(seg.matchId);
+      if (!entry) continue;
+      entry.scoreSegments.push({
+        segmentType: seg.segmentType as SegmentType,
+        userGamesOrPoints: seg.userGamesOrPoints,
+        opponentGamesOrPoints: seg.opponentGamesOrPoints,
+      });
     }
   }
 

@@ -1,9 +1,14 @@
+"use client";
+
 import Link from "next/link";
-import { getTranslations } from "next-intl/server";
+import { useState } from "react";
+import { useTranslations } from "next-intl";
+import { ChevronDown, SlidersHorizontal } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { DashboardFilters } from "@/lib/dashboard-aggregates";
+import { cn } from "@/lib/utils";
 
 type OpponentOption = { id: string; name: string };
 
@@ -12,11 +17,11 @@ type DashboardFiltersFormProps = {
   opponents: OpponentOption[];
 };
 
-export async function DashboardFiltersForm({
+export function DashboardFiltersForm({
   filters,
   opponents,
 }: DashboardFiltersFormProps) {
-  const t = await getTranslations("dashboard.filters");
+  const t = useTranslations("dashboard.filters");
 
   const hasFilters = Boolean(
     filters.from ||
@@ -26,10 +31,12 @@ export async function DashboardFiltersForm({
       (filters.completionStatus && filters.completionStatus !== "all"),
   );
 
-  return (
+  const [mobileOpen, setMobileOpen] = useState(hasFilters);
+
+  const formFields = (
     <form
       method="get"
-      className="mb-6 grid gap-3 rounded-lg border border-border p-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6"
+      className="grid gap-3 rounded-lg border border-border p-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6"
     >
       <label className="space-y-1 text-sm">
         <span>{t("from")}</span>
@@ -90,5 +97,39 @@ export async function DashboardFiltersForm({
         ) : null}
       </div>
     </form>
+  );
+
+  return (
+    <div className="mb-6">
+      {/* Mobile: compact toggle */}
+      <div className="md:hidden">
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="h-8 gap-1.5 px-2 text-muted-foreground"
+          aria-expanded={mobileOpen}
+          onClick={() => setMobileOpen((open) => !open)}
+        >
+          <SlidersHorizontal className="h-3.5 w-3.5" />
+          {t("toggle")}
+          {hasFilters ? (
+            <span className="rounded-full bg-primary/15 px-1.5 text-[10px] font-medium text-primary">
+              {t("active")}
+            </span>
+          ) : null}
+          <ChevronDown
+            className={cn(
+              "h-3.5 w-3.5 transition-transform",
+              mobileOpen && "rotate-180",
+            )}
+          />
+        </Button>
+        {mobileOpen ? <div className="mt-2">{formFields}</div> : null}
+      </div>
+
+      {/* Desktop: always visible */}
+      <div className="hidden md:block">{formFields}</div>
+    </div>
   );
 }

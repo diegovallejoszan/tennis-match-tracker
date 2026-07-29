@@ -41,8 +41,10 @@ function toStatsShape(matches: GroupedMatch[]): MatchForDashboard[] {
     createdAt: m.createdAt,
     matchType: m.matchType,
     outcome: m.outcome,
+    score: m.score,
     opponents: m.opponents,
     partner: m.partner,
+    scoreSegments: m.scoreSegments,
   }));
 }
 
@@ -122,11 +124,8 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
 
   return (
     <div className="p-4 md:p-6">
-      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="mb-4 flex items-center justify-between gap-3 md:mb-6">
         <h1 className="text-2xl font-semibold">{t("title")}</h1>
-        <Button variant="outline" asChild>
-          <Link href="/matches/new">{t("logMatch")}</Link>
-        </Button>
       </div>
 
       <DashboardFiltersForm filters={filters} opponents={playerRows} />
@@ -228,11 +227,16 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
       </div>
 
       <section>
-        <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <h2 className="text-lg font-semibold">{t("recent.title")}</h2>
-          <Button variant="link" className="h-auto p-0" asChild>
-            <Link href="/matches">{tCommon("viewAll")}</Link>
-          </Button>
+          <div className="flex flex-wrap items-center gap-3">
+            <Button variant="outline" size="sm" asChild>
+              <Link href="/matches/new">{t("logMatch")}</Link>
+            </Button>
+            <Button variant="link" className="h-auto p-0" asChild>
+              <Link href="/matches">{tCommon("viewAll")}</Link>
+            </Button>
+          </div>
         </div>
         {recent.length === 0 ? (
           <Card>

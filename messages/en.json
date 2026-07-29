@@ -96,7 +96,9 @@
       "finishedOnly": "Finished (win/loss)",
       "notFinishedOnly": "Not finished only",
       "apply": "Apply filters",
-      "clear": "Clear"
+      "clear": "Clear",
+      "toggle": "Filters",
+      "active": "On"
     },
     "charts": {
       "wins": "Wins",
@@ -104,14 +106,18 @@
       "winRate": "Win rate",
       "sparkline": {
         "title": "Match results over time",
-        "subtitle": "Each match on the timeline — up for wins, down for losses, dot for not finished.",
+        "subtitle": "Each match on the timeline — color is the result; height is the games differential.",
         "empty": "No matches match the current filters.",
         "ariaLabel": "Per-match result sparkline",
         "win": "Win",
         "loss": "Loss",
         "notFinished": "Not finished",
         "vs": "vs",
-        "hint": "Tap or hover a marker for match details"
+        "hint": "Tap a marker for match details",
+        "score": "Score",
+        "noScore": "No score recorded",
+        "differential": "Games: {value}",
+        "heightHint": "Height = games for (+) / against (−)"
       },
       "byType": {
         "title": "Win / loss by match type",

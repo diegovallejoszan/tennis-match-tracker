@@ -6,8 +6,14 @@ export type MatchForDashboard = {
   createdAt?: Date;
   matchType: string;
   outcome: string | null;
+  score?: string | null;
   opponents: Array<{ id: string; name: string }>;
   partner?: { id: string; name: string } | null;
+  scoreSegments?: Array<{
+    segmentType: string;
+    userGamesOrPoints: number;
+    opponentGamesOrPoints: number;
+  }>;
 };
 
 export type DashboardFilters = {
@@ -113,8 +119,75 @@ export type SparklinePoint = {
   outcome: "win" | "loss" | "non_finished" | null;
   matchType: string;
   opponents: string[];
+  score: string | null;
+  /** Signed game differential (user − opponent). Legacy matches are 0. */
+  gameDifferential: number;
   sortKey: string;
 };
+
+/**
+ * Games won by the user minus games won by the opponent.
+ *
+ * - Counts set / long-set games only.
+ * - A following standard (or super) tie-break awards the deciding set game
+ *   (+1 to the TB winner) but TB/STB *points* never count.
+ * - Standalone super/tie-break segments contribute 0.
+ * - Legacy free-text scores (no segments) return 0.
+ */
+export function gameDifferentialFromSegments(
+  segments:
+    | Array<{
+        segmentType: string;
+        userGamesOrPoints: number;
+        opponentGamesOrPoints: number;
+      }>
+    | null
+    | undefined,
+): number {
+  if (!segments || segments.length === 0) return 0;
+
+  let diff = 0;
+  let i = 0;
+  while (i < segments.length) {
+    const current = segments[i]!;
+    const next = segments[i + 1];
+    const isSet =
+      current.segmentType === "set" || current.segmentType === "long_set";
+    const nextIsBreak =
+      next?.segmentType === "tie_break" ||
+      next?.segmentType === "super_tie_break";
+
+    if (isSet && nextIsBreak) {
+      let userGames = current.userGamesOrPoints;
+      let oppGames = current.opponentGamesOrPoints;
+      const isStandardTb = next.segmentType === "tie_break";
+      const setTied = userGames === oppGames;
+      // Standard TB always decides the set game. Match STB only does when the
+      // preceding set is tied (e.g. 6-6 [10-8]); otherwise STB points are ignored.
+      if (isStandardTb || setTied) {
+        if (next.userGamesOrPoints > next.opponentGamesOrPoints) {
+          userGames += 1;
+        } else if (next.opponentGamesOrPoints > next.userGamesOrPoints) {
+          oppGames += 1;
+        }
+      }
+      diff += userGames - oppGames;
+      i += 2;
+      continue;
+    }
+
+    if (isSet) {
+      diff += current.userGamesOrPoints - current.opponentGamesOrPoints;
+      i += 1;
+      continue;
+    }
+
+    // Orphan tie-break / super-tie-break points are excluded.
+    i += 1;
+  }
+
+  return diff;
+}
 
 function sparklineSortKey(m: MatchForDashboard): string {
   const time = m.time?.slice(0, 8) ?? "00:00:00";
@@ -142,6 +215,8 @@ export function buildSparklinePoints(
       outcome,
       matchType: m.matchType,
       opponents: m.opponents.map((o) => o.name),
+      score: m.score ?? null,
+      gameDifferential: gameDifferentialFromSegments(m.scoreSegments),
       sortKey: sparklineSortKey(m),
     };
   });

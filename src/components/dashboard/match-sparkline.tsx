@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 
 import type { SparklinePoint } from "@/lib/dashboard-aggregates";
@@ -9,11 +9,12 @@ type MatchSparklineProps = {
   points: SparklinePoint[];
 };
 
-const WHISKER_LEN = 26;
-const CHART_HEIGHT = 100;
-const MIN_POINT_GAP = 10;
-/** Invisible hit area width so thin whiskers are easy to tap on mobile. */
+const CHART_HEIGHT = 120;
+const BASELINE = CHART_HEIGHT / 2;
+const MAX_BAR = 44;
+const MIN_POINT_GAP = 14;
 const HIT_WIDTH = 28;
+const ZERO_DOT_R = 3.5;
 
 function formatPointDate(date: string, time: string | null): string {
   const [y, mo, d] = date.split("-");
@@ -22,17 +23,30 @@ function formatPointDate(date: string, time: string | null): string {
   return time ? `${base} ${time.slice(0, 5)}` : base;
 }
 
+function outcomeColor(outcome: SparklinePoint["outcome"]): string {
+  if (outcome === "win") return "#16a34a";
+  if (outcome === "loss") return "#dc2626";
+  return "currentColor";
+}
+
 export function MatchSparkline({ points }: MatchSparklineProps) {
   const t = useTranslations("dashboard.charts.sparkline");
-  const [activeIndex, setActiveIndex] = useState<number | null>(null);
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  /** Skip the synthetic mouseenter that follows a touch tap on mobile. */
+  const skipHoverRef = useRef(false);
+  const skipHoverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const layout = useMemo(() => {
     const count = points.length;
     const width = Math.max(320, count * MIN_POINT_GAP + 48);
-    const baseline = CHART_HEIGHT / 2;
     const gap = count > 0 ? width / (count + 1) : width;
-    return { width, baseline, gap, count };
-  }, [points.length]);
+    const maxAbs = Math.max(
+      1,
+      ...points.map((p) => Math.abs(p.gameDifferential)),
+    );
+    return { width, gap, count, maxAbs };
+  }, [points]);
 
   if (points.length === 0) {
     return (
@@ -42,11 +56,8 @@ export function MatchSparkline({ points }: MatchSparklineProps) {
     );
   }
 
+  const activeIndex = selectedIndex ?? hoveredIndex;
   const active = activeIndex !== null ? points[activeIndex] : null;
-
-  function selectPoint(index: number) {
-    setActiveIndex((prev) => (prev === index ? null : index));
-  }
 
   function outcomeLabel(outcome: SparklinePoint["outcome"]): string {
     if (outcome === "win") return t("win");
@@ -54,20 +65,46 @@ export function MatchSparkline({ points }: MatchSparklineProps) {
     return t("notFinished");
   }
 
+  function barLength(diff: number): number {
+    if (diff === 0) return 0;
+    return Math.max(6, (Math.abs(diff) / layout.maxAbs) * MAX_BAR);
+  }
+
+  function selectPoint(index: number) {
+    skipHoverRef.current = true;
+    if (skipHoverTimerRef.current) clearTimeout(skipHoverTimerRef.current);
+    skipHoverTimerRef.current = setTimeout(() => {
+      skipHoverRef.current = false;
+      skipHoverTimerRef.current = null;
+    }, 500);
+    setHoveredIndex(null);
+    setSelectedIndex((prev) => (prev === index ? null : index));
+  }
+
+  function onPointerEnter(index: number) {
+    if (skipHoverRef.current) return;
+    setHoveredIndex(index);
+  }
+
+  function onPointerLeave() {
+    if (skipHoverRef.current) return;
+    setHoveredIndex(null);
+  }
+
   return (
     <div className="space-y-2">
       <div className="relative overflow-x-auto">
         <svg
           viewBox={`0 0 ${layout.width} ${CHART_HEIGHT}`}
-          className="min-w-full touch-manipulation text-foreground"
+          className="min-w-full touch-manipulation text-foreground [&_:focus]:outline-none"
           role="img"
           aria-label={t("ariaLabel")}
         >
           <line
             x1={layout.gap * 0.5}
-            y1={layout.baseline}
+            y1={BASELINE}
             x2={layout.width - layout.gap * 0.5}
-            y2={layout.baseline}
+            y2={BASELINE}
             stroke="currentColor"
             strokeWidth={0.75}
             opacity={0.25}
@@ -75,95 +112,114 @@ export function MatchSparkline({ points }: MatchSparklineProps) {
           {points.map((point, index) => {
             const x = layout.gap * (index + 1);
             const isActive = activeIndex === index;
-            const strokeWidth = isActive ? 2.25 : 1.25;
-
-            const hitRect = (
-              <rect
-                x={x - HIT_WIDTH / 2}
-                y={0}
-                width={HIT_WIDTH}
-                height={CHART_HEIGHT}
-                fill="transparent"
-                className="cursor-pointer"
-                onClick={() => selectPoint(index)}
-                onMouseEnter={() => setActiveIndex(index)}
-                role="button"
-                tabIndex={0}
-                aria-label={`${formatPointDate(point.date, point.time)} · ${outcomeLabel(point.outcome)}`}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter" || event.key === " ") {
-                    event.preventDefault();
-                    selectPoint(index);
-                  }
-                }}
-              />
-            );
-
-            if (point.outcome === "win") {
-              const yTop = layout.baseline - WHISKER_LEN;
-              return (
-                <g key={point.id}>
-                  <line
-                    x1={x}
-                    y1={layout.baseline}
-                    x2={x}
-                    y2={yTop}
-                    stroke="#16a34a"
-                    strokeWidth={strokeWidth}
-                    pointerEvents="none"
-                  />
-                  <line
-                    x1={x - 4}
-                    y1={yTop}
-                    x2={x + 4}
-                    y2={yTop}
-                    stroke="#16a34a"
-                    strokeWidth={strokeWidth}
-                    pointerEvents="none"
-                  />
-                  {hitRect}
-                </g>
-              );
-            }
-
-            if (point.outcome === "loss") {
-              const yBottom = layout.baseline + WHISKER_LEN;
-              return (
-                <g key={point.id}>
-                  <line
-                    x1={x}
-                    y1={layout.baseline}
-                    x2={x}
-                    y2={yBottom}
-                    stroke="#dc2626"
-                    strokeWidth={strokeWidth}
-                    pointerEvents="none"
-                  />
-                  <line
-                    x1={x - 4}
-                    y1={yBottom}
-                    x2={x + 4}
-                    y2={yBottom}
-                    stroke="#dc2626"
-                    strokeWidth={strokeWidth}
-                    pointerEvents="none"
-                  />
-                  {hitRect}
-                </g>
-              );
-            }
+            const color = outcomeColor(point.outcome);
+            const len = barLength(point.gameDifferential);
+            const opacity = point.outcome === "non_finished" || point.outcome === null ? 0.55 : 1;
 
             return (
               <g key={point.id}>
-                <circle
-                  cx={x}
-                  cy={layout.baseline}
-                  r={isActive ? 4 : 3}
-                  fill="currentColor"
-                  opacity={0.45}
-                  pointerEvents="none"
+                {isActive ? (
+                  <rect
+                    x={x - HIT_WIDTH / 2}
+                    y={4}
+                    width={HIT_WIDTH}
+                    height={CHART_HEIGHT - 8}
+                    rx={4}
+                    fill="currentColor"
+                    opacity={0.08}
+                    pointerEvents="none"
+                  />
+                ) : null}
+
+                {point.gameDifferential > 0 ? (
+                  <>
+                    <line
+                      x1={x}
+                      y1={BASELINE}
+                      x2={x}
+                      y2={BASELINE - len}
+                      stroke={color}
+                      strokeWidth={isActive ? 2.5 : 1.75}
+                      opacity={opacity}
+                      pointerEvents="none"
+                    />
+                    <line
+                      x1={x - 4}
+                      y1={BASELINE - len}
+                      x2={x + 4}
+                      y2={BASELINE - len}
+                      stroke={color}
+                      strokeWidth={isActive ? 2.5 : 1.75}
+                      opacity={opacity}
+                      pointerEvents="none"
+                    />
+                  </>
+                ) : null}
+
+                {point.gameDifferential < 0 ? (
+                  <>
+                    <line
+                      x1={x}
+                      y1={BASELINE}
+                      x2={x}
+                      y2={BASELINE + len}
+                      stroke={color}
+                      strokeWidth={isActive ? 2.5 : 1.75}
+                      opacity={opacity}
+                      pointerEvents="none"
+                    />
+                    <line
+                      x1={x - 4}
+                      y1={BASELINE + len}
+                      x2={x + 4}
+                      y2={BASELINE + len}
+                      stroke={color}
+                      strokeWidth={isActive ? 2.5 : 1.75}
+                      opacity={opacity}
+                      pointerEvents="none"
+                    />
+                  </>
+                ) : null}
+
+                {point.gameDifferential === 0 ? (
+                  <circle
+                    cx={x}
+                    cy={BASELINE}
+                    r={isActive ? ZERO_DOT_R + 1 : ZERO_DOT_R}
+                    fill={color}
+                    opacity={opacity}
+                    pointerEvents="none"
+                  />
+                ) : null}
+
+                <rect
+                  x={x - HIT_WIDTH / 2}
+                  y={0}
+                  width={HIT_WIDTH}
+                  height={CHART_HEIGHT}
+                  fill="transparent"
+                  className="cursor-pointer focus:outline-none"
+                  style={{ outline: "none" }}
+                  tabIndex={0}
+                  role="button"
+                  aria-pressed={selectedIndex === index}
+                  aria-label={`${formatPointDate(point.date, point.time)} · ${outcomeLabel(point.outcome)}`}
+                  onPointerUp={(event) => {
+                    // Prefer pointerup so touch and mouse share one path.
+                    if (event.pointerType === "touch") {
+                      event.preventDefault();
+                    }
+                    selectPoint(index);
+                  }}
+                  onPointerEnter={() => onPointerEnter(index)}
+                  onPointerLeave={onPointerLeave}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      selectPoint(index);
+                    }
+                  }}
                 />
-                {hitRect}
               </g>
             );
           })}
@@ -179,16 +235,30 @@ export function MatchSparkline({ points }: MatchSparklineProps) {
         aria-live="polite"
       >
         {active ? (
-          <p>
-            <span className="font-medium">
-              {formatPointDate(active.date, active.time)}
-            </span>
-            {" · "}
-            {outcomeLabel(active.outcome)}
-            {active.opponents.length > 0
-              ? ` · ${t("vs")} ${active.opponents.join(", ")}`
-              : ""}
-          </p>
+          <div className="space-y-0.5">
+            <p>
+              <span className="font-medium">
+                {formatPointDate(active.date, active.time)}
+              </span>
+              {" · "}
+              {outcomeLabel(active.outcome)}
+              {active.opponents.length > 0
+                ? ` · ${t("vs")} ${active.opponents.join(", ")}`
+                : ""}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {active.score
+                ? `${t("score")}: ${active.score}`
+                : t("noScore")}
+              {" · "}
+              {t("differential", {
+                value:
+                  active.gameDifferential > 0
+                    ? `+${active.gameDifferential}`
+                    : String(active.gameDifferential),
+              })}
+            </p>
+          </div>
         ) : (
           <p className="text-xs">{t("hint")}</p>
         )}
@@ -198,6 +268,7 @@ export function MatchSparkline({ points }: MatchSparklineProps) {
         <span className="text-emerald-600">↑ {t("win")}</span>
         <span className="text-red-600">↓ {t("loss")}</span>
         <span>· {t("notFinished")}</span>
+        <span>· {t("heightHint")}</span>
       </div>
     </div>
   );

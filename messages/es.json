@@ -96,7 +96,9 @@
       "finishedOnly": "Terminados (victoria/derrota)",
       "notFinishedOnly": "Solo sin terminar",
       "apply": "Aplicar filtros",
-      "clear": "Limpiar"
+      "clear": "Limpiar",
+      "toggle": "Filtros",
+      "active": "Activos"
     },
     "charts": {
       "wins": "Victorias",
@@ -104,14 +106,18 @@
       "winRate": "Porcentaje de victorias",
       "sparkline": {
         "title": "Resultados en el tiempo",
-        "subtitle": "Cada partido en la línea — arriba victoria, abajo derrota, punto sin terminar.",
+        "subtitle": "Cada partido en la línea — el color es el resultado; la altura es la diferencia de juegos.",
         "empty": "Ningún partido coincide con los filtros actuales.",
         "ariaLabel": "Gráfico de resultados por partido",
         "win": "Victoria",
         "loss": "Derrota",
         "notFinished": "Sin terminar",
         "vs": "vs",
-        "hint": "Toca o pasa el cursor sobre un marcador para ver detalles"
+        "hint": "Toca un marcador para ver detalles",
+        "score": "Marcador",
+        "noScore": "Sin marcador registrado",
+        "differential": "Juegos: {value}",
+        "heightHint": "Altura = juegos a favor (+) / en contra (−)"
       },
       "byType": {
         "title": "Victorias / derrotas por tipo",
