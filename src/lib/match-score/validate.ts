@@ -12,6 +12,7 @@ function validateStandardSet(
   target: number,
   label: string,
   followedByTieBreak = false,
+  allowIncomplete = false,
 ): IntegrityIssue[] {
   const issues: IntegrityIssue[] = [];
   if (u < 0 || o < 0) {
@@ -40,9 +41,11 @@ function validateStandardSet(
   }
   if (w === "tie") {
     issues.push({
-      code: "set_tied",
-      message: `${label}: set cannot end in a tie unless ${target}-${target} (add a tie break)`,
-      severity: "error",
+      code: allowIncomplete ? "set_incomplete" : "set_tied",
+      message: allowIncomplete
+        ? `${label}: set is still in progress`
+        : `${label}: set cannot end in a tie unless ${target}-${target} (add a tie break)`,
+      severity: allowIncomplete ? "warning" : "error",
     });
     return issues;
   }
@@ -119,7 +122,7 @@ function validateTieBreak(
 export function validateSegment(
   segment: ScoreSegmentInput,
   index: number,
-  options?: { followedByTieBreak?: boolean },
+  options?: { followedByTieBreak?: boolean; allowIncomplete?: boolean },
 ): IntegrityIssue[] {
   const { segmentType, userGamesOrPoints: u, opponentGamesOrPoints: o } =
     segment;
@@ -133,6 +136,7 @@ export function validateSegment(
         6,
         label,
         options?.followedByTieBreak,
+        options?.allowIncomplete,
       );
     case "long_set":
       return validateStandardSet(
@@ -141,6 +145,7 @@ export function validateSegment(
         9,
         label,
         options?.followedByTieBreak,
+        options?.allowIncomplete,
       );
     case "tie_break":
       return validateTieBreak(u, o, 7);
@@ -169,6 +174,7 @@ export function validateAllSegments(
     issues.push(
       ...validateSegment(seg, i, {
         followedByTieBreak: decidedByBreak,
+        allowIncomplete: i === segments.length - 1,
       }),
     );
   });
@@ -201,20 +207,28 @@ export function countSetsWon(
       current.segmentType === "set" ||
       current.segmentType === "long_set"
     ) {
-      const w = winner(
-        current.userGamesOrPoints,
-        current.opponentGamesOrPoints,
-      );
-      if (w === "user") user += 1;
-      else if (w === "opponent") opponent += 1;
+      const target = current.segmentType === "set" ? 6 : 9;
+      const u = current.userGamesOrPoints;
+      const o = current.opponentGamesOrPoints;
+      const high = Math.max(u, o);
+      const low = Math.min(u, o);
+      const completed =
+        (high >= target && high - low >= 2) ||
+        (high === target + 1 && low === target);
+      if (completed) {
+        const w = winner(u, o);
+        if (w === "user") user += 1;
+        else if (w === "opponent") opponent += 1;
+      }
     }
     if (current.segmentType === "super_tie_break") {
-      const w = winner(
-        current.userGamesOrPoints,
-        current.opponentGamesOrPoints,
-      );
-      if (w === "user") user += 1;
-      else if (w === "opponent") opponent += 1;
+      const u = current.userGamesOrPoints;
+      const o = current.opponentGamesOrPoints;
+      if (Math.max(u, o) >= 10 && Math.abs(u - o) >= 2) {
+        const w = winner(u, o);
+        if (w === "user") user += 1;
+        else if (w === "opponent") opponent += 1;
+      }
     }
     i += 1;
   }

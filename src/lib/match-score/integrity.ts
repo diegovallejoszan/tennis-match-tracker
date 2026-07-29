@@ -41,7 +41,17 @@ export function checkMatchIntegrity(
 
     if (outcome === "win" || outcome === "loss") {
       const { user, opponent } = countSetsWon(segments);
-      if (user === opponent && user > 0) {
+      const hasFinishedSet = user + opponent > 0;
+      const hasIncompleteSet = issues.some(
+        (issue) => issue.code === "set_incomplete",
+      );
+      const outcomeCanComeFromRetirement = hasFinishedSet && hasIncompleteSet;
+
+      if (outcomeCanComeFromRetirement) {
+        // A match can end by retirement during a later set. In that case the
+        // selected result is authoritative even if completed sets favor the
+        // other player.
+      } else if (user === opponent && user > 0) {
         issues.push({
           code: "tied_match",
           message: "Sets are tied — match may be incomplete",

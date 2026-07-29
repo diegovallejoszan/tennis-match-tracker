@@ -33,6 +33,53 @@ describe("parseMatchForm", () => {
     expect(parsed.success).toBe(true);
   });
 
+  it("accepts a loss with one finished set and a partial final set", () => {
+    const parsed = parseMatchForm({
+      ...defaultMatchFormValues(),
+      date: "2026-07-29",
+      matchType: "single",
+      outcome: "loss",
+      scoreSegments: [
+        { segmentType: "set", userGamesOrPoints: 4, opponentGamesOrPoints: 6 },
+        { segmentType: "set", userGamesOrPoints: 4, opponentGamesOrPoints: 4 },
+      ],
+      opponentIds: [opponentA],
+    });
+
+    expect(parsed.success).toBe(true);
+  });
+
+  it("allows either result when a match ends during a partial set", () => {
+    const parsed = parseMatchForm({
+      ...defaultMatchFormValues(),
+      date: "2026-07-29",
+      matchType: "single",
+      outcome: "win",
+      scoreSegments: [
+        { segmentType: "set", userGamesOrPoints: 4, opponentGamesOrPoints: 6 },
+        { segmentType: "set", userGamesOrPoints: 4, opponentGamesOrPoints: 4 },
+      ],
+      opponentIds: [opponentA],
+    });
+
+    expect(parsed.success).toBe(true);
+  });
+
+  it("still rejects win or loss when no set has been finished", () => {
+    const parsed = parseMatchForm({
+      ...defaultMatchFormValues(),
+      date: "2026-07-29",
+      matchType: "single",
+      outcome: "loss",
+      scoreSegments: [
+        { segmentType: "set", userGamesOrPoints: 4, opponentGamesOrPoints: 4 },
+      ],
+      opponentIds: [opponentA],
+    });
+
+    expect(parsed.success).toBe(false);
+  });
+
   it("accepts legacy score when structured is off", () => {
     const parsed = parseMatchForm({
       ...defaultMatchFormValues(),

@@ -24,7 +24,7 @@
     "viewAll": "Ver todos",
     "addOne": "Añadir uno",
     "all": "Todos",
-    "singles": "Individual",
+    "singles": "Singles",
     "doubles": "Dobles",
     "practice": "Entrenamiento",
     "from": "Desde",
@@ -71,7 +71,7 @@
     "cards": {
       "totalMatches": "Total de partidos",
       "inRange": "Con los filtros actuales",
-      "singlesWinRate": "Victorias en individual",
+      "singlesWinRate": "Victorias en Singles",
       "doublesWinRate": "Victorias en dobles",
       "noResults": "Sin resultados competitivos en el rango",
       "record": "{wins}V · {losses}D",
@@ -87,7 +87,7 @@
       "matchType": "Tipo de partido",
       "allTypes": "Todos los tipos",
       "practice": "Entrenamiento",
-      "singles": "Individual",
+      "singles": "Singles",
       "doubles": "Dobles",
       "opponent": "Rival",
       "allOpponents": "Todos los rivales",
@@ -121,12 +121,12 @@
       },
       "byType": {
         "title": "Victorias / derrotas por tipo",
-        "subtitle": "Solo individual y dobles (partidos competitivos).",
-        "empty": "Sin partidos competitivos de individual o dobles en este rango."
+        "subtitle": "Solo Singles y dobles (partidos competitivos).",
+        "empty": "Sin partidos competitivos de Singles o dobles en este rango."
       },
       "trend": {
         "title": "Tendencia de rendimiento",
-        "subtitle": "Porcentaje de victorias por mes en partidos competitivos (individual y dobles).",
+        "subtitle": "Porcentaje de victorias por mes en partidos competitivos (Singles y dobles).",
         "empty": "Sin resultados competitivos en este rango."
       }
     },
@@ -215,7 +215,7 @@
       "timeOptional": "Hora (opcional)",
       "matchType": "Tipo de partido",
       "practice": "Entrenamiento",
-      "singles": "Individual",
+      "singles": "Singles",
       "doubles": "Dobles",
       "partner": "Compañero",
       "addNewPartner": "Añadir nuevo compañero",
