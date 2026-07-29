@@ -250,13 +250,6 @@ export function MatchSparkline({ points }: MatchSparklineProps) {
               {active.score
                 ? `${t("score")}: ${active.score}`
                 : t("noScore")}
-              {" · "}
-              {t("differential", {
-                value:
-                  active.gameDifferential > 0
-                    ? `+${active.gameDifferential}`
-                    : String(active.gameDifferential),
-              })}
             </p>
           </div>
         ) : (
