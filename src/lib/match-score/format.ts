@@ -1,4 +1,5 @@
 import type { ScoreSegmentInput, SegmentType } from "./types";
+import { isCompletedSetScore } from "./validate";
 
 function formatSetGames(u: number, o: number): string {
   return `${u}-${o}`;
@@ -21,7 +22,12 @@ export function formatScoreFromSegments(segments: ScoreSegmentInput[]): string {
 
     if (
       (current.segmentType === "set" || current.segmentType === "long_set") &&
-      next?.segmentType === "tie_break"
+      next?.segmentType === "tie_break" &&
+      !isCompletedSetScore(
+        current.userGamesOrPoints,
+        current.opponentGamesOrPoints,
+        current.segmentType === "long_set" ? 9 : 6,
+      )
     ) {
       const u = current.userGamesOrPoints;
       const o = current.opponentGamesOrPoints;
@@ -40,7 +46,12 @@ export function formatScoreFromSegments(segments: ScoreSegmentInput[]): string {
 
     if (
       (current.segmentType === "set" || current.segmentType === "long_set") &&
-      next?.segmentType === "super_tie_break"
+      next?.segmentType === "super_tie_break" &&
+      !isCompletedSetScore(
+        current.userGamesOrPoints,
+        current.opponentGamesOrPoints,
+        current.segmentType === "long_set" ? 9 : 6,
+      )
     ) {
       const u = current.userGamesOrPoints;
       const o = current.opponentGamesOrPoints;

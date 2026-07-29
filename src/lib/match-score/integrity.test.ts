@@ -34,6 +34,21 @@ describe("checkMatchIntegrity", () => {
     expect(hasBlockingIntegrityIssues(issues)).toBe(false);
   });
 
+  it("keeps a completed-set lead over an additional lost super tie break", () => {
+    const segments: ScoreSegmentInput[] = [
+      { segmentType: "set", userGamesOrPoints: 6, opponentGamesOrPoints: 4 },
+      {
+        segmentType: "super_tie_break",
+        userGamesOrPoints: 7,
+        opponentGamesOrPoints: 10,
+      },
+    ];
+
+    const issues = checkMatchIntegrity({ outcome: "win", segments });
+    expect(hasBlockingIntegrityIssues(issues)).toBe(false);
+    expect(suggestOutcomeFromSegments(segments)).toBe("win");
+  });
+
   it("allows non-finished without segments", () => {
     const issues = checkMatchIntegrity({
       outcome: "non_finished",

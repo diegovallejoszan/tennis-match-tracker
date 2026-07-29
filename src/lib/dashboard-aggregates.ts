@@ -1,3 +1,5 @@
+import { isCompletedSetScore } from "@/lib/match-score/validate";
+
 /** Minimal match shape for dashboard math (keeps aggregates testable without DB). */
 export type MatchForDashboard = {
   id?: string;
@@ -162,9 +164,14 @@ export function gameDifferentialFromSegments(
       let oppGames = current.opponentGamesOrPoints;
       const isStandardTb = next.segmentType === "tie_break";
       const setTied = userGames === oppGames;
-      // Standard TB always decides the set game. Match STB only does when the
-      // preceding set is tied (e.g. 6-6 [10-8]); otherwise STB points are ignored.
-      if (isStandardTb || setTied) {
+      const setComplete = isCompletedSetScore(
+        userGames,
+        oppGames,
+        current.segmentType === "long_set" ? 9 : 6,
+      );
+      // A break can decide an unfinished set. Once the preceding set is already
+      // complete, later TB/STB points are additional play and do not alter it.
+      if (!setComplete && (isStandardTb || setTied)) {
         if (next.userGamesOrPoints > next.opponentGamesOrPoints) {
           userGames += 1;
         } else if (next.opponentGamesOrPoints > next.userGamesOrPoints) {

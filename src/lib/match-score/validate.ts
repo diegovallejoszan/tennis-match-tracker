@@ -6,6 +6,19 @@ function winner(u: number, o: number): "user" | "opponent" | "tie" {
   return "tie";
 }
 
+export function isCompletedSetScore(
+  u: number,
+  o: number,
+  target: number,
+): boolean {
+  const high = Math.max(u, o);
+  const low = Math.min(u, o);
+  return (
+    (high >= target && high - low >= 2) ||
+    (high === target + 1 && low === target)
+  );
+}
+
 function validateStandardSet(
   u: number,
   o: number,
@@ -187,12 +200,24 @@ export function countSetsWon(
 ): { user: number; opponent: number } {
   let user = 0;
   let opponent = 0;
+  const standaloneSuperTieBreaks: ScoreSegmentInput[] = [];
   let i = 0;
   while (i < segments.length) {
     const current = segments[i]!;
     const next = segments[i + 1];
+    const currentIsSet =
+      current.segmentType === "set" || current.segmentType === "long_set";
+    const target = current.segmentType === "long_set" ? 9 : 6;
+    const currentSetIsComplete =
+      currentIsSet &&
+      isCompletedSetScore(
+        current.userGamesOrPoints,
+        current.opponentGamesOrPoints,
+        target,
+      );
     if (
-      (current.segmentType === "set" || current.segmentType === "long_set") &&
+      currentIsSet &&
+      !currentSetIsComplete &&
       (next?.segmentType === "tie_break" ||
         next?.segmentType === "super_tie_break")
     ) {
@@ -204,33 +229,33 @@ export function countSetsWon(
       continue;
     }
     if (
-      current.segmentType === "set" ||
-      current.segmentType === "long_set"
+      currentIsSet
     ) {
-      const target = current.segmentType === "set" ? 6 : 9;
       const u = current.userGamesOrPoints;
       const o = current.opponentGamesOrPoints;
-      const high = Math.max(u, o);
-      const low = Math.min(u, o);
-      const completed =
-        (high >= target && high - low >= 2) ||
-        (high === target + 1 && low === target);
-      if (completed) {
+      if (currentSetIsComplete) {
         const w = winner(u, o);
         if (w === "user") user += 1;
         else if (w === "opponent") opponent += 1;
       }
     }
     if (current.segmentType === "super_tie_break") {
-      const u = current.userGamesOrPoints;
-      const o = current.opponentGamesOrPoints;
+      standaloneSuperTieBreaks.push(current);
+    }
+    i += 1;
+  }
+
+  if (user === opponent) {
+    for (const segment of standaloneSuperTieBreaks) {
+      const u = segment.userGamesOrPoints;
+      const o = segment.opponentGamesOrPoints;
       if (Math.max(u, o) >= 10 && Math.abs(u - o) >= 2) {
         const w = winner(u, o);
         if (w === "user") user += 1;
         else if (w === "opponent") opponent += 1;
       }
     }
-    i += 1;
   }
+
   return { user, opponent };
 }

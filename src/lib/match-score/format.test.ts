@@ -32,6 +32,19 @@ describe("formatScoreFromSegments", () => {
     expect(formatScoreFromSegments(segments)).toBe("[10-8]");
   });
 
+  it("keeps a super tie break separate after a completed set", () => {
+    const segments: ScoreSegmentInput[] = [
+      { segmentType: "set", userGamesOrPoints: 6, opponentGamesOrPoints: 4 },
+      {
+        segmentType: "super_tie_break",
+        userGamesOrPoints: 7,
+        opponentGamesOrPoints: 10,
+      },
+    ];
+
+    expect(formatScoreFromSegments(segments)).toBe("6-4 [7-10]");
+  });
+
   it("merges unfinished set with tie break", () => {
     const segments: ScoreSegmentInput[] = [
       { segmentType: "set", userGamesOrPoints: 6, opponentGamesOrPoints: 5 },

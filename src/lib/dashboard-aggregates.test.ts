@@ -166,6 +166,19 @@ describe("gameDifferentialFromSegments", () => {
     ).toBe(-1);
   });
 
+  it("preserves a completed-set margin over an additional super tie break", () => {
+    expect(
+      gameDifferentialFromSegments([
+        { segmentType: "set", userGamesOrPoints: 6, opponentGamesOrPoints: 4 },
+        {
+          segmentType: "super_tie_break",
+          userGamesOrPoints: 7,
+          opponentGamesOrPoints: 10,
+        },
+      ]),
+    ).toBe(2);
+  });
+
   it("awards the deciding set game from a tied set decided by super-tie-break", () => {
     expect(
       gameDifferentialFromSegments([
