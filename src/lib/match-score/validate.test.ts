@@ -30,4 +30,27 @@ describe("validateAllSegments", () => {
     ]);
     expect(issues.some((i) => i.code === "set_margin")).toBe(true);
   });
+
+  it.each([
+    [7, 5],
+    [5, 7],
+  ])("accepts %i-%i as a completed standard set", (user, opponent) => {
+    const issues = validateAllSegments([
+      {
+        segmentType: "set",
+        userGamesOrPoints: user,
+        opponentGamesOrPoints: opponent,
+      },
+    ]);
+
+    expect(hasBlockingIntegrityIssues(issues)).toBe(false);
+  });
+
+  it("still rejects 7-4 as an invalid standard set", () => {
+    const issues = validateAllSegments([
+      { segmentType: "set", userGamesOrPoints: 7, opponentGamesOrPoints: 4 },
+    ]);
+
+    expect(issues.some((issue) => issue.code === "set_invalid_seven")).toBe(true);
+  });
 });

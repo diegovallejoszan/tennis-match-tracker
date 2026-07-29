@@ -66,7 +66,7 @@ function validateStandardSet(
       severity: "error",
     });
   }
-  if (winGames === target + 1 && loseGames < target) {
+  if (winGames === target + 1 && loseGames < target - 1) {
     issues.push({
       code: "set_invalid_seven",
       message: `${label}: invalid ${winGames}-${loseGames} — use a tie break after ${target}-${target}`,
