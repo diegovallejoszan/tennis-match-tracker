@@ -105,6 +105,15 @@ export function PrepareClient({
     router.replace(`/prepare?adviceId=${advice.id}`, { scroll: false });
   }
 
+  function onOpponentChange(nextOpponentId: string) {
+    setOpponentId(nextOpponentId);
+    setServerError(null);
+    if (activeAdvice && activeAdvice.opponentId !== nextOpponentId) {
+      setActiveAdvice(null);
+      router.replace("/prepare", { scroll: false });
+    }
+  }
+
   function onGetAdvice() {
     setServerError(null);
     setPendingAction("generate");
@@ -191,7 +200,7 @@ export function PrepareClient({
               id="prepare-opponent"
               className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
               value={opponentId}
-              onChange={(e) => setOpponentId(e.target.value)}
+              onChange={(e) => onOpponentChange(e.target.value)}
             >
               {players.map((p) => (
                 <option key={p.id} value={p.id}>
