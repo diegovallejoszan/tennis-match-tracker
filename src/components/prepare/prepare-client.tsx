@@ -6,8 +6,10 @@ import { useRouter } from "next/navigation";
 import { useMemo, useState, useTransition } from "react";
 
 import {
+  deleteMatchPrepAdviceAction,
   generateMatchPrepAdviceAction,
   loadSavedMatchPrepAdviceAction,
+  regenerateMatchPrepAdviceAction,
 } from "@/app/actions/match-prep";
 import { AdviceMarkdown } from "@/components/prepare/advice-markdown";
 import { Button } from "@/components/ui/button";
@@ -18,17 +20,19 @@ import { cn } from "@/lib/utils";
 
 export type PreparePlayerOption = { id: string; name: string };
 
+type ActiveAdvice = {
+  id: string;
+  opponentId: string | null;
+  opponentName: string | null;
+  plannedMatchDate: string;
+  adviceMarkdown: string;
+  createdAt: Date;
+};
+
 type PrepareClientProps = {
   players: PreparePlayerOption[];
   history: SavedMatchPrepAdviceSummary[];
-  initialAdvice: {
-    id: string;
-    opponentId: string | null;
-    opponentName: string | null;
-    plannedMatchDate: string;
-    adviceMarkdown: string;
-    createdAt: Date;
-  } | null;
+  initialAdvice: ActiveAdvice | null;
   initialOpponentId?: string;
 };
 
@@ -57,6 +61,7 @@ export function PrepareClient({
   initialOpponentId,
 }: PrepareClientProps) {
   const t = useTranslations("prepare");
+  const tCommon = useTranslations("common");
   const locale = useLocale();
   const router = useRouter();
   const [opponentId, setOpponentId] = useState(
@@ -67,6 +72,9 @@ export function PrepareClient({
   );
   const [serverError, setServerError] = useState<string | null>(null);
   const [activeAdvice, setActiveAdvice] = useState(initialAdvice);
+  const [pendingAction, setPendingAction] = useState<
+    "generate" | "regenerate" | "delete" | null
+  >(null);
   const [isPending, startTransition] = useTransition();
 
   const filteredHistory = useMemo(() => {
@@ -74,26 +82,43 @@ export function PrepareClient({
     return history.filter((h) => h.opponentId === opponentId);
   }, [history, opponentId]);
 
+  function applyAdvice(advice: {
+    id: string;
+    opponentId: string | null;
+    opponentName?: string | null;
+    plannedMatchDate: string;
+    adviceMarkdown: string;
+    createdAt: Date;
+  }) {
+    setActiveAdvice({
+      id: advice.id,
+      opponentId: advice.opponentId,
+      opponentName: advice.opponentName ?? null,
+      plannedMatchDate: advice.plannedMatchDate,
+      adviceMarkdown: advice.adviceMarkdown,
+      createdAt: advice.createdAt,
+    });
+    if (advice.opponentId) {
+      setOpponentId(advice.opponentId);
+    }
+    setPlannedMatchDate(advice.plannedMatchDate);
+    router.replace(`/prepare?adviceId=${advice.id}`, { scroll: false });
+  }
+
   function onGetAdvice() {
     setServerError(null);
+    setPendingAction("generate");
     startTransition(async () => {
       const result = await generateMatchPrepAdviceAction({
         opponentId,
         plannedMatchDate,
       });
+      setPendingAction(null);
       if ("error" in result) {
         setServerError(result.error);
         return;
       }
-      setActiveAdvice({
-        id: result.advice.id,
-        opponentId: result.advice.opponentId,
-        opponentName: result.advice.opponentName ?? null,
-        plannedMatchDate: result.advice.plannedMatchDate,
-        adviceMarkdown: result.advice.adviceMarkdown,
-        createdAt: result.advice.createdAt,
-      });
-      router.replace(`/prepare?adviceId=${result.advice.id}`, { scroll: false });
+      applyAdvice(result.advice);
       router.refresh();
     });
   }
@@ -106,19 +131,42 @@ export function PrepareClient({
         setServerError(result.error);
         return;
       }
-      setActiveAdvice({
-        id: result.advice.id,
-        opponentId: result.advice.opponentId,
-        opponentName: result.advice.opponentName ?? null,
-        plannedMatchDate: result.advice.plannedMatchDate,
-        adviceMarkdown: result.advice.adviceMarkdown,
-        createdAt: result.advice.createdAt,
-      });
-      if (result.advice.opponentId) {
-        setOpponentId(result.advice.opponentId);
+      applyAdvice(result.advice);
+    });
+  }
+
+  function onRegenerate() {
+    if (!activeAdvice) return;
+    setServerError(null);
+    setPendingAction("regenerate");
+    startTransition(async () => {
+      const result = await regenerateMatchPrepAdviceAction(activeAdvice.id);
+      setPendingAction(null);
+      if ("error" in result) {
+        setServerError(result.error);
+        return;
       }
-      setPlannedMatchDate(result.advice.plannedMatchDate);
-      router.replace(`/prepare?adviceId=${result.advice.id}`, { scroll: false });
+      applyAdvice(result.advice);
+      router.refresh();
+    });
+  }
+
+  function onDelete() {
+    if (!activeAdvice) return;
+    if (!window.confirm(t("deleteConfirm"))) return;
+
+    setServerError(null);
+    setPendingAction("delete");
+    startTransition(async () => {
+      const result = await deleteMatchPrepAdviceAction(activeAdvice.id);
+      setPendingAction(null);
+      if ("error" in result) {
+        setServerError(result.error);
+        return;
+      }
+      setActiveAdvice(null);
+      router.replace("/prepare", { scroll: false });
+      router.refresh();
     });
   }
 
@@ -178,7 +226,7 @@ export function PrepareClient({
             disabled={!opponentId || !plannedMatchDate || isPending}
             className="w-full sm:w-auto"
           >
-            {isPending ? t("generating") : t("getAdvice")}
+            {pendingAction === "generate" ? t("generating") : t("getAdvice")}
           </Button>
         </section>
 
@@ -223,17 +271,43 @@ export function PrepareClient({
       <section className="min-w-0">
         {activeAdvice ? (
           <div className="space-y-3">
-            <div>
-              <h2 className="text-lg font-semibold tracking-tight">
-                {t("adviceTitle", {
-                  opponent: activeAdvice.opponentName ?? t("unknownOpponent"),
-                })}
-              </h2>
-              <p className="text-sm text-muted-foreground">
-                {t("adviceSubtitle", {
-                  date: formatShortDate(activeAdvice.plannedMatchDate, locale),
-                })}
-              </p>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <h2 className="text-lg font-semibold tracking-tight">
+                  {t("adviceTitle", {
+                    opponent: activeAdvice.opponentName ?? t("unknownOpponent"),
+                  })}
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  {t("adviceSubtitle", {
+                    date: formatShortDate(activeAdvice.plannedMatchDate, locale),
+                  })}
+                </p>
+              </div>
+              <div className="flex shrink-0 flex-wrap gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={onRegenerate}
+                  disabled={isPending || !activeAdvice.opponentId}
+                >
+                  {pendingAction === "regenerate"
+                    ? t("regenerating")
+                    : t("regenerate")}
+                </Button>
+                <Button
+                  type="button"
+                  variant="destructive"
+                  size="sm"
+                  onClick={onDelete}
+                  disabled={isPending}
+                >
+                  {pendingAction === "delete"
+                    ? t("deleting")
+                    : tCommon("delete")}
+                </Button>
+              </div>
             </div>
             <AdviceMarkdown markdown={activeAdvice.adviceMarkdown} />
           </div>

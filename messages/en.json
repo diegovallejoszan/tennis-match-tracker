@@ -373,6 +373,10 @@
     "advicePlaceholder": "Your tactical advice and game plan will appear here.",
     "noPlayers": "Add at least one player before requesting match preparation.",
     "addPlayer": "Add a player",
-    "unknownOpponent": "Unknown opponent"
+    "unknownOpponent": "Unknown opponent",
+    "regenerate": "Regenerate",
+    "regenerating": "Regenerating…",
+    "deleting": "Deleting…",
+    "deleteConfirm": "Delete this saved advice? This cannot be undone."
   }
 }

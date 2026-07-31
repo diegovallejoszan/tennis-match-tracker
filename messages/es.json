@@ -373,6 +373,10 @@
     "advicePlaceholder": "Aquí aparecerán los consejos tácticos y el plan de juego.",
     "noPlayers": "Añade al menos un jugador antes de pedir preparación.",
     "addPlayer": "Añadir jugador",
-    "unknownOpponent": "Rival desconocido"
+    "unknownOpponent": "Rival desconocido",
+    "regenerate": "Volver a generar",
+    "regenerating": "Generando de nuevo…",
+    "deleting": "Eliminando…",
+    "deleteConfirm": "¿Eliminar este consejo guardado? Esta acción no se puede deshacer."
   }
 }
