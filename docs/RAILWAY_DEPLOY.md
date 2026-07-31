@@ -115,6 +115,7 @@ Railway requires **service names to be unique across the whole project**. So we 
 5. In **app-production** → **Variables**:
    - **Add variable reference** → select **postgres-prod** → **DATABASE_URL**.
    - Add: `AUTH_SECRET` (e.g. `npx auth secret`), `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET` (from [Google Cloud Console](https://console.cloud.google.com/apis/credentials)).
+   - Phase 5c+: also add `OPENAI_API_KEY` (and optionally `OPENAI_MATCH_PREP_MODEL` / `OPENAI_MATCH_PREP_REASONING_EFFORT`) for match preparation advice.
 6. In **app-production** → **Settings** → **Networking**, create a public domain if needed. Copy the URL (e.g. `https://tennis-match-tracker-production.up.railway.app`).
 
 ## 4. Staging environment: add Dev DB and app

@@ -1,8 +1,8 @@
 /**
  * Active product phase. Bump when shipping a new major increment.
- * Phase 4: dashboard only — match preparation is built internally but hidden.
+ * Phase 5: match preparation UI + LLM advice (5a–5c).
  */
-export const CURRENT_APP_PHASE = 4 as const;
+export const CURRENT_APP_PHASE = 5 as const;
 
 export type AppPhase = 4 | 5 | 6;
 

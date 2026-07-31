@@ -7,6 +7,7 @@ export default defineConfig({
     "./src/db/schema/players.ts",
     "./src/db/schema/matches.ts",
     "./src/db/schema/user-preferences.ts",
+    "./src/db/schema/match-prep-advice.ts",
   ],
   out: "./drizzle",
   dbCredentials: {

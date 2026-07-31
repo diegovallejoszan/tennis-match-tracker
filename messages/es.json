@@ -357,5 +357,22 @@
     "createAccount": "Crear mi cuenta",
     "saved": "Perfil guardado.",
     "notProvided": "Sin registrar"
+  },
+  "prepare": {
+    "title": "Preparación del partido",
+    "description": "Elige un rival y la fecha del partido para recibir consejos tácticos y un plan de juego. Puedes volver a abrir consejos guardados sin llamar otra vez a la IA.",
+    "opponent": "Rival",
+    "matchDate": "Fecha del partido",
+    "getAdvice": "Obtener consejo",
+    "generating": "Generando…",
+    "historyTitle": "Consejos guardados",
+    "historyEmpty": "Aún no hay consejos guardados para este rival.",
+    "historyItemMeta": "Fecha del partido {date}",
+    "adviceTitle": "Preparación vs {opponent}",
+    "adviceSubtitle": "Previsto para {date}",
+    "advicePlaceholder": "Aquí aparecerán los consejos tácticos y el plan de juego.",
+    "noPlayers": "Añade al menos un jugador antes de pedir preparación.",
+    "addPlayer": "Añadir jugador",
+    "unknownOpponent": "Rival desconocido"
   }
 }

@@ -357,5 +357,22 @@
     "createAccount": "Create my account",
     "saved": "Profile saved.",
     "notProvided": "Not provided"
+  },
+  "prepare": {
+    "title": "Match preparation",
+    "description": "Pick an opponent and upcoming match date to get tactical advice and a game plan. Saved advice can be reopened without calling the AI again.",
+    "opponent": "Opponent",
+    "matchDate": "Match date",
+    "getAdvice": "Get advice",
+    "generating": "Generating…",
+    "historyTitle": "Saved advice",
+    "historyEmpty": "No saved advice for this opponent yet.",
+    "historyItemMeta": "Match date {date}",
+    "adviceTitle": "Prep vs {opponent}",
+    "adviceSubtitle": "Planned for {date}",
+    "advicePlaceholder": "Your tactical advice and game plan will appear here.",
+    "noPlayers": "Add at least one player before requesting match preparation.",
+    "addPlayer": "Add a player",
+    "unknownOpponent": "Unknown opponent"
   }
 }

@@ -48,9 +48,12 @@ Version 1.1 adds paraphrased, source-linked tactics from:
 The library stores only concise paraphrases with source provenance; the PDFs
 remain the authoritative references.
 
-## Phase 4 (current)
+## Phase 5c (current)
 
-- Knowledge base code lives in the repo but **Prepare** is hidden from navigation.  
-- No LLM calls or saved-advice UI until Phase 5.
+- **Prepare** is enabled in navigation (`CURRENT_APP_PHASE >= 5`).
+- `/prepare` gathers opponent + date, calls the LLM with knowledge-base context, and saves advice to `match_prep_advices`.
+- Users can reopen saved advice without a new API call.
+- Set `OPENAI_API_KEY` in local and Railway env.
+- Optional: `OPENAI_MATCH_PREP_MODEL` (default `gpt-5.6-terra`) and `OPENAI_MATCH_PREP_REASONING_EFFORT` (default `low`). Model IDs: [OpenAI models catalog](https://developers.openai.com/api/docs/models).
 
-See [DEVELOPMENT_PLAN.md](../DEVELOPMENT_PLAN.md) for the full Phase 5 specification.
+See [DEVELOPMENT_PLAN.md](../DEVELOPMENT_PLAN.md) for the full Phase 5c specification.

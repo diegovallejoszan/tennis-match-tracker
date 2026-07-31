@@ -1,6 +1,7 @@
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import * as authSchema from "./schema/auth";
+import * as matchPrepAdviceSchema from "./schema/match-prep-advice";
 import * as matchesSchema from "./schema/matches";
 import * as playersSchema from "./schema/players";
 import * as userPreferencesSchema from "./schema/user-preferences";
@@ -18,10 +19,12 @@ export const db = drizzle(client, {
     ...playersSchema,
     ...matchesSchema,
     ...userPreferencesSchema,
+    ...matchPrepAdviceSchema,
   },
 });
 
 export * from "./schema/auth";
+export * from "./schema/match-prep-advice";
 export * from "./schema/matches";
 export * from "./schema/players";
 export * from "./schema/user-preferences";

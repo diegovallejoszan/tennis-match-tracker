@@ -4,13 +4,13 @@
 
 ---
 
-## Active phase: **5b shipped → 5c next**
+## Active phase: **5c in progress → 6 next**
 
 **Phase 5a is deployed**: structured scoring, non-finished results, audio dictation, per-user locale preference, and match integrity checks are live in match registration.
 
-**Phase 5b is deployed**: score-aware dashboard analytics (Tufte per-match sparkline with game-differential height, singles/doubles win-rate cards, combinable filters), full app UI i18n (`en` / `es`), read-only account/match detail views with explicit edit mode, and an expanded tactical knowledge base (v1.1) ready for Phase 5c.
+**Phase 5b is deployed**: score-aware dashboard analytics (Tufte per-match sparkline with game-differential height, singles/doubles win-rate cards, combinable filters), full app UI i18n (`en` / `es`), read-only account/match detail views with explicit edit mode, and an expanded tactical knowledge base (v1.1).
 
-**Phase 5c (next)**: LLM match preparation — expose Prepare in the UI, generate advice from profiles/history plus the knowledge base, and save advice for later review.
+**Phase 5c (this branch)**: LLM match preparation — Prepare in navigation, generate advice from profiles/history plus the knowledge base, and save advice for later review.
 
 ---
 
@@ -292,7 +292,7 @@ export const matchPlayers = pgTable("match_players", {
 
 ---
 
-## Phase 5c -- Match Preparation (LLM)
+## Phase 5c -- Match Preparation (LLM) *(in progress)*
 
 **Goal**: User selects an opponent and upcoming match date, requests AI advice, and can review past advice without re-calling the API.
 
@@ -441,5 +441,5 @@ Each phase produces a usable, deployed increment. You can register players after
 - [x] **Phase 4** — Dashboard: summary cards, Recharts charts, filters, responsive layout; Prepare hidden
 - [x] **Phase 5a** — Match results & integrity: non-finished result, structured score segments (set/long set/tie break/super tie break), auto-generated score string, legacy compatibility, user locale, audio dictation, integrity validation and tests
 - [x] **Phase 5b** — Score-aware analytics & i18n: singles/doubles win-rate cards, Tufte-style per-match sparkline (outcome color + game-differential height), combinable filters, full UI i18n (en/es), read-only detail views, knowledge base v1.1
-- [ ] **Phase 5c** — LLM match prep: opponent + date, advice generation, saved advice history, knowledge base as prompt context
+- [x] **Phase 5c** — LLM match prep: opponent + date, advice generation, saved advice history, knowledge base as prompt context
 - [ ] **Phase 6** — Polish: app logo + favicon, custom domain, loading states, error boundaries, Lighthouse audit
