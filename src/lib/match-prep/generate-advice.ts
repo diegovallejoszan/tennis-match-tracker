@@ -45,7 +45,8 @@ function buildSystemPrompt(locale: AppLocale): string {
     "## Tactical advice",
     "## Game plan",
     "Under ## Tactical advice, use bullet points only and at most 5 bullets. If more ideas come to mind, keep only the most important ones.",
-    "Under ## Game plan, structure and length may follow your best coaching judgment.",
+    "Under ## Game plan, you may use short subsections (e.g. ### Serve, ### Return), but each subsection must have at most 2 bullet points.",
+    "If a Game plan subsection would need more than 2 bullets, keep only the highest-priority ones. Keep the whole Game plan short and simple.",
     "Keep each section concrete and actionable for club-level / recreational singles play (not tour analytics).",
     language,
   ].join("\n");
