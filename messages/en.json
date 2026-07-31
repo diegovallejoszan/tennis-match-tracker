@@ -360,7 +360,7 @@
   },
   "prepare": {
     "title": "Match preparation",
-    "description": "Pick an opponent and upcoming match date to get tactical advice and a game plan. Saved advice can be reopened without calling the AI again.",
+    "description": "For singles matches only. Pick an opponent and upcoming match date to get tactical advice and a game plan. You can also review advice you saved earlier.",
     "opponent": "Opponent",
     "matchDate": "Match date",
     "getAdvice": "Get advice",

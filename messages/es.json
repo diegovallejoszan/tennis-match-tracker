@@ -360,7 +360,7 @@
   },
   "prepare": {
     "title": "Preparación del partido",
-    "description": "Elige un rival y la fecha del partido para recibir consejos tácticos y un plan de juego. Puedes volver a abrir consejos guardados sin llamar otra vez a la IA.",
+    "description": "Solo para partidos de singles. Elige un rival y la fecha del partido para recibir consejos tácticos y un plan de juego. También puedes revisar consejos que guardaste antes.",
     "opponent": "Rival",
     "matchDate": "Fecha del partido",
     "getAdvice": "Obtener consejo",
