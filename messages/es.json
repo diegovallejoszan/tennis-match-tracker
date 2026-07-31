@@ -13,7 +13,9 @@
     "profileSettings": "Perfil y ajustes",
     "signOut": "Cerrar sesión",
     "openMenu": "Abrir menú",
-    "accountMenu": "Cuenta"
+    "accountMenu": "Cuenta",
+    "collapseSidebar": "Contraer barra lateral",
+    "expandSidebar": "Expandir barra lateral"
   },
   "common": {
     "win": "Victoria",

@@ -3,8 +3,10 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
+  ChevronLeft,
+  ChevronRight,
   LayoutDashboard,
   Users,
   Trophy,
@@ -52,9 +54,11 @@ const navItems = allNavItems.filter(
 function NavLinks({
   className,
   onLinkClick,
+  collapsed = false,
 }: {
   className?: string;
   onLinkClick?: () => void;
+  collapsed?: boolean;
 }) {
   const pathname = usePathname();
   const t = useTranslations("nav");
@@ -66,15 +70,18 @@ function NavLinks({
           key={href}
           href={href}
           {...(onLinkClick !== undefined && { onClick: onLinkClick })}
+          title={collapsed ? t(labelKey) : undefined}
+          aria-label={collapsed ? t(labelKey) : undefined}
           className={cn(
             "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+            collapsed && "justify-center px-2",
             pathname === href
               ? "bg-primary text-primary-foreground"
               : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
           )}
         >
           <Icon className="h-5 w-5 shrink-0" />
-          {t(labelKey)}
+          {!collapsed ? t(labelKey) : null}
         </Link>
       ))}
     </nav>
@@ -113,32 +120,91 @@ export function AppShell({
   session: Session | null;
 }) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const t = useTranslations("nav");
+
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => {
+      setSidebarCollapsed(
+        window.localStorage.getItem("desktop-sidebar-collapsed") === "true",
+      );
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, []);
+
+  function toggleSidebar() {
+    setSidebarCollapsed((current) => {
+      const next = !current;
+      window.localStorage.setItem(
+        "desktop-sidebar-collapsed",
+        String(next),
+      );
+      return next;
+    });
+  }
 
   return (
     <div className="min-h-screen bg-background">
       {/* Desktop sidebar */}
-      <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col border-r border-border bg-card md:flex">
-        <div className="flex h-14 items-center gap-2 border-b border-border px-4">
-          <Link href="/" className="font-semibold text-foreground">
-            {t("brand")}
-          </Link>
+      <aside
+        className={cn(
+          "fixed inset-y-0 left-0 z-40 hidden flex-col border-r border-border bg-card transition-[width] duration-200 md:flex",
+          sidebarCollapsed ? "w-16" : "w-64",
+        )}
+      >
+        <div
+          className={cn(
+            "flex h-14 items-center gap-2 border-b border-border px-3",
+            sidebarCollapsed && "justify-center px-2",
+          )}
+        >
+          {!sidebarCollapsed ? (
+            <Link href="/" className="min-w-0 truncate font-semibold text-foreground">
+              {t("brand")}
+            </Link>
+          ) : null}
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className={cn("shrink-0", !sidebarCollapsed && "ml-auto")}
+            onClick={toggleSidebar}
+            aria-label={
+              sidebarCollapsed ? t("expandSidebar") : t("collapseSidebar")
+            }
+            title={
+              sidebarCollapsed ? t("expandSidebar") : t("collapseSidebar")
+            }
+          >
+            {sidebarCollapsed ? (
+              <ChevronRight className="h-5 w-5" />
+            ) : (
+              <ChevronLeft className="h-5 w-5" />
+            )}
+          </Button>
         </div>
         <div className="flex-1 overflow-y-auto p-3">
-          <NavLinks />
+          <NavLinks collapsed={sidebarCollapsed} />
         </div>
         <div className="border-t border-border p-3">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"
-                className="w-full justify-start gap-3 px-3"
+                className={cn(
+                  "w-full gap-3",
+                  sidebarCollapsed ? "justify-center px-0" : "justify-start px-3",
+                )}
                 size="sm"
+                aria-label={sidebarCollapsed ? t("accountMenu") : undefined}
+                title={sidebarCollapsed ? t("accountMenu") : undefined}
               >
                 <UserAvatar session={session} />
-                <span className="text-sm text-muted-foreground">
-                  {session?.user?.name ?? t("accountMenu")}
-                </span>
+                {!sidebarCollapsed ? (
+                  <span className="truncate text-sm text-muted-foreground">
+                    {session?.user?.name ?? t("accountMenu")}
+                  </span>
+                ) : null}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="w-56">
@@ -249,7 +315,14 @@ export function AppShell({
       </header>
 
       {/* Main content */}
-      <main className="md:pl-64">{children}</main>
+      <main
+        className={cn(
+          "transition-[padding] duration-200",
+          sidebarCollapsed ? "md:pl-16" : "md:pl-64",
+        )}
+      >
+        {children}
+      </main>
     </div>
   );
 }

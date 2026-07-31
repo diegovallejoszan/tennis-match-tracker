@@ -13,7 +13,9 @@
     "profileSettings": "Profile & settings",
     "signOut": "Sign out",
     "openMenu": "Open menu",
-    "accountMenu": "Account"
+    "accountMenu": "Account",
+    "collapseSidebar": "Collapse sidebar",
+    "expandSidebar": "Expand sidebar"
   },
   "common": {
     "win": "Win",
