@@ -5,9 +5,19 @@ import { auth, signIn } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-export default async function LoginPage() {
-  const session = await auth();
+type LoginPageProps = {
+  searchParams: Promise<{ recovered?: string }>;
+};
+
+export default async function LoginPage({ searchParams }: LoginPageProps) {
+  let session = null;
+  try {
+    session = await auth();
+  } catch {
+    // Ignore invalid session; recover flow may have already cleared cookies.
+  }
   const t = await getTranslations("auth.login");
+  const { recovered } = await searchParams;
 
   if (session?.user) {
     redirect("/auth/after-login");
@@ -21,6 +31,11 @@ export default async function LoginPage() {
           <p className="text-sm text-muted-foreground">
             {t("description")}
           </p>
+          {recovered === "1" ? (
+            <p className="text-sm text-amber-700 dark:text-amber-400">
+              {t("recovered")}
+            </p>
+          ) : null}
         </CardHeader>
         <CardContent>
           <form

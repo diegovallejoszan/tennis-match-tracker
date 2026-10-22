@@ -18,7 +18,12 @@ type RootLayoutProps = Readonly<{
 }>;
 
 export default async function RootLayout({ children }: RootLayoutProps) {
-  const session = await auth();
+  let session = null;
+  try {
+    session = await auth();
+  } catch {
+    // Invalid session cookie must not crash the shell; user can recover via /auth/recover.
+  }
   const locale = await getLocale();
   const messages = await getMessages();
 

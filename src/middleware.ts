@@ -1,17 +1,47 @@
-import { auth } from "@/lib/auth";
+import { NextResponse } from "next/server";
+import type { NextFetchEvent, NextMiddleware, NextRequest } from "next/server";
 
-export default auth((req) => {
+import { auth } from "@/lib/auth";
+import { clearAuthCookies } from "@/lib/auth-cookies";
+
+const authMiddleware = auth((req) => {
   const isLoggedIn = !!req.auth;
   const isLanding = req.nextUrl.pathname === "/";
   const isLoginPage = req.nextUrl.pathname === "/login";
+  const isAuthRecover = req.nextUrl.pathname.startsWith("/auth/recover");
   const isApiAuth = req.nextUrl.pathname.startsWith("/api/auth");
 
-  if (isApiAuth) return;
+  if (isApiAuth || isAuthRecover) return;
   if (isLanding || isLoginPage) return;
   if (!isLoggedIn) {
     return Response.redirect(new URL("/login", req.url));
   }
-});
+}) as unknown as NextMiddleware;
+
+export default async function middleware(
+  request: NextRequest,
+  event: NextFetchEvent,
+) {
+  try {
+    return await authMiddleware(request, event);
+  } catch {
+    // Stale session after secret rotation: clear cookies and send user to login.
+    // Avoid redirect loops if /auth/recover or /login also hit decrypt errors.
+    if (
+      request.nextUrl.pathname.startsWith("/auth/recover") ||
+      request.nextUrl.pathname === "/login"
+    ) {
+      const response = NextResponse.next();
+      clearAuthCookies(response);
+      return response;
+    }
+    const url = new URL("/login", request.url);
+    url.searchParams.set("recovered", "1");
+    const response = NextResponse.redirect(url);
+    clearAuthCookies(response);
+    return response;
+  }
+}
 
 export const config = {
   matcher: [

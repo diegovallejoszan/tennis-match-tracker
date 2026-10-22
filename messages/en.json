@@ -60,7 +60,8 @@
     "login": {
       "title": "Sign in",
       "description": "Sign in with your Google account to use Tennis Match Tracker.",
-      "button": "Sign in with Google"
+      "button": "Sign in with Google",
+      "recovered": "Your previous session was reset. Sign in again to continue."
     },
     "onboarding": {
       "title": "Create your account",

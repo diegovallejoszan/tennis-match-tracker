@@ -60,7 +60,8 @@
     "login": {
       "title": "Iniciar sesión",
       "description": "Inicia sesión con tu cuenta de Google para usar Registro de Partidos de Tenis.",
-      "button": "Iniciar sesión con Google"
+      "button": "Iniciar sesión con Google",
+      "recovered": "Tu sesión anterior se restableció. Vuelve a iniciar sesión para continuar."
     },
     "onboarding": {
       "title": "Crea tu cuenta",
