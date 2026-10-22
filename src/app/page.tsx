@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 
+import { BrandMark } from "@/components/brand/brand-mark";
 import { auth, signIn } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 
@@ -15,12 +16,9 @@ export default async function HomePage() {
   return (
     <div className="flex min-h-[60vh] flex-col items-center justify-center p-4 md:p-6">
       <div className="mx-auto max-w-md text-center">
-        <h1 className="mb-3 text-3xl font-bold tracking-tight">
-          {t("title")}
-        </h1>
-        <p className="mb-8 text-muted-foreground">
-          {t("description")}
-        </p>
+        <BrandMark className="mx-auto mb-5 h-14 w-14" title={t("title")} />
+        <h1 className="mb-3 text-3xl font-bold tracking-tight">{t("title")}</h1>
+        <p className="mb-8 text-muted-foreground">{t("description")}</p>
         <form
           action={async () => {
             "use server";
@@ -31,9 +29,7 @@ export default async function HomePage() {
             {t("signIn")}
           </Button>
         </form>
-        <p className="mt-6 text-sm text-muted-foreground">
-          {t("footer")}
-        </p>
+        <p className="mt-6 text-sm text-muted-foreground">{t("footer")}</p>
       </div>
     </div>
   );

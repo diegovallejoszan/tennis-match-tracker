@@ -1,8 +1,30 @@
 # Tennis Match Tracker
 
-Phase 0 baseline for a typed, production-style web app workflow.
+Personal tennis journal: opponents, structured scores, score-aware stats, and AI match preparation. The product brand in the UI is **PrepCourt**.
 
-**Development plan:** The full incremental plan (auth, players, matches, dashboard, AI match prep, Railway deploy) is in [docs/DEVELOPMENT_PLAN.md](docs/DEVELOPMENT_PLAN.md). Open that file anytime to pick up the next phase.
+**Development plan:** The full incremental plan is in [docs/DEVELOPMENT_PLAN.md](docs/DEVELOPMENT_PLAN.md).
+
+## Architecture
+
+```mermaid
+flowchart LR
+  Browser["Browser"] --> Next["Next.js App Router"]
+  Next --> Auth["Auth.js Google"]
+  Next --> Actions["Server actions"]
+  Actions --> DB["PostgreSQL via Drizzle"]
+  Actions --> LLM["OpenAI match prep"]
+  Actions --> KB["Tactical knowledge base"]
+```
+
+| Layer | Where |
+|---|---|
+| UI shell, pages, i18n | `src/app`, `src/components`, `messages/` |
+| Auth | `src/lib/auth.ts`, `src/middleware.ts` |
+| Data | `src/db` |
+| Match prep | `src/lib/match-prep` |
+| Brand | `public/brand`, `src/components/brand`, `src/app/icon.tsx` |
+
+Deploy target is Railway (app + Postgres) on the platform URL. A custom domain is not part of the current release.
 
 ## Requirements
 

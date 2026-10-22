@@ -8,7 +8,7 @@ import { isMatchPrepEnabled } from "@/lib/app-phase";
 import { auth } from "@/lib/auth";
 import {
   getMatchPrepAdviceById,
-  listMatchPrepAdviceForUser,
+  listMatchPrepAdviceForUser
 } from "@/lib/match-prep/advice-queries";
 
 type PreparePageProps = {
@@ -38,13 +38,14 @@ export default async function PreparePage({ searchParams }: PreparePageProps) {
     listMatchPrepAdviceForUser(session.user.id),
     params.adviceId
       ? getMatchPrepAdviceById(session.user.id, params.adviceId)
-      : Promise.resolve(null),
+      : Promise.resolve(null)
   ]);
 
   return (
     <div className="p-4 md:p-6">
-      <div className="mb-6 max-w-3xl">
-        <h1 className="text-2xl font-semibold tracking-tight">{t("title")}</h1>
+      <div className="mb-6 max-w-3xl rounded-2xl border border-primary/15 bg-card p-5 shadow-sm">
+        <p className="text-xs font-semibold uppercase tracking-wide text-primary">{t("eyebrow")}</p>
+        <h1 className="mt-1 text-2xl font-semibold tracking-tight">{t("title")}</h1>
         <p className="mt-1 text-sm text-muted-foreground">{t("description")}</p>
       </div>
       <PrepareClient
@@ -58,7 +59,7 @@ export default async function PreparePage({ searchParams }: PreparePageProps) {
                 opponentName: selectedAdvice.opponentName,
                 plannedMatchDate: selectedAdvice.plannedMatchDate,
                 adviceMarkdown: selectedAdvice.adviceMarkdown,
-                createdAt: selectedAdvice.createdAt,
+                createdAt: selectedAdvice.createdAt
               }
             : null
         }

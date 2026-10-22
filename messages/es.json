@@ -1,7 +1,7 @@
 {
   "app": {
-    "title": "Registro de Partidos de Tenis",
-    "description": "App para registrar partidos de tenis con enfoque en el aprendizaje."
+    "title": "PrepCourt",
+    "description": "Registra tus partidos, lee tu forma y prepara el siguiente."
   },
   "nav": {
     "dashboard": "Panel",
@@ -9,7 +9,7 @@
     "matches": "Partidos",
     "prepare": "Preparar",
     "account": "Mi cuenta",
-    "brand": "Tennis Tracker",
+    "brand": "PrepCourt",
     "profileSettings": "Perfil y ajustes",
     "signOut": "Cerrar sesión",
     "openMenu": "Abrir menú",
@@ -52,20 +52,20 @@
   },
   "auth": {
     "landing": {
-      "title": "Registro de Partidos de Tenis",
-      "description": "Registra tus partidos, gestiona rivales y compañeros, y mejora tu juego con estadísticas orientadas al aprendizaje y preparación lista para IA.",
+      "title": "PrepCourt",
+      "description": "Un diario de club para partidos, rivales y el plan del siguiente.",
       "signIn": "Iniciar sesión con Google",
       "footer": "Usa tu cuenta de Google para iniciar sesión. Los usuarios nuevos crean una cuenta en el primer acceso."
     },
     "login": {
       "title": "Iniciar sesión",
-      "description": "Inicia sesión con tu cuenta de Google para usar Registro de Partidos de Tenis.",
+      "description": "Inicia sesión con tu cuenta de Google para usar PrepCourt.",
       "button": "Iniciar sesión con Google",
       "recovered": "Tu sesión anterior se restableció. Vuelve a iniciar sesión para continuar."
     },
     "onboarding": {
       "title": "Crea tu cuenta",
-      "description": "Has iniciado sesión con Google. Completa tu cuenta para empezar a usar Registro de Partidos de Tenis. Los datos de perfil son opcionales: puedes actualizarlos cuando quieras en Mi cuenta."
+      "description": "Has iniciado sesión con Google. Completa tu cuenta para empezar a usar PrepCourt. Los datos de perfil son opcionales: puedes actualizarlos cuando quieras en Mi cuenta."
     }
   },
   "dashboard": {
@@ -361,7 +361,17 @@
     "saved": "Perfil guardado.",
     "notProvided": "Sin registrar"
   },
+  "errors": {
+    "title": "Algo salió mal",
+    "description": "Si sigue pasando después de una actualización, tu sesión anterior puede haber quedado atascada. Empieza de nuevo; no hace falta borrar las cookies.",
+    "tryAgain": "Reintentar",
+    "signInAgain": "Volver a iniciar sesión",
+    "notFoundTitle": "Página no encontrada",
+    "notFoundDescription": "Esa página no existe o ya no está disponible.",
+    "goHome": "Ir al inicio"
+  },
   "prepare": {
+    "eyebrow": "Próximo partido",
     "title": "Preparación del partido",
     "description": "Solo para partidos de singles. Elige un rival y la fecha del partido para recibir consejos tácticos y un plan de juego. También puedes revisar consejos que guardaste antes.",
     "opponent": "Rival",

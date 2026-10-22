@@ -1,7 +1,7 @@
 {
   "app": {
-    "title": "Tennis Match Tracker",
-    "description": "Learning-first tennis match tracking app."
+    "title": "PrepCourt",
+    "description": "Track your matches, read your form, and prepare the next one."
   },
   "nav": {
     "dashboard": "Dashboard",
@@ -9,7 +9,7 @@
     "matches": "Matches",
     "prepare": "Prepare",
     "account": "My Account",
-    "brand": "Tennis Tracker",
+    "brand": "PrepCourt",
     "profileSettings": "Profile & settings",
     "signOut": "Sign out",
     "openMenu": "Open menu",
@@ -52,20 +52,20 @@
   },
   "auth": {
     "landing": {
-      "title": "Tennis Match Tracker",
-      "description": "Track your matches, manage opponents and partners, and build your game with learning-first stats and AI-ready preparation.",
+      "title": "PrepCourt",
+      "description": "A club-side journal for matches, opponents, and the plan for your next one.",
       "signIn": "Sign in with Google",
       "footer": "Use your Google account to sign in. New users create an account on first sign-in."
     },
     "login": {
       "title": "Sign in",
-      "description": "Sign in with your Google account to use Tennis Match Tracker.",
+      "description": "Sign in with your Google account to use PrepCourt.",
       "button": "Sign in with Google",
       "recovered": "Your previous session was reset. Sign in again to continue."
     },
     "onboarding": {
       "title": "Create your account",
-      "description": "You’re signed in with Google. Complete your account to start using Tennis Match Tracker. Profile details below are optional—you can update them anytime under My Account."
+      "description": "You’re signed in with Google. Complete your account to start using PrepCourt. Profile details below are optional—you can update them anytime under My Account."
     }
   },
   "dashboard": {
@@ -361,7 +361,17 @@
     "saved": "Profile saved.",
     "notProvided": "Not provided"
   },
+  "errors": {
+    "title": "Something went wrong",
+    "description": "If this keeps happening after a site update, your old sign-in may be stuck. Start fresh — you will not need to clear cookies yourself.",
+    "tryAgain": "Try again",
+    "signInAgain": "Sign in again",
+    "notFoundTitle": "Page not found",
+    "notFoundDescription": "That page does not exist, or it is no longer available.",
+    "goHome": "Go home"
+  },
   "prepare": {
+    "eyebrow": "Next match",
     "title": "Match preparation",
     "description": "For singles matches only. Pick an opponent and upcoming match date to get tactical advice and a game plan. You can also review advice you saved earlier.",
     "opponent": "Opponent",

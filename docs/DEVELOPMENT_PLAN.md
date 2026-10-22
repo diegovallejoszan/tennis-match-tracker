@@ -4,13 +4,13 @@
 
 ---
 
-## Active phase: **5c in progress → 6 next**
+## Active phase: **6 in progress** (custom domain deferred)
 
-**Phase 5a is deployed**: structured scoring, non-finished results, audio dictation, per-user locale preference, and match integrity checks are live in match registration.
+**Phase 5c is on this line of work**: LLM match preparation — Prepare in navigation, generate advice from profiles/history plus the knowledge base, and save advice for later review.
 
-**Phase 5b is deployed**: score-aware dashboard analytics (Tufte per-match sparkline with game-differential height, singles/doubles win-rate cards, combinable filters), full app UI i18n (`en` / `es`), read-only account/match detail views with explicit edit mode, and an expanded tactical knowledge base (v1.1).
+**Phase 6 (this branch, `feature/phase-6-polish`)**: PrepCourt branding (Alternative C), favicon and Open Graph, loading skeletons, error pages, and match-prep rate limiting. **Custom domain setup is out of scope** so this branch can ship on the existing Railway URL.
 
-**Phase 5c (this branch)**: LLM match preparation — Prepare in navigation, generate advice from profiles/history plus the knowledge base, and save advice for later review.
+Phases 5a and 5b are already shipped (structured scores and integrity, then score-aware analytics and `en` / `es` UI).
 
 ---
 
@@ -377,14 +377,17 @@ export const matchPrepAdvices = pgTable("match_prep_advices", {
 
 **Branch**: `feature/phase-6-polish`
 
+Visual direction: **Alternative C — PrepCourt** (club-coach). Sage canvas, forest green accent, ball-yellow highlight, Plus Jakarta Sans. See [docs/branding/PHASE6_UX_UI_PROPOSALS.md](branding/PHASE6_UX_UI_PROPOSALS.md).
+
+**Deferred:** custom domain on Railway. The app keeps the Railway-provided HTTPS URL so this branch can be merged and deployed without DNS work.
+
 - Create app branding assets:
-  - Primary logo (SVG + PNG variants) for the app header/auth screens and social preview
-  - Favicon set for browser tabs/bookmarks (`favicon.ico`, `icon.svg`, and touch icon)
+  - Primary logo (SVG + PNG mark) for the app header/auth screens and social preview
+  - Favicon set for browser tabs/bookmarks (`favicon.ico`, generated `icon`, and touch icon)
 - Wire branding into app entry points:
   - Logo in main navigation/header and login/landing surfaces
   - Configure favicon/icons in Next.js App Router metadata (`src/app/`) and validate across desktop/mobile browsers
-- Custom domain setup on Railway
-- SEO metadata and Open Graph tags
+- SEO metadata and Open Graph tags (origin from `AUTH_URL` or `RAILWAY_PUBLIC_DOMAIN`)
 - Loading skeletons / Suspense boundaries for every page
 - Error boundaries and user-friendly error pages
 - Rate limiting on AI endpoint
@@ -442,4 +445,4 @@ Each phase produces a usable, deployed increment. You can register players after
 - [x] **Phase 5a** — Match results & integrity: non-finished result, structured score segments (set/long set/tie break/super tie break), auto-generated score string, legacy compatibility, user locale, audio dictation, integrity validation and tests
 - [x] **Phase 5b** — Score-aware analytics & i18n: singles/doubles win-rate cards, Tufte-style per-match sparkline (outcome color + game-differential height), combinable filters, full UI i18n (en/es), read-only detail views, knowledge base v1.1
 - [x] **Phase 5c** — LLM match prep: opponent + date, advice generation, saved advice history, knowledge base as prompt context
-- [ ] **Phase 6** — Polish: app logo + favicon, custom domain, loading states, error boundaries, Lighthouse audit
+- [x] **Phase 6** — Polish: PrepCourt logo + favicon, loading states, error boundaries, match-prep rate limit, Lighthouse (mobile production login: performance 97, accessibility 100, best practices 100, SEO 100). Custom domain deferred.

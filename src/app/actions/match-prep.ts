@@ -11,9 +11,10 @@ import { getMatchPrepAdviceById } from "@/lib/match-prep/advice-queries";
 import { buildMatchPrepPromptContext } from "@/lib/match-prep/build-prep-prompt-context";
 import {
   formatMatchPrepLlmError,
-  generateMatchPrepAdviceFromLlm,
+  generateMatchPrepAdviceFromLlm
 } from "@/lib/match-prep/generate-advice";
 import { KNOWLEDGE_BASE_VERSION } from "@/lib/match-prep/knowledge-base";
+import { consumeMatchPrepRateLimit } from "@/lib/match-prep/rate-limit";
 import { parseMatchPrepAdviceRequest } from "@/lib/match-prep/validation";
 import { getUserLocale } from "@/lib/user-locale-db";
 
@@ -39,13 +40,9 @@ async function requireUserId(): Promise<string | null> {
 }
 
 function mapLlmFailure(err: unknown): MatchPrepActionError {
-  if (
-    err instanceof Error &&
-    err.message === "OPENAI_API_KEY is not configured"
-  ) {
+  if (err instanceof Error && err.message === "OPENAI_API_KEY is not configured") {
     return {
-      error:
-        "AI advice is not configured. Ask an admin to set OPENAI_API_KEY.",
+      error: "AI advice is not configured. Ask an admin to set OPENAI_API_KEY."
     };
   }
   return { error: formatMatchPrepLlmError(err) };
@@ -60,12 +57,7 @@ async function generateAndPersistAdvice(options: {
   const [opponent] = await db
     .select({ id: players.id, name: players.name })
     .from(players)
-    .where(
-      and(
-        eq(players.id, options.opponentId),
-        eq(players.userId, options.userId),
-      ),
-    )
+    .where(and(eq(players.id, options.opponentId), eq(players.userId, options.userId)))
     .limit(1);
 
   if (!opponent) {
@@ -73,10 +65,17 @@ async function generateAndPersistAdvice(options: {
   }
 
   const locale = await getUserLocale(options.userId);
+  const rateLimit = consumeMatchPrepRateLimit(options.userId);
+  if (!rateLimit.allowed) {
+    return {
+      error: "Too many advice requests. Please wait a few minutes and try again."
+    };
+  }
+
   const context = await buildMatchPrepPromptContext({
     userId: options.userId,
     opponentId: options.opponentId,
-    plannedMatchDate: options.plannedMatchDate,
+    plannedMatchDate: options.plannedMatchDate
   });
 
   let adviceMarkdown: string;
@@ -95,7 +94,7 @@ async function generateAndPersistAdvice(options: {
     opponentName: context.opponent?.name ?? opponent.name,
     headToHeadCount: context.headToHeadMatches.length,
     recentMatchCount: context.recentUserMatches.length,
-    hasUserProfile: !context.missingSections.includes("user_profile"),
+    hasUserProfile: !context.missingSections.includes("user_profile")
   };
 
   const values = {
@@ -103,7 +102,7 @@ async function generateAndPersistAdvice(options: {
     contextSnapshot,
     knowledgeBaseVersion: KNOWLEDGE_BASE_VERSION,
     modelId,
-    createdAt: new Date(),
+    createdAt: new Date()
   };
 
   if (options.replaceAdviceId) {
@@ -112,13 +111,13 @@ async function generateAndPersistAdvice(options: {
       .set({
         ...values,
         opponentId: options.opponentId,
-        plannedMatchDate: options.plannedMatchDate,
+        plannedMatchDate: options.plannedMatchDate
       })
       .where(
         and(
           eq(matchPrepAdvices.id, options.replaceAdviceId),
-          eq(matchPrepAdvices.userId, options.userId),
-        ),
+          eq(matchPrepAdvices.userId, options.userId)
+        )
       )
       .returning({
         id: matchPrepAdvices.id,
@@ -127,7 +126,7 @@ async function generateAndPersistAdvice(options: {
         adviceMarkdown: matchPrepAdvices.adviceMarkdown,
         knowledgeBaseVersion: matchPrepAdvices.knowledgeBaseVersion,
         modelId: matchPrepAdvices.modelId,
-        createdAt: matchPrepAdvices.createdAt,
+        createdAt: matchPrepAdvices.createdAt
       });
 
     if (!updated) {
@@ -137,7 +136,7 @@ async function generateAndPersistAdvice(options: {
     revalidatePath("/prepare");
     return {
       ok: true,
-      advice: { ...updated, opponentName: opponent.name },
+      advice: { ...updated, opponentName: opponent.name }
     };
   }
 
@@ -147,7 +146,7 @@ async function generateAndPersistAdvice(options: {
       userId: options.userId,
       opponentId: options.opponentId,
       plannedMatchDate: options.plannedMatchDate,
-      ...values,
+      ...values
     })
     .returning({
       id: matchPrepAdvices.id,
@@ -156,7 +155,7 @@ async function generateAndPersistAdvice(options: {
       adviceMarkdown: matchPrepAdvices.adviceMarkdown,
       knowledgeBaseVersion: matchPrepAdvices.knowledgeBaseVersion,
       modelId: matchPrepAdvices.modelId,
-      createdAt: matchPrepAdvices.createdAt,
+      createdAt: matchPrepAdvices.createdAt
     });
 
   if (!saved) {
@@ -166,12 +165,12 @@ async function generateAndPersistAdvice(options: {
   revalidatePath("/prepare");
   return {
     ok: true,
-    advice: { ...saved, opponentName: opponent.name },
+    advice: { ...saved, opponentName: opponent.name }
   };
 }
 
 export async function generateMatchPrepAdviceAction(
-  input: unknown,
+  input: unknown
 ): Promise<MatchPrepActionError | MatchPrepActionOk> {
   if (!isMatchPrepEnabled()) {
     return { error: "Match preparation is not available yet." };
@@ -188,12 +187,12 @@ export async function generateMatchPrepAdviceAction(
   return generateAndPersistAdvice({
     userId,
     opponentId: parsed.data.opponentId,
-    plannedMatchDate: parsed.data.plannedMatchDate,
+    plannedMatchDate: parsed.data.plannedMatchDate
   });
 }
 
 export async function regenerateMatchPrepAdviceAction(
-  adviceId: string,
+  adviceId: string
 ): Promise<MatchPrepActionError | MatchPrepActionOk> {
   if (!isMatchPrepEnabled()) {
     return { error: "Match preparation is not available yet." };
@@ -212,8 +211,7 @@ export async function regenerateMatchPrepAdviceAction(
   }
   if (!existing.opponentId) {
     return {
-      error:
-        "This advice’s opponent is no longer available. Choose an opponent and get new advice.",
+      error: "This advice’s opponent is no longer available. Choose an opponent and get new advice."
     };
   }
 
@@ -221,12 +219,12 @@ export async function regenerateMatchPrepAdviceAction(
     userId,
     opponentId: existing.opponentId,
     plannedMatchDate: existing.plannedMatchDate,
-    replaceAdviceId: existing.id,
+    replaceAdviceId: existing.id
   });
 }
 
 export async function deleteMatchPrepAdviceAction(
-  adviceId: string,
+  adviceId: string
 ): Promise<MatchPrepActionError | MatchPrepDeleteOk> {
   if (!isMatchPrepEnabled()) {
     return { error: "Match preparation is not available yet." };
@@ -241,12 +239,7 @@ export async function deleteMatchPrepAdviceAction(
 
   const deleted = await db
     .delete(matchPrepAdvices)
-    .where(
-      and(
-        eq(matchPrepAdvices.id, adviceId),
-        eq(matchPrepAdvices.userId, userId),
-      ),
-    )
+    .where(and(eq(matchPrepAdvices.id, adviceId), eq(matchPrepAdvices.userId, userId)))
     .returning({ id: matchPrepAdvices.id });
 
   if (deleted.length === 0) {
@@ -258,7 +251,7 @@ export async function deleteMatchPrepAdviceAction(
 }
 
 export async function loadSavedMatchPrepAdviceAction(
-  adviceId: string,
+  adviceId: string
 ): Promise<MatchPrepActionError | MatchPrepActionOk> {
   if (!isMatchPrepEnabled()) {
     return { error: "Match preparation is not available yet." };
@@ -286,7 +279,7 @@ export async function loadSavedMatchPrepAdviceAction(
       adviceMarkdown: row.adviceMarkdown,
       knowledgeBaseVersion: row.knowledgeBaseVersion,
       modelId: row.modelId,
-      createdAt: row.createdAt,
-    },
+      createdAt: row.createdAt
+    }
   };
 }

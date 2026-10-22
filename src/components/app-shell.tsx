@@ -14,18 +14,12 @@ import {
   Menu,
   User,
   UserCircle,
-  LogOut,
+  LogOut
 } from "lucide-react";
 import type { Session } from "next-auth";
 
 import { Button } from "@/components/ui/button";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -33,8 +27,9 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
+  DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
+import { BrandLockup } from "@/components/brand/brand-mark";
 import { cn } from "@/lib/utils";
 import { signOutAction } from "@/app/actions/auth";
 import { isMatchPrepEnabled } from "@/lib/app-phase";
@@ -44,17 +39,17 @@ const allNavItems = [
   { href: "/players", labelKey: "players", icon: Users },
   { href: "/matches", labelKey: "matches", icon: Trophy },
   { href: "/prepare", labelKey: "prepare", icon: Target, requiresMatchPrep: true },
-  { href: "/account", labelKey: "account", icon: UserCircle },
+  { href: "/account", labelKey: "account", icon: UserCircle }
 ] as const;
 
 const navItems = allNavItems.filter(
-  (item) => !("requiresMatchPrep" in item && item.requiresMatchPrep) || isMatchPrepEnabled(),
+  (item) => !("requiresMatchPrep" in item && item.requiresMatchPrep) || isMatchPrepEnabled()
 );
 
 function NavLinks({
   className,
   onLinkClick,
-  collapsed = false,
+  collapsed = false
 }: {
   className?: string;
   onLinkClick?: () => void;
@@ -65,25 +60,31 @@ function NavLinks({
 
   return (
     <nav className={cn("flex flex-col gap-1", className)}>
-      {navItems.map(({ href, labelKey, icon: Icon }) => (
-        <Link
-          key={href}
-          href={href}
-          {...(onLinkClick !== undefined && { onClick: onLinkClick })}
-          title={collapsed ? t(labelKey) : undefined}
-          aria-label={collapsed ? t(labelKey) : undefined}
-          className={cn(
-            "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
-            collapsed && "justify-center px-2",
-            pathname === href
-              ? "bg-primary text-primary-foreground"
-              : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-          )}
-        >
-          <Icon className="h-5 w-5 shrink-0" />
-          {!collapsed ? t(labelKey) : null}
-        </Link>
-      ))}
+      {navItems.map(({ href, labelKey, icon: Icon }) => {
+        const active = pathname === href;
+        const prepare = href === "/prepare";
+        return (
+          <Link
+            key={href}
+            href={href}
+            {...(onLinkClick !== undefined && { onClick: onLinkClick })}
+            title={collapsed ? t(labelKey) : undefined}
+            aria-label={collapsed ? t(labelKey) : undefined}
+            aria-current={active ? "page" : undefined}
+            className={cn(
+              "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+              collapsed && "justify-center px-2",
+              active
+                ? "bg-primary/10 text-primary shadow-[inset_3px_0_0_0_hsl(var(--primary))]"
+                : "text-muted-foreground hover:bg-accent hover:text-foreground",
+              prepare && !active && "bg-highlight/70 font-semibold text-foreground"
+            )}
+          >
+            <Icon className="h-5 w-5 shrink-0" />
+            {!collapsed ? t(labelKey) : null}
+          </Link>
+        );
+      })}
     </nav>
   );
 }
@@ -102,9 +103,7 @@ function UserAvatar({ session }: { session: Session | null }) {
 
   return (
     <Avatar className="h-8 w-8">
-      {image ? (
-        <AvatarImage src={image} alt={name ?? "User"} />
-      ) : null}
+      {image ? <AvatarImage src={image} alt={name ?? "User"} /> : null}
       <AvatarFallback className="text-xs">
         {initials ?? <User className="h-4 w-4" />}
       </AvatarFallback>
@@ -114,7 +113,7 @@ function UserAvatar({ session }: { session: Session | null }) {
 
 export function AppShell({
   children,
-  session,
+  session
 }: {
   children: React.ReactNode;
   session: Session | null;
@@ -125,9 +124,7 @@ export function AppShell({
 
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => {
-      setSidebarCollapsed(
-        window.localStorage.getItem("desktop-sidebar-collapsed") === "true",
-      );
+      setSidebarCollapsed(window.localStorage.getItem("desktop-sidebar-collapsed") === "true");
     });
     return () => window.cancelAnimationFrame(frame);
   }, []);
@@ -135,10 +132,7 @@ export function AppShell({
   function toggleSidebar() {
     setSidebarCollapsed((current) => {
       const next = !current;
-      window.localStorage.setItem(
-        "desktop-sidebar-collapsed",
-        String(next),
-      );
+      window.localStorage.setItem("desktop-sidebar-collapsed", String(next));
       return next;
     });
   }
@@ -149,40 +143,58 @@ export function AppShell({
       <aside
         className={cn(
           "fixed inset-y-0 left-0 z-40 hidden flex-col border-r border-border bg-card transition-[width] duration-200 md:flex",
-          sidebarCollapsed ? "w-16" : "w-64",
+          sidebarCollapsed ? "w-16" : "w-64"
         )}
       >
         <div
           className={cn(
             "flex h-14 items-center gap-2 border-b border-border px-3",
-            sidebarCollapsed && "justify-center px-2",
+            sidebarCollapsed && "justify-center px-2"
           )}
         >
-          {!sidebarCollapsed ? (
-            <Link href="/" className="min-w-0 truncate font-semibold text-foreground">
-              {t("brand")}
-            </Link>
-          ) : null}
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className={cn("shrink-0", !sidebarCollapsed && "ml-auto")}
-            onClick={toggleSidebar}
-            aria-label={
-              sidebarCollapsed ? t("expandSidebar") : t("collapseSidebar")
-            }
-            title={
-              sidebarCollapsed ? t("expandSidebar") : t("collapseSidebar")
-            }
-          >
-            {sidebarCollapsed ? (
+          {sidebarCollapsed ? (
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              onClick={toggleSidebar}
+              aria-label={t("expandSidebar")}
+              title={t("expandSidebar")}
+            >
               <ChevronRight className="h-5 w-5" />
-            ) : (
-              <ChevronLeft className="h-5 w-5" />
-            )}
-          </Button>
+            </Button>
+          ) : (
+            <>
+              <Link
+                href={session?.user ? "/dashboard" : "/"}
+                className="min-w-0"
+                aria-label={t("brand")}
+              >
+                <BrandLockup label={t("brand")} />
+              </Link>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="ml-auto shrink-0"
+                onClick={toggleSidebar}
+                aria-label={t("collapseSidebar")}
+                title={t("collapseSidebar")}
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </Button>
+            </>
+          )}
         </div>
+        {sidebarCollapsed ? (
+          <Link
+            href={session?.user ? "/dashboard" : "/"}
+            className="flex justify-center py-3"
+            aria-label={t("brand")}
+          >
+            <BrandLockup label={t("brand")} collapsed />
+          </Link>
+        ) : null}
         <div className="flex-1 overflow-y-auto p-3">
           <NavLinks collapsed={sidebarCollapsed} />
         </div>
@@ -193,7 +205,7 @@ export function AppShell({
                 variant="ghost"
                 className={cn(
                   "w-full gap-3",
-                  sidebarCollapsed ? "justify-center px-0" : "justify-start px-3",
+                  sidebarCollapsed ? "justify-center px-0" : "justify-start px-3"
                 )}
                 size="sm"
                 aria-label={sidebarCollapsed ? t("accountMenu") : undefined}
@@ -240,8 +252,12 @@ export function AppShell({
           <SheetContent side="left" className="w-64 p-0">
             <SheetHeader className="border-b border-border p-4 text-left">
               <SheetTitle>
-                <Link href="/" onClick={() => setMobileOpen(false)}>
-                  {t("brand")}
+                <Link
+                  href={session?.user ? "/dashboard" : "/"}
+                  onClick={() => setMobileOpen(false)}
+                  aria-label={t("brand")}
+                >
+                  <BrandLockup label={t("brand")} />
                 </Link>
               </SheetTitle>
             </SheetHeader>
@@ -282,8 +298,8 @@ export function AppShell({
             </div>
           </SheetContent>
         </Sheet>
-        <Link href="/" className="font-semibold text-foreground">
-          {t("brand")}
+        <Link href={session?.user ? "/dashboard" : "/"} className="min-w-0" aria-label={t("brand")}>
+          <BrandLockup label={t("brand")} markClassName="h-7 w-7" />
         </Link>
         <div className="ml-auto">
           <DropdownMenu>
@@ -318,7 +334,7 @@ export function AppShell({
       <main
         className={cn(
           "transition-[padding] duration-200",
-          sidebarCollapsed ? "md:pl-16" : "md:pl-64",
+          sidebarCollapsed ? "md:pl-16" : "md:pl-64"
         )}
       >
         {children}

@@ -11,7 +11,14 @@ const authMiddleware = auth((req) => {
   const isAuthRecover = req.nextUrl.pathname.startsWith("/auth/recover");
   const isApiAuth = req.nextUrl.pathname.startsWith("/api/auth");
 
-  if (isApiAuth || isAuthRecover) return;
+  const isMetadataRoute =
+    req.nextUrl.pathname === "/robots.txt" ||
+    req.nextUrl.pathname === "/sitemap.xml" ||
+    req.nextUrl.pathname === "/icon" ||
+    req.nextUrl.pathname.startsWith("/apple-icon") ||
+    req.nextUrl.pathname.startsWith("/opengraph-image");
+
+  if (isApiAuth || isAuthRecover || isMetadataRoute) return;
   if (isLanding || isLoginPage) return;
   if (!isLoggedIn) {
     return Response.redirect(new URL("/login", req.url));
@@ -45,6 +52,6 @@ export default async function middleware(
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|icon|apple-icon|opengraph-image|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
   ],
 };
