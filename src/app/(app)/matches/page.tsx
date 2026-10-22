@@ -34,7 +34,7 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
       .from(players)
       .where(eq(players.userId, session.user.id))
       .orderBy(players.name),
-    fetchGroupedMatchesForUser(session.user.id),
+    fetchGroupedMatchesForUser(session.user.id)
   ]);
 
   const filtered = groupedMatches.filter((match) => {
@@ -52,7 +52,7 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
   const typeLabels: Record<string, string> = {
     practice: tCommon("practice"),
     single: tCommon("singles"),
-    doubles: tCommon("doubles"),
+    doubles: tCommon("doubles")
   };
 
   return (
@@ -64,17 +64,12 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
         </Button>
       </div>
 
-      <MatchesFilters
-        filters={{ type, from, to, opponentId }}
-        players={playerRows}
-      />
+      <MatchesFilters filters={{ type, from, to, opponentId }} players={playerRows} />
 
       {filtered.length === 0 ? (
         <div className="rounded-lg border border-border p-6">
           <h2 className="text-lg font-semibold">{t("emptyTitle")}</h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {t("emptyDescription")}
-          </p>
+          <p className="mt-1 text-sm text-muted-foreground">{t("emptyDescription")}</p>
           <Button asChild className="mt-4">
             <Link href="/matches/new">{t("createFirst")}</Link>
           </Button>
@@ -135,20 +130,14 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
                     </Badge>
                   </td>
                   <td className="whitespace-nowrap px-3 py-3 align-top">
-                    {match.outcome === "win" ? (
-                      <Badge className="bg-emerald-600 hover:bg-emerald-600">
-                        {tCommon("win")}
-                      </Badge>
-                    ) : null}
+                    {match.outcome === "win" ? <Badge variant="win">{tCommon("win")}</Badge> : null}
                     {match.outcome === "loss" ? (
-                      <Badge variant="destructive">{tCommon("loss")}</Badge>
+                      <Badge variant="loss">{tCommon("loss")}</Badge>
                     ) : null}
                     {match.outcome === "non_finished" ? (
                       <Badge variant="outline">{tCommon("notFinished")}</Badge>
                     ) : null}
-                    {!match.outcome ? (
-                      <span className="text-muted-foreground">—</span>
-                    ) : null}
+                    {!match.outcome ? <span className="text-muted-foreground">—</span> : null}
                   </td>
                   <td className="max-w-[120px] px-3 py-3 align-top">
                     {match.score ? (

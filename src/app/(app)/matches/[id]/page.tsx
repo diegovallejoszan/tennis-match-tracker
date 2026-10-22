@@ -7,6 +7,7 @@ import { and, asc, eq } from "drizzle-orm";
 import { deleteMatchAction } from "@/app/actions/matches";
 import { MatchForm } from "@/components/matches/match-form";
 import { MatchIntegrityPanel } from "@/components/matches/match-integrity-panel";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { db, matchPlayers, matchScoreSegments, matches, players } from "@/db";
@@ -18,7 +19,7 @@ import {
   defaultMatchFormValues,
   MATCH_TYPES,
   type MatchFormInput,
-  type MatchOutcome,
+  type MatchOutcome
 } from "@/lib/matches-validation";
 import { getUserLocale } from "@/lib/user-locale-db";
 
@@ -27,10 +28,7 @@ type MatchDetailPageProps = {
   searchParams: Promise<{ edit?: string }>;
 };
 
-export default async function MatchDetailPage({
-  params,
-  searchParams,
-}: MatchDetailPageProps) {
+export default async function MatchDetailPage({ params, searchParams }: MatchDetailPageProps) {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
 
@@ -40,8 +38,8 @@ export default async function MatchDetailPage({
   const { edit } = await searchParams;
   const isEditing = edit === "1";
 
-  const [matchRow, playerRows, opponentRows, teammateRows, segmentRows, locale] =
-    await Promise.all([
+  const [matchRow, playerRows, opponentRows, teammateRows, segmentRows, locale] = await Promise.all(
+    [
       db
         .select()
         .from(matches)
@@ -55,42 +53,37 @@ export default async function MatchDetailPage({
       db
         .select({ playerId: matchPlayers.playerId })
         .from(matchPlayers)
-        .where(
-          and(eq(matchPlayers.matchId, id), eq(matchPlayers.role, "opponent")),
-        ),
+        .where(and(eq(matchPlayers.matchId, id), eq(matchPlayers.role, "opponent"))),
       db
         .select({ playerId: matchPlayers.playerId })
         .from(matchPlayers)
-        .where(
-          and(eq(matchPlayers.matchId, id), eq(matchPlayers.role, "teammate")),
-        )
+        .where(and(eq(matchPlayers.matchId, id), eq(matchPlayers.role, "teammate")))
         .limit(1),
       db
         .select({
           segmentType: matchScoreSegments.segmentType,
           userGamesOrPoints: matchScoreSegments.userGamesOrPoints,
-          opponentGamesOrPoints: matchScoreSegments.opponentGamesOrPoints,
+          opponentGamesOrPoints: matchScoreSegments.opponentGamesOrPoints
         })
         .from(matchScoreSegments)
         .where(eq(matchScoreSegments.matchId, id))
         .orderBy(asc(matchScoreSegments.segmentOrder)),
-      getUserLocale(session.user.id),
-    ]);
+      getUserLocale(session.user.id)
+    ]
+  );
 
   const row = matchRow[0];
   if (!row) notFound();
 
   const outcome: MatchFormInput["outcome"] =
-    row.outcome === "win" ||
-    row.outcome === "loss" ||
-    row.outcome === "non_finished"
+    row.outcome === "win" || row.outcome === "loss" || row.outcome === "non_finished"
       ? row.outcome
       : "";
 
   const scoreSegments: ScoreSegmentInput[] = segmentRows.map((seg) => ({
     segmentType: seg.segmentType as ScoreSegmentInput["segmentType"],
     userGamesOrPoints: seg.userGamesOrPoints,
-    opponentGamesOrPoints: seg.opponentGamesOrPoints,
+    opponentGamesOrPoints: seg.opponentGamesOrPoints
   }));
 
   const useStructuredScore = scoreSegments.length > 0;
@@ -99,9 +92,7 @@ export default async function MatchDetailPage({
     ...defaultMatchFormValues(),
     date: row.date,
     time: row.time ? row.time.slice(0, 5) : "",
-    matchType: MATCH_TYPES.includes(
-      row.matchType as (typeof MATCH_TYPES)[number],
-    )
+    matchType: MATCH_TYPES.includes(row.matchType as (typeof MATCH_TYPES)[number])
       ? (row.matchType as (typeof MATCH_TYPES)[number])
       : "practice",
     outcome,
@@ -110,22 +101,17 @@ export default async function MatchDetailPage({
     scoreSegments,
     notes: row.notes ?? "",
     opponentIds: opponentRows.map((entry) => entry.playerId),
-    partnerId: teammateRows[0]?.playerId ?? "",
+    partnerId: teammateRows[0]?.playerId ?? ""
   };
 
   const userLocale: AppLocale = isAppLocale(locale) ? locale : "en";
-  const integrityOutcome: MatchOutcome | null =
-    outcome === "" ? null : outcome;
+  const integrityOutcome: MatchOutcome | null = outcome === "" ? null : outcome;
   const playerNames = new Map(playerRows.map((player) => [player.id, player.name]));
   const opponentNames = opponentRows
     .map((entry) => playerNames.get(entry.playerId))
     .filter((name): name is string => Boolean(name));
-  const partnerName = teammateRows[0]
-    ? playerNames.get(teammateRows[0].playerId)
-    : null;
-  const displayScore = useStructuredScore
-    ? formatScoreFromSegments(scoreSegments)
-    : row.score;
+  const partnerName = teammateRows[0] ? playerNames.get(teammateRows[0].playerId) : null;
+  const displayScore = useStructuredScore ? formatScoreFromSegments(scoreSegments) : row.score;
   const typeLabel =
     row.matchType === "single"
       ? tCommon("singles")
@@ -189,24 +175,25 @@ export default async function MatchDetailPage({
           <Card>
             <CardContent className="grid gap-5 pt-6 sm:grid-cols-2">
               <Detail label={t("form.date")} value={row.date} />
-              <Detail
-                label={t("form.timeOptional")}
-                value={row.time?.slice(0, 5) || "—"}
-              />
+              <Detail label={t("form.timeOptional")} value={row.time?.slice(0, 5) || "—"} />
               <Detail label={t("form.matchType")} value={typeLabel} />
-              <Detail label={t("form.result")} value={outcomeLabel} />
-              <Detail
-                label={t("columns.score")}
-                value={displayScore || "—"}
-              />
-              <Detail
-                label={t("columns.partner")}
-                value={partnerName || "—"}
-              />
-              <Detail
-                label={t("columns.opponents")}
-                value={opponentNames.join(", ") || "—"}
-              />
+              <div>
+                <dt className="text-sm font-medium">{t("form.result")}</dt>
+                <dd className="mt-1">
+                  {outcome === "win" ? (
+                    <Badge variant="win">{outcomeLabel}</Badge>
+                  ) : outcome === "loss" ? (
+                    <Badge variant="loss">{outcomeLabel}</Badge>
+                  ) : outcome === "non_finished" ? (
+                    <Badge variant="outline">{outcomeLabel}</Badge>
+                  ) : (
+                    <span className="text-sm text-muted-foreground">—</span>
+                  )}
+                </dd>
+              </div>
+              <Detail label={t("columns.score")} value={displayScore || "—"} />
+              <Detail label={t("columns.partner")} value={partnerName || "—"} />
+              <Detail label={t("columns.opponents")} value={opponentNames.join(", ") || "—"} />
               <Detail
                 label={t("columns.notes")}
                 value={row.notes || "—"}
@@ -223,7 +210,7 @@ export default async function MatchDetailPage({
 function Detail({
   label,
   value,
-  className = "",
+  className = ""
 }: {
   label: string;
   value: string;
@@ -232,9 +219,7 @@ function Detail({
   return (
     <div className={className}>
       <dt className="text-sm font-medium">{label}</dt>
-      <dd className="mt-1 whitespace-pre-wrap text-sm text-muted-foreground">
-        {value}
-      </dd>
+      <dd className="mt-1 whitespace-pre-wrap text-sm text-muted-foreground">{value}</dd>
     </div>
   );
 }

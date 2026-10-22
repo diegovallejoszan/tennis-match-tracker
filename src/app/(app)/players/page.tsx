@@ -16,7 +16,7 @@ import {
   CardDescription,
   CardFooter,
   CardHeader,
-  CardTitle,
+  CardTitle
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 
@@ -80,9 +80,7 @@ export default async function PlayersPage({ searchParams }: PlayersPageProps) {
         <Card>
           <CardHeader>
             <CardTitle>{t("emptyTitle")}</CardTitle>
-            <CardDescription>
-              {safeTerm ? t("emptySearch") : t("emptyDefault")}
-            </CardDescription>
+            <CardDescription>{safeTerm ? t("emptySearch") : t("emptyDefault")}</CardDescription>
           </CardHeader>
           <CardContent>
             <Button asChild>
@@ -94,7 +92,7 @@ export default async function PlayersPage({ searchParams }: PlayersPageProps) {
         <ul className="grid min-w-0 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {rows.map((p) => {
             const availableDays = getAvailableDayKeys(
-              p.availability as Record<string, unknown> | null,
+              p.availability as Record<string, unknown> | null
             );
 
             return (
@@ -155,7 +153,7 @@ export default async function PlayersPage({ searchParams }: PlayersPageProps) {
                         {p.strengths ? (
                           <div className="flex items-start gap-2">
                             <Swords
-                              className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-500"
+                              className="mt-0.5 h-4 w-4 shrink-0 text-outcome-win"
                               aria-hidden
                             />
                             <p className="line-clamp-2">{p.strengths}</p>
@@ -164,7 +162,7 @@ export default async function PlayersPage({ searchParams }: PlayersPageProps) {
                         {p.weaknesses ? (
                           <div className="flex items-start gap-2">
                             <ShieldAlert
-                              className="mt-0.5 h-4 w-4 shrink-0 text-destructive"
+                              className="mt-0.5 h-4 w-4 shrink-0 text-outcome-loss"
                               aria-hidden
                             />
                             <p className="line-clamp-2">{p.weaknesses}</p>

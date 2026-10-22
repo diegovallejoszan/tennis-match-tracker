@@ -19,7 +19,7 @@ import {
   winRateByMonth,
   winRateForMatchType,
   type DashboardFilters,
-  type MatchForDashboard,
+  type MatchForDashboard
 } from "@/lib/dashboard-aggregates";
 import { fetchGroupedMatchesForUser, type GroupedMatch } from "@/lib/grouped-matches";
 
@@ -44,7 +44,7 @@ function toStatsShape(matches: GroupedMatch[]): MatchForDashboard[] {
     score: m.score,
     opponents: m.opponents,
     partner: m.partner,
-    scoreSegments: m.scoreSegments,
+    scoreSegments: m.scoreSegments
   }));
 }
 
@@ -56,7 +56,7 @@ function parseFilters(params: {
   completionStatus?: string;
 }): DashboardFilters {
   const filters: DashboardFilters = {
-    completionStatus: params.completionStatus || "all",
+    completionStatus: params.completionStatus || "all"
   };
   if (params.from) filters.from = params.from;
   if (params.to) filters.to = params.to;
@@ -81,7 +81,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
       .select({ id: players.id, name: players.name })
       .from(players)
       .where(eq(players.userId, session.user.id))
-      .orderBy(players.name),
+      .orderBy(players.name)
   ]);
 
   const statsInput = toStatsShape(allMatches);
@@ -99,17 +99,16 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
 
   const sparklinePoints = buildSparklinePoints(filteredInput);
   const wlByType = winLossByMatchType(filteredInput).map((row) => ({
-    label:
-      row.typeKey === "single" ? tCommon("singles") : tCommon("doubles"),
+    label: row.typeKey === "single" ? tCommon("singles") : tCommon("doubles"),
     wins: row.wins,
-    losses: row.losses,
+    losses: row.losses
   }));
   const winRateSeries = winRateByMonth(filteredInput).map(
     ({ label, winRate, competitiveCount }) => ({
       label,
       winRate,
-      competitiveCount,
-    }),
+      competitiveCount
+    })
   );
 
   const recent = [...filteredFull]
@@ -119,7 +118,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   const typeLabels: Record<string, string> = {
     practice: tCommon("practice"),
     single: tCommon("singles"),
-    doubles: tCommon("doubles"),
+    doubles: tCommon("doubles")
   };
 
   return (
@@ -138,12 +137,8 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-semibold tabular-nums">
-              {filteredFull.length}
-            </p>
-            <p className="mt-1 text-xs text-muted-foreground">
-              {t("cards.inRange")}
-            </p>
+            <p className="text-3xl font-semibold tabular-nums">{filteredFull.length}</p>
+            <p className="mt-1 text-xs text-muted-foreground">{t("cards.inRange")}</p>
           </CardContent>
         </Card>
         <Card>
@@ -161,7 +156,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                 ? t("cards.noResults")
                 : t("cards.record", {
                     wins: singlesRate.wins,
-                    losses: singlesRate.losses,
+                    losses: singlesRate.losses
                   })}
             </p>
           </CardContent>
@@ -181,7 +176,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                 ? t("cards.noResults")
                 : t("cards.record", {
                     wins: doublesRate.wins,
-                    losses: doublesRate.losses,
+                    losses: doublesRate.losses
                   })}
             </p>
           </CardContent>
@@ -194,9 +189,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
           </CardHeader>
           <CardContent>
             <p className="text-3xl font-semibold tabular-nums">{thisMonthCount}</p>
-            <p className="mt-1 text-xs text-muted-foreground">
-              {t("cards.monthHint")}
-            </p>
+            <p className="mt-1 text-xs text-muted-foreground">{t("cards.monthHint")}</p>
           </CardContent>
         </Card>
         <Card className="sm:col-span-2 xl:col-span-1">
@@ -265,15 +258,9 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                     <Badge variant="secondary">
                       {typeLabels[match.matchType] ?? match.matchType}
                     </Badge>
-                    {match.outcome === "win" ? (
-                      <Badge className="border-transparent bg-outcome-win text-white hover:bg-outcome-win">
-                        {tCommon("win")}
-                      </Badge>
-                    ) : null}
+                    {match.outcome === "win" ? <Badge variant="win">{tCommon("win")}</Badge> : null}
                     {match.outcome === "loss" ? (
-                      <Badge className="border-transparent bg-outcome-loss text-white hover:bg-outcome-loss">
-                        {tCommon("loss")}
-                      </Badge>
+                      <Badge variant="loss">{tCommon("loss")}</Badge>
                     ) : null}
                     {match.outcome === "non_finished" ? (
                       <Badge variant="outline">{tCommon("notFinished")}</Badge>
@@ -286,8 +273,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                   ) : null}
                   {match.opponents.length > 0 ? (
                     <p className="mt-1 text-sm text-muted-foreground">
-                      {tCommon("vs")}{" "}
-                      {match.opponents.map((o) => o.name).join(", ")}
+                      {tCommon("vs")} {match.opponents.map((o) => o.name).join(", ")}
                     </p>
                   ) : null}
                 </Link>

@@ -13,8 +13,6 @@ body {
   color: hsl(var(--foreground));
 }
 
-
-
 @layer base {
   :root {
     --background: 96 24% 96%;
@@ -33,7 +31,7 @@ body {
     --accent-foreground: 154 43% 18%;
     --highlight: 66 70% 61%;
     --highlight-foreground: 154 43% 18%;
-    --destructive: 0 72% 46%;
+    --destructive: 10 42% 42%;
     --destructive-foreground: 0 0% 98%;
     --border: 130 14% 84%;
     --input: 130 14% 84%;
