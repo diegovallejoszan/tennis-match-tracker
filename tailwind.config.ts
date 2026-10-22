@@ -53,6 +53,10 @@ const config: Config = {
           DEFAULT: "hsl(var(--highlight))",
           foreground: "hsl(var(--highlight-foreground))"
         },
+        outcome: {
+          win: "hsl(var(--outcome-win))",
+          loss: "hsl(var(--outcome-loss))"
+        },
         chart: {
           "1": "hsl(var(--chart-1))",
           "2": "hsl(var(--chart-2))",

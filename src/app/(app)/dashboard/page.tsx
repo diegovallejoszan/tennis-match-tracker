@@ -266,12 +266,14 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                       {typeLabels[match.matchType] ?? match.matchType}
                     </Badge>
                     {match.outcome === "win" ? (
-                      <Badge className="bg-emerald-600 hover:bg-emerald-600">
+                      <Badge className="border-transparent bg-outcome-win text-white hover:bg-outcome-win">
                         {tCommon("win")}
                       </Badge>
                     ) : null}
                     {match.outcome === "loss" ? (
-                      <Badge variant="destructive">{tCommon("loss")}</Badge>
+                      <Badge className="border-transparent bg-outcome-loss text-white hover:bg-outcome-loss">
+                        {tCommon("loss")}
+                      </Badge>
                     ) : null}
                     {match.outcome === "non_finished" ? (
                       <Badge variant="outline">{tCommon("notFinished")}</Badge>

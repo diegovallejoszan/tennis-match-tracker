@@ -29,8 +29,8 @@ function formatPointDate(date: string, locale: string): string {
 }
 
 function outcomeColor(outcome: SparklinePoint["outcome"]): string {
-  if (outcome === "win") return "#16a34a";
-  if (outcome === "loss") return "#dc2626";
+  if (outcome === "win") return "hsl(var(--outcome-win))";
+  if (outcome === "loss") return "hsl(var(--outcome-loss))";
   return "currentColor";
 }
 
@@ -264,8 +264,8 @@ export function MatchSparkline({ points }: MatchSparklineProps) {
       </div>
 
       <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
-        <span className="text-emerald-600">↑ {t("win")}</span>
-        <span className="text-red-600">↓ {t("loss")}</span>
+        <span className="text-outcome-win">↑ {t("win")}</span>
+        <span className="text-outcome-loss">↓ {t("loss")}</span>
         <span>· {t("notFinished")}</span>
         <span>· {t("heightHint")}</span>
       </div>

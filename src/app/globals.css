@@ -39,8 +39,10 @@ body {
     --input: 130 14% 84%;
     --ring: 153 40% 30%;
     --chart-1: 153 40% 30%;
-    --chart-2: 142 64% 32%;
-    --chart-3: 0 72% 46%;
+    --outcome-win: 152 28% 36%;
+    --outcome-loss: 10 42% 42%;
+    --chart-2: 152 28% 36%;
+    --chart-3: 10 42% 42%;
     --chart-4: 66 70% 42%;
     --chart-5: 197 37% 24%;
     --radius: 0.85rem;
@@ -72,5 +74,7 @@ body {
     --chart-5: 340 75% 55%;
     --highlight: 66 70% 50%;
     --highlight-foreground: 0 0% 98%;
+    --outcome-win: 152 32% 52%;
+    --outcome-loss: 10 48% 58%;
   }
 }

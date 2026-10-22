@@ -99,14 +99,14 @@ export function DashboardCharts({
                   dataKey="wins"
                   name={t("wins")}
                   stackId="wl"
-                  fill="#16a34a"
+                  fill="hsl(var(--outcome-win))"
                   radius={[0, 0, 0, 0]}
                 />
                 <Bar
                   dataKey="losses"
                   name={t("losses")}
                   stackId="wl"
-                  fill="#dc2626"
+                  fill="hsl(var(--outcome-loss))"
                   radius={[4, 4, 0, 0]}
                 />
               </BarChart>

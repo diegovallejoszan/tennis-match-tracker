@@ -53,7 +53,7 @@
   "auth": {
     "landing": {
       "title": "PrepCourt",
-      "description": "Un diario de club para partidos, rivales y el plan del siguiente.",
+      "description": "Registra tus partidos de tenis y rivales. Usa inteligencia artificial para tu próximo juego.",
       "signIn": "Iniciar sesión con Google",
       "footer": "Usa tu cuenta de Google para iniciar sesión. Los usuarios nuevos crean una cuenta en el primer acceso."
     },
