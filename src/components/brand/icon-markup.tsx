@@ -27,13 +27,13 @@ export function BrandIconMarkup({ size }: BrandIconMarkupProps) {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          gap: Math.round(ball * 0.08)
+          gap: Math.round(ball * 0.4)
         }}
       >
         <div
           style={{
-            width: Math.round(ball * 0.24),
-            height: Math.round(ball * 0.7),
+            width: Math.round(ball * 0.2),
+            height: Math.round(ball * 0.6),
             borderRight: `${seam}px solid #FFFFFF`,
             borderRadius: ball,
             display: "flex"
@@ -41,8 +41,8 @@ export function BrandIconMarkup({ size }: BrandIconMarkupProps) {
         />
         <div
           style={{
-            width: Math.round(ball * 0.24),
-            height: Math.round(ball * 0.7),
+            width: Math.round(ball * 0.2),
+            height: Math.round(ball * 0.6),
             borderLeft: `${seam}px solid #FFFFFF`,
             borderRadius: ball,
             display: "flex"

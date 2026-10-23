@@ -99,11 +99,11 @@ function faviconPixel(x, y, size) {
   if (dx * dx + dy * dy > rad * rad) return CLEAR;
 
   const t = dy / rad;
-  if (Math.abs(t) < 0.78) {
-    const endOffset = rad * 0.38;
-    const midOffset = rad * 0.08;
-    const offset = endOffset + (midOffset - endOffset) * (1 - t * t);
-    const stroke = Math.max(1.15, size * 0.07);
+  if (Math.abs(t) < 0.62) {
+    const endOffset = rad * 0.62;
+    const midOffset = rad * 0.4;
+    const offset = endOffset + (midOffset - endOffset) * (1 - (t / 0.62) * (t / 0.62));
+    const stroke = Math.max(1.6, size * 0.085);
     if (Math.abs(Math.abs(dx) - offset) < stroke * 0.5) return WHITE;
   }
 

@@ -19,25 +19,25 @@ export function BrandMark({ className, title }: BrandMarkProps) {
       aria-label={title}
     >
       <path
-        d="M16.5 49.5A23 23 0 1 1 54 22.5"
+        d="M18 50A22.5 22.5 0 1 1 55 24"
         fill="none"
         stroke="#1B4332"
-        strokeWidth="3.2"
+        strokeWidth="2.6"
         strokeLinecap="round"
       />
-      <circle cx="34" cy="36" r="15" fill="#1B4332" />
+      <circle cx="35" cy="36" r="16" fill="#1B4332" />
       <path
-        d="M26.5 24.5c6.5 5.5 6.5 15.5 0 22"
+        d="M24.5 25.5c4.5 6.5 4.5 14.5 0 21"
         fill="none"
         stroke="#F4F7F2"
-        strokeWidth="3.3"
+        strokeWidth="2.6"
         strokeLinecap="round"
       />
       <path
-        d="M41.5 24.5c-6.5 5.5-6.5 15.5 0 22"
+        d="M45.5 25.5c-4.5 6.5-4.5 14.5 0 21"
         fill="none"
         stroke="#F4F7F2"
-        strokeWidth="3.3"
+        strokeWidth="2.6"
         strokeLinecap="round"
       />
     </svg>
