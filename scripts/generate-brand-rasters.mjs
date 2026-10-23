@@ -85,34 +85,33 @@ function ico(size, pixel) {
   return Buffer.concat([header, entry, dib, xor, Buffer.alloc(andSize)]);
 }
 
-function markPixel(x, y, size) {
-  const forest = [45, 106, 79, 255];
-  const ball = [27, 67, 50, 255];
-  const seam = [244, 247, 242, 255];
-  const arc = [212, 225, 87, 255];
+const BALL = [27, 67, 50, 255];
+const WHITE = [255, 255, 255, 255];
+const CLEAR = [0, 0, 0, 0];
+
+/** Green disc with inward seams, matching the Matches header icon. */
+function faviconPixel(x, y, size) {
   const cx = (size - 1) / 2;
-  const cy = cx + size * 0.03;
-  const dx = x - cx;
-  const dy = y - cy;
-  const dist = Math.hypot(dx, dy);
-  const radius = size * 0.28;
-  if (dist < radius) {
-    const seamBand = Math.abs(Math.abs(dx) - radius * 0.38);
-    if (seamBand < Math.max(1, size * 0.025) && Math.abs(dy) < radius * 0.82) {
-      return seam;
-    }
-    return ball;
+  const cy = (size - 1) / 2;
+  const rad = size * 0.46;
+  const dx = x + 0.5 - cx;
+  const dy = y + 0.5 - cy;
+  if (dx * dx + dy * dy > rad * rad) return CLEAR;
+
+  const t = dy / rad;
+  if (Math.abs(t) < 0.78) {
+    const endOffset = rad * 0.38;
+    const midOffset = rad * 0.08;
+    const offset = endOffset + (midOffset - endOffset) * (1 - t * t);
+    const stroke = Math.max(1.15, size * 0.07);
+    if (Math.abs(Math.abs(dx) - offset) < stroke * 0.5) return WHITE;
   }
-  const ax = x - size * 0.72;
-  const ay = y - size * 0.2;
-  const ad = Math.hypot(ax, ay);
-  if (ad > size * 0.1 && ad < size * 0.16 && y < size * 0.28 && x > size * 0.62) {
-    return arc;
-  }
-  return forest;
+
+  return BALL;
 }
 
-writeFileSync("public/brand/mark-32.png", png(32, markPixel));
-writeFileSync("public/brand/mark-180.png", png(180, markPixel));
-writeFileSync("src/app/favicon.ico", ico(32, markPixel));
-console.log("wrote mark pngs and favicon.ico");
+writeFileSync("public/brand/mark-32.png", png(32, faviconPixel));
+writeFileSync("public/brand/mark-180.png", png(180, faviconPixel));
+writeFileSync("src/app/apple-icon.png", png(180, faviconPixel));
+writeFileSync("src/app/favicon.ico", ico(32, faviconPixel));
+console.log("wrote favicon rasters");

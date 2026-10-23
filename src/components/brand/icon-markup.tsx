@@ -1,13 +1,12 @@
-/** Satori-safe markup for generated PNG icons (favicon, touch, Open Graph). */
+/** Satori-safe Matches icon: green disc and inward tennis-ball seams. */
 
 type BrandIconMarkupProps = {
   size: number;
-  showArc?: boolean;
 };
 
-export function BrandIconMarkup({ size, showArc = true }: BrandIconMarkupProps) {
-  const ball = Math.round(size * 0.56);
-  const seam = Math.max(2, Math.round(size * 0.045));
+export function BrandIconMarkup({ size }: BrandIconMarkupProps) {
+  const ball = Math.round(size * 0.72);
+  const seam = Math.max(3, Math.round(size * 0.045));
   return (
     <div
       style={{
@@ -16,7 +15,7 @@ export function BrandIconMarkup({ size, showArc = true }: BrandIconMarkupProps) 
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        background: "#2D6A4F"
+        background: "#F4F7F2"
       }}
     >
       <div
@@ -28,34 +27,27 @@ export function BrandIconMarkup({ size, showArc = true }: BrandIconMarkupProps) 
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          position: "relative"
+          gap: Math.round(ball * 0.08)
         }}
       >
         <div
           style={{
-            width: Math.round(ball * 0.42),
-            height: Math.round(ball * 0.78),
-            borderLeft: `${seam}px solid #F4F7F2`,
-            borderRight: `${seam}px solid #F4F7F2`,
+            width: Math.round(ball * 0.24),
+            height: Math.round(ball * 0.7),
+            borderRight: `${seam}px solid #FFFFFF`,
             borderRadius: ball,
             display: "flex"
           }}
         />
-        {showArc ? (
-          <div
-            style={{
-              position: "absolute",
-              top: Math.round(ball * -0.08),
-              right: Math.round(ball * -0.02),
-              width: Math.round(ball * 0.38),
-              height: Math.round(ball * 0.22),
-              borderTop: `${seam}px solid #D4E157`,
-              borderRight: `${seam}px solid #D4E157`,
-              borderTopRightRadius: ball,
-              display: "flex"
-            }}
-          />
-        ) : null}
+        <div
+          style={{
+            width: Math.round(ball * 0.24),
+            height: Math.round(ball * 0.7),
+            borderLeft: `${seam}px solid #FFFFFF`,
+            borderRadius: ball,
+            display: "flex"
+          }}
+        />
       </div>
     </div>
   );

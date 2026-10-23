@@ -5,7 +5,10 @@ type BrandMarkProps = {
   title?: string;
 };
 
-/** Tennis ball with seam and a short prep trajectory. Used in chrome and auth. */
+/**
+ * PrepCourt logo mark from docs/branding/alt-c/logo.jpg:
+ * forest ball, seams that bow inward, and a sweep around the upper left.
+ */
 export function BrandMark({ className, title }: BrandMarkProps) {
   return (
     <svg
@@ -15,27 +18,26 @@ export function BrandMark({ className, title }: BrandMarkProps) {
       aria-hidden={title ? undefined : true}
       aria-label={title}
     >
-      <rect width="64" height="64" rx="16" fill="#2D6A4F" />
-      <circle cx="32" cy="34" r="18" fill="#1B4332" />
       <path
-        d="M22 20c6 6 6 22 0 28"
+        d="M16.5 49.5A23 23 0 1 1 54 22.5"
+        fill="none"
+        stroke="#1B4332"
+        strokeWidth="3.2"
+        strokeLinecap="round"
+      />
+      <circle cx="34" cy="36" r="15" fill="#1B4332" />
+      <path
+        d="M26.5 24.5c6.5 5.5 6.5 15.5 0 22"
         fill="none"
         stroke="#F4F7F2"
-        strokeWidth="2.4"
+        strokeWidth="3.3"
         strokeLinecap="round"
       />
       <path
-        d="M42 20c-6 6-6 22 0 28"
+        d="M41.5 24.5c-6.5 5.5-6.5 15.5 0 22"
         fill="none"
         stroke="#F4F7F2"
-        strokeWidth="2.4"
-        strokeLinecap="round"
-      />
-      <path
-        d="M44 12c7 2 12 8 14 14"
-        fill="none"
-        stroke="#D4E157"
-        strokeWidth="2.6"
+        strokeWidth="3.3"
         strokeLinecap="round"
       />
     </svg>
