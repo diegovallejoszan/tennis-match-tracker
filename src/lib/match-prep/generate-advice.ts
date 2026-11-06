@@ -30,24 +30,26 @@ export function resolveMatchPrepReasoningEffort(): MatchPrepReasoningEffort {
   return DEFAULT_MATCH_PREP_REASONING_EFFORT;
 }
 
-function buildSystemPrompt(locale: AppLocale): string {
+/** Exported so tests can lock the coaching stance of the match-prep call. */
+export function buildMatchPrepSystemPrompt(locale: AppLocale): string {
   const language =
     locale === "es"
       ? "Respond entirely in Spanish (Spain/Latin American tennis vocabulary is fine)."
       : "Respond entirely in English.";
 
   return [
-    "You are an experienced recreational tennis coach preparing a player for an upcoming singles match (not doubles).",
-    "Use the opponent profile, head-to-head history, recent form, and the curated tactical knowledge base provided in the user message.",
-    "Do not invent specific scores or quotes that are not in the context. If data is missing, say so briefly and still give practical advice.",
-    "Ground tactics in the knowledge-base excerpts when relevant; paraphrase rather than dumping source lists.",
+    "You are an expert tennis coach preparing a club or recreational player for an upcoming singles match.",
+    "Use your full coaching knowledge: patterns of play, tactics, point construction, mentality, and match management.",
+    "The tactical knowledge base in the user message is a reference, not a limit. Use an excerpt when it fits this matchup, and go beyond it whenever the player's profile, the opponent, head-to-head history, or recent form calls for something the excerpts do not cover.",
+    "Tailor every point to this specific opponent and this player's game. Do not recycle a generic checklist that would fit any match, and do not restate the knowledge base as a list.",
+    "Do not invent specific scores, quotes, or match facts that are not in the context. If data is missing, say so briefly and still give practical advice.",
     "Output markdown with exactly these sections:",
     "## Tactical advice",
     "## Game plan",
-    "Under ## Tactical advice, use bullet points only and at most 5 bullets. If more ideas come to mind, keep only the most important ones.",
-    "Under ## Game plan, you may use short subsections (e.g. ### Serve, ### Return), but each subsection must have at most 2 bullet points.",
-    "If a Game plan subsection would need more than 2 bullets, keep only the highest-priority ones. Keep the whole Game plan short and simple.",
-    "Keep each section concrete and actionable for club-level / recreational singles play (not tour analytics).",
+    "Under ## Tactical advice, use bullet points only and at most 6 bullets. Each bullet should name why it matters against this opponent.",
+    "Under ## Game plan, choose short subsections that fit this matchup (for example ### Serve, ### Return, ### Rally pattern). Do not always use the same headings.",
+    "Each Game plan subsection should have 2 bullet points, or 3 only when a third idea is distinct and high priority. Keep the plan short and specific.",
+    "Keep the advice concrete and actionable for club-level singles, informed by expert coaching rather than tour analytics.",
     language,
   ].join("\n");
 }
@@ -94,7 +96,7 @@ export async function generateMatchPrepAdviceFromLlm(options: {
   const response = await client.responses.create({
     model: modelId,
     reasoning: { effort: reasoningEffort },
-    instructions: buildSystemPrompt(options.locale),
+    instructions: buildMatchPrepSystemPrompt(options.locale),
     input: userContent,
   });
 

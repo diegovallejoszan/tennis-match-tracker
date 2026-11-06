@@ -4,6 +4,7 @@ import OpenAI from "openai";
 import {
   DEFAULT_MATCH_PREP_MODEL,
   DEFAULT_MATCH_PREP_REASONING_EFFORT,
+  buildMatchPrepSystemPrompt,
   formatMatchPrepLlmError,
   resolveMatchPrepModelId,
   resolveMatchPrepReasoningEffort,
@@ -115,6 +116,17 @@ describe("match prep prompt snapshot for LLM", () => {
     expect(md).toContain("Matches vs this opponent");
     expect(md).toContain("Your last 5 matches");
     expect(md).toContain("Tactical knowledge base");
+    expect(md).toContain("optional reference material");
     expect(md).not.toContain("Missing data");
+  });
+});
+
+describe("buildMatchPrepSystemPrompt", () => {
+  it("asks for an expert coach who can advise beyond the knowledge base", () => {
+    const prompt = buildMatchPrepSystemPrompt("en");
+    expect(prompt).toContain("expert tennis coach");
+    expect(prompt).toContain("reference, not a limit");
+    expect(prompt).toContain("go beyond it");
+    expect(prompt).not.toContain("Ground tactics in the knowledge-base");
   });
 });

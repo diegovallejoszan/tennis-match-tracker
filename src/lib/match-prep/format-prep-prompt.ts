@@ -103,7 +103,13 @@ export function formatMatchPrepPromptContext(ctx: MatchPrepPromptContext): strin
     );
   }
 
-  sections.push(ctx.knowledgeBaseMarkdown);
+  sections.push(
+    "## How to use the knowledge base",
+    "The tactical knowledge base below is optional reference material.",
+    "Prefer advice that fits this player and this opponent, including ideas that are not listed there.",
+    "",
+    ctx.knowledgeBaseMarkdown,
+  );
 
   return sections.join("\n");
 }
