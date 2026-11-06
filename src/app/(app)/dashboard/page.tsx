@@ -48,6 +48,12 @@ function toStatsShape(matches: GroupedMatch[]): MatchForDashboard[] {
   }));
 }
 
+/** Grass for a winning record, clay for a losing one; ink when there is no data. */
+function rateTone(rate: number | null): string {
+  if (rate === null) return "";
+  return rate >= 50 ? "text-outcome-win" : "text-outcome-loss";
+}
+
 function parseFilters(params: {
   from?: string;
   to?: string;
@@ -148,7 +154,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-semibold tabular-nums">
+            <p className={`text-3xl font-semibold tabular-nums ${rateTone(singlesRate.rate)}`}>
               {singlesRate.rate === null ? "—" : `${singlesRate.rate}%`}
             </p>
             <p className="mt-1 text-xs text-muted-foreground">
@@ -168,7 +174,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-semibold tabular-nums">
+            <p className={`text-3xl font-semibold tabular-nums ${rateTone(doublesRate.rate)}`}>
               {doublesRate.rate === null ? "—" : `${doublesRate.rate}%`}
             </p>
             <p className="mt-1 text-xs text-muted-foreground">

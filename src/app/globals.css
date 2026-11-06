@@ -14,35 +14,46 @@ body {
 }
 
 @layer base {
+  /*
+   * PrepCourt palette — "three surfaces and a ball":
+   *   grass  (wins)        --outcome-win  / --chart-2
+   *   clay   (losses)      --outcome-loss / --chart-3
+   *   hard court (trend)   --chart-1
+   *   optic-yellow ball    --highlight
+   * Forest green stays the ink / primary so the brand still reads as a club.
+   */
   :root {
-    --background: 96 24% 96%;
-    --foreground: 154 43% 18%;
+    --background: 96 30% 97%;
+    --foreground: 156 40% 16%;
     --card: 0 0% 100%;
-    --card-foreground: 154 43% 18%;
+    --card-foreground: 156 40% 16%;
     --popover: 0 0% 100%;
-    --popover-foreground: 154 43% 18%;
-    --primary: 153 40% 30%;
-    --primary-foreground: 96 24% 97%;
-    --secondary: 120 18% 92%;
-    --secondary-foreground: 154 43% 18%;
-    --muted: 110 14% 92%;
-    --muted-foreground: 150 10% 36%;
-    --accent: 100 22% 90%;
-    --accent-foreground: 154 43% 18%;
-    --highlight: 66 70% 61%;
-    --highlight-foreground: 154 43% 18%;
-    --destructive: 10 42% 42%;
+    --popover-foreground: 156 40% 16%;
+    --primary: 152 44% 30%;
+    --primary-foreground: 96 30% 98%;
+    --secondary: 110 22% 93%;
+    --secondary-foreground: 156 40% 16%;
+    --muted: 105 18% 93%;
+    --muted-foreground: 152 10% 40%;
+    --accent: 96 30% 91%;
+    --accent-foreground: 156 40% 16%;
+    --highlight: 68 80% 60%;
+    --highlight-foreground: 156 40% 16%;
+    --destructive: 16 68% 44%;
     --destructive-foreground: 0 0% 98%;
-    --border: 130 14% 84%;
-    --input: 130 14% 84%;
-    --ring: 153 40% 30%;
-    --chart-1: 153 40% 30%;
-    --outcome-win: 152 28% 36%;
-    --outcome-loss: 10 42% 42%;
-    --chart-2: 152 28% 36%;
-    --chart-3: 10 42% 42%;
-    --chart-4: 66 70% 42%;
-    --chart-5: 197 37% 24%;
+    --border: 125 16% 87%;
+    --input: 125 16% 87%;
+    --ring: 152 44% 30%;
+    --surface-grass: 145 52% 34%;
+    --surface-clay: 16 68% 46%;
+    --surface-hard: 206 62% 42%;
+    --outcome-win: var(--surface-grass);
+    --outcome-loss: var(--surface-clay);
+    --chart-1: var(--surface-hard);
+    --chart-2: var(--surface-grass);
+    --chart-3: var(--surface-clay);
+    --chart-4: 68 80% 44%;
+    --chart-5: 156 40% 16%;
     --radius: 0.85rem;
   }
   .dark {

@@ -85,29 +85,59 @@ function ico(size, pixel) {
   return Buffer.concat([header, entry, dib, xor, Buffer.alloc(andSize)]);
 }
 
-const BALL = [27, 67, 50, 255];
+const TILE = [27, 67, 50, 255];
+const FELT_LIGHT = [238, 250, 122];
+const FELT_DARK = [185, 207, 44];
 const WHITE = [255, 255, 255, 255];
 const CLEAR = [0, 0, 0, 0];
 
-/** Green disc with inward seams, matching the Matches header icon. */
-function faviconPixel(x, y, size) {
-  const cx = (size - 1) / 2;
-  const cy = (size - 1) / 2;
-  const rad = size * 0.46;
-  const dx = x + 0.5 - cx;
-  const dy = y + 0.5 - cy;
-  if (dx * dx + dy * dy > rad * rad) return CLEAR;
+function mix(a, b, t) {
+  const k = Math.min(1, Math.max(0, t));
+  return [
+    Math.round(a[0] + (b[0] - a[0]) * k),
+    Math.round(a[1] + (b[1] - a[1]) * k),
+    Math.round(a[2] + (b[2] - a[2]) * k),
+    255,
+  ];
+}
 
-  const t = dy / rad;
-  if (Math.abs(t) < 0.62) {
-    const endOffset = rad * 0.62;
-    const midOffset = rad * 0.4;
-    const offset = endOffset + (midOffset - endOffset) * (1 - (t / 0.62) * (t / 0.62));
-    const stroke = Math.max(1.6, size * 0.085);
-    if (Math.abs(Math.abs(dx) - offset) < stroke * 0.5) return WHITE;
+/**
+ * Mirrors src/app/icon.svg: forest rounded tile, optic-yellow ball,
+ * two white seams that run edge to edge (arcs of circles centred on the
+ * tile's corners, clipped to the ball).
+ */
+function faviconPixel(x, y, size) {
+  const u = size / 64;
+  const px = x + 0.5;
+  const py = y + 0.5;
+
+  // Rounded tile (rx = 14 in a 64 box).
+  const rx = 14 * u;
+  const qx = Math.max(0, Math.abs(px - size / 2) - (size / 2 - rx));
+  const qy = Math.max(0, Math.abs(py - size / 2) - (size / 2 - rx));
+  if (qx * qx + qy * qy > rx * rx) return CLEAR;
+
+  const cx = 32 * u;
+  const cy = 32 * u;
+  const rad = 23 * u;
+  const dx = px - cx;
+  const dy = py - cy;
+  const inBall = dx * dx + dy * dy <= rad * rad;
+  if (!inBall) return TILE;
+
+  const stroke = Math.max(1.6, 4 * u);
+  const seamR = 23 * u;
+  const d1 = Math.hypot(px - 9 * u, py - 9 * u);
+  const d2 = Math.hypot(px - 55 * u, py - 55 * u);
+  if (Math.abs(d1 - seamR) < stroke / 2 || Math.abs(d2 - seamR) < stroke / 2) {
+    return WHITE;
   }
 
-  return BALL;
+  // Soft felt shading: lighter towards the upper-left highlight.
+  const hx = cx - rad * 0.3;
+  const hy = cy - rad * 0.36;
+  const t = Math.hypot(px - hx, py - hy) / (rad * 1.6);
+  return mix(FELT_LIGHT, FELT_DARK, t);
 }
 
 writeFileSync("public/brand/mark-32.png", png(32, faviconPixel));

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 
 import type { SparklinePoint } from "@/lib/dashboard-aggregates";
@@ -9,12 +9,21 @@ type MatchSparklineProps = {
   points: SparklinePoint[];
 };
 
-const CHART_HEIGHT = 120;
+/**
+ * The chart is drawn 1:1 in CSS pixels (fixed height, width measured from
+ * the container) instead of letting the SVG scale with the card. Scaling
+ * made strokes fat and soft on wide screens; this keeps them crisp.
+ */
+const CHART_HEIGHT = 160;
 const BASELINE = CHART_HEIGHT / 2;
-const MAX_BAR = 44;
-const MIN_POINT_GAP = 14;
+const MAX_BAR = 62;
+const MIN_POINT_GAP = 18;
+const MIN_WIDTH = 320;
 const HIT_WIDTH = 28;
-const ZERO_DOT_R = 3.5;
+const ZERO_DOT_R = 4.5;
+const BAR_STROKE = 3;
+const BAR_STROKE_ACTIVE = 4;
+const CAP_HALF = 6;
 
 function formatPointDate(date: string, locale: string): string {
   const [y, mo, d] = date.split("-");
@@ -31,7 +40,7 @@ function formatPointDate(date: string, locale: string): string {
 function outcomeColor(outcome: SparklinePoint["outcome"]): string {
   if (outcome === "win") return "hsl(var(--outcome-win))";
   if (outcome === "loss") return "hsl(var(--outcome-loss))";
-  return "currentColor";
+  return "hsl(var(--muted-foreground))";
 }
 
 export function MatchSparkline({ points }: MatchSparklineProps) {
@@ -42,17 +51,30 @@ export function MatchSparkline({ points }: MatchSparklineProps) {
   /** Skip the synthetic mouseenter that follows a touch tap on mobile. */
   const skipHoverRef = useRef(false);
   const skipHoverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const [containerWidth, setContainerWidth] = useState(0);
+
+  useLayoutEffect(() => {
+    const node = containerRef.current;
+    if (!node) return;
+    const update = () => setContainerWidth(Math.floor(node.clientWidth));
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
 
   const layout = useMemo(() => {
     const count = points.length;
-    const width = Math.max(320, count * MIN_POINT_GAP + 48);
+    const minWidth = Math.max(MIN_WIDTH, count * MIN_POINT_GAP + 48);
+    const width = Math.max(minWidth, containerWidth);
     const gap = count > 0 ? width / (count + 1) : width;
     const maxAbs = Math.max(
       1,
       ...points.map((p) => Math.abs(p.gameDifferential)),
     );
     return { width, gap, count, maxAbs };
-  }, [points]);
+  }, [points, containerWidth]);
 
   if (points.length === 0) {
     return (
@@ -99,28 +121,50 @@ export function MatchSparkline({ points }: MatchSparklineProps) {
 
   return (
     <div className="space-y-2">
-      <div className="relative overflow-x-auto">
+      <div ref={containerRef} className="relative overflow-x-auto rounded-lg">
         <svg
+          width={layout.width}
+          height={CHART_HEIGHT}
           viewBox={`0 0 ${layout.width} ${CHART_HEIGHT}`}
-          className="min-w-full touch-manipulation text-foreground [&_:focus]:outline-none"
+          className="block touch-manipulation text-foreground [&_:focus]:outline-none"
           role="img"
           aria-label={t("ariaLabel")}
         >
+          {/* Court halves: grass above the net (games won), clay below (games lost). */}
+          <rect
+            x={0}
+            y={0}
+            width={layout.width}
+            height={BASELINE}
+            fill="hsl(var(--outcome-win))"
+            opacity={0.07}
+            pointerEvents="none"
+          />
+          <rect
+            x={0}
+            y={BASELINE}
+            width={layout.width}
+            height={CHART_HEIGHT - BASELINE}
+            fill="hsl(var(--outcome-loss))"
+            opacity={0.07}
+            pointerEvents="none"
+          />
           <line
             x1={layout.gap * 0.5}
             y1={BASELINE}
             x2={layout.width - layout.gap * 0.5}
             y2={BASELINE}
             stroke="currentColor"
-            strokeWidth={0.75}
-            opacity={0.25}
+            strokeWidth={1}
+            opacity={0.45}
           />
           {points.map((point, index) => {
             const x = layout.gap * (index + 1);
             const isActive = activeIndex === index;
             const color = outcomeColor(point.outcome);
             const len = barLength(point.gameDifferential);
-            const opacity = point.outcome === "non_finished" || point.outcome === null ? 0.55 : 1;
+            const strokeWidth = isActive ? BAR_STROKE_ACTIVE : BAR_STROKE;
+            const capHalf = isActive ? CAP_HALF + 1 : CAP_HALF;
 
             return (
               <g key={point.id}>
@@ -130,9 +174,9 @@ export function MatchSparkline({ points }: MatchSparklineProps) {
                     y={4}
                     width={HIT_WIDTH}
                     height={CHART_HEIGHT - 8}
-                    rx={4}
-                    fill="currentColor"
-                    opacity={0.08}
+                    rx={6}
+                    fill="hsl(var(--highlight))"
+                    opacity={0.28}
                     pointerEvents="none"
                   />
                 ) : null}
@@ -145,18 +189,18 @@ export function MatchSparkline({ points }: MatchSparklineProps) {
                       x2={x}
                       y2={BASELINE - len}
                       stroke={color}
-                      strokeWidth={isActive ? 2.5 : 1.75}
-                      opacity={opacity}
+                      strokeWidth={strokeWidth}
+                      strokeLinecap="round"
                       pointerEvents="none"
                     />
                     <line
-                      x1={x - 4}
+                      x1={x - capHalf}
                       y1={BASELINE - len}
-                      x2={x + 4}
+                      x2={x + capHalf}
                       y2={BASELINE - len}
                       stroke={color}
-                      strokeWidth={isActive ? 2.5 : 1.75}
-                      opacity={opacity}
+                      strokeWidth={strokeWidth}
+                      strokeLinecap="round"
                       pointerEvents="none"
                     />
                   </>
@@ -170,18 +214,18 @@ export function MatchSparkline({ points }: MatchSparklineProps) {
                       x2={x}
                       y2={BASELINE + len}
                       stroke={color}
-                      strokeWidth={isActive ? 2.5 : 1.75}
-                      opacity={opacity}
+                      strokeWidth={strokeWidth}
+                      strokeLinecap="round"
                       pointerEvents="none"
                     />
                     <line
-                      x1={x - 4}
+                      x1={x - capHalf}
                       y1={BASELINE + len}
-                      x2={x + 4}
+                      x2={x + capHalf}
                       y2={BASELINE + len}
                       stroke={color}
-                      strokeWidth={isActive ? 2.5 : 1.75}
-                      opacity={opacity}
+                      strokeWidth={strokeWidth}
+                      strokeLinecap="round"
                       pointerEvents="none"
                     />
                   </>
@@ -193,7 +237,8 @@ export function MatchSparkline({ points }: MatchSparklineProps) {
                     cy={BASELINE}
                     r={isActive ? ZERO_DOT_R + 1 : ZERO_DOT_R}
                     fill={color}
-                    opacity={opacity}
+                    stroke="hsl(var(--card))"
+                    strokeWidth={1.5}
                     pointerEvents="none"
                   />
                 ) : null}

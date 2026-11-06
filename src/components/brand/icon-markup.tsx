@@ -1,54 +1,21 @@
-/** Satori-safe Matches icon: green disc and inward tennis-ball seams. */
+/**
+ * Satori-safe app icon: forest tile, optic-yellow tennis ball and
+ * edge-to-edge white seams. Mirrors src/app/icon.svg using explicit arcs
+ * (no clipPath / gradients) so the Open Graph renderer stays predictable.
+ */
 
 type BrandIconMarkupProps = {
   size: number;
 };
 
 export function BrandIconMarkup({ size }: BrandIconMarkupProps) {
-  const ball = Math.round(size * 0.72);
-  const seam = Math.max(3, Math.round(size * 0.045));
   return (
-    <div
-      style={{
-        width: "100%",
-        height: "100%",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        background: "#F4F7F2"
-      }}
-    >
-      <div
-        style={{
-          width: ball,
-          height: ball,
-          borderRadius: ball,
-          background: "#1B4332",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: Math.round(ball * 0.4)
-        }}
-      >
-        <div
-          style={{
-            width: Math.round(ball * 0.2),
-            height: Math.round(ball * 0.6),
-            borderRight: `${seam}px solid #FFFFFF`,
-            borderRadius: ball,
-            display: "flex"
-          }}
-        />
-        <div
-          style={{
-            width: Math.round(ball * 0.2),
-            height: Math.round(ball * 0.6),
-            borderLeft: `${seam}px solid #FFFFFF`,
-            borderRadius: ball,
-            display: "flex"
-          }}
-        />
-      </div>
-    </div>
+    <svg width={size} height={size} viewBox="0 0 64 64" style={{ display: "flex" }}>
+      <rect width="64" height="64" rx="14" fill="#1B4332" />
+      <circle cx="32" cy="32" r="23" fill="#D9EC45" />
+      <path d="M32 9A23 23 0 0 1 9 32" fill="none" stroke="#FFFFFF" strokeWidth="4" />
+      <path d="M32 55A23 23 0 0 1 55 32" fill="none" stroke="#FFFFFF" strokeWidth="4" />
+      <circle cx="32" cy="32" r="23" fill="none" stroke="#1B4332" strokeWidth="1.5" />
+    </svg>
   );
 }

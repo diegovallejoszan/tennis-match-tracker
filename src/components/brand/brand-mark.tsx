@@ -6,8 +6,11 @@ type BrandMarkProps = {
 };
 
 /**
- * PrepCourt logo mark from docs/branding/alt-c/logo.jpg:
- * forest ball, seams that bow inward, and a sweep around the upper left.
+ * PrepCourt logo mark: an optic-yellow tennis ball with edge-to-edge white
+ * seams and a forest sweep around the upper left (the ball's trajectory).
+ * Seam geometry matches src/app/icon.svg (arcs centred on the ball's
+ * bounding-box corners, so they meet the ball at its top/left and
+ * bottom/right points).
  */
 export function BrandMark({ className, title }: BrandMarkProps) {
   return (
@@ -25,21 +28,10 @@ export function BrandMark({ className, title }: BrandMarkProps) {
         strokeWidth="2.6"
         strokeLinecap="round"
       />
-      <circle cx="35" cy="36" r="16" fill="#1B4332" />
-      <path
-        d="M24.5 25.5c4.5 6.5 4.5 14.5 0 21"
-        fill="none"
-        stroke="#F4F7F2"
-        strokeWidth="2.6"
-        strokeLinecap="round"
-      />
-      <path
-        d="M45.5 25.5c-4.5 6.5-4.5 14.5 0 21"
-        fill="none"
-        stroke="#F4F7F2"
-        strokeWidth="2.6"
-        strokeLinecap="round"
-      />
+      <circle cx="35" cy="36" r="16" fill="#D9EC45" />
+      <path d="M35 20A16 16 0 0 1 19 36" fill="none" stroke="#FFFFFF" strokeWidth="2.6" />
+      <path d="M35 52A16 16 0 0 1 51 36" fill="none" stroke="#FFFFFF" strokeWidth="2.6" />
+      <circle cx="35" cy="36" r="16" fill="none" stroke="#1B4332" strokeWidth="1.8" />
     </svg>
   );
 }
