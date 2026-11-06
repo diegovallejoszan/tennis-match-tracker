@@ -7,10 +7,7 @@ import { ChevronDown, SlidersHorizontal } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  defaultDashboardDateRange,
-  type DashboardFilters,
-} from "@/lib/dashboard-aggregates";
+import type { DashboardFilters } from "@/lib/dashboard-aggregates";
 import { cn } from "@/lib/utils";
 
 type OpponentOption = { id: string; name: string };
@@ -31,18 +28,6 @@ function hasActiveFilters(filters: DashboardFilters): boolean {
   );
 }
 
-/** Filters beyond the default date window — worth offering Limpiar. */
-function hasClearableFilters(filters: DashboardFilters, now = new Date()): boolean {
-  const defaults = defaultDashboardDateRange(now);
-  return Boolean(
-    (filters.from && filters.from !== defaults.from) ||
-      (filters.to && filters.to !== defaults.to) ||
-      filters.matchType ||
-      filters.opponentId ||
-      (filters.completionStatus && filters.completionStatus !== "all"),
-  );
-}
-
 export function DashboardFiltersForm({
   filters,
   opponents,
@@ -50,7 +35,6 @@ export function DashboardFiltersForm({
   const t = useTranslations("dashboard.filters");
 
   const filtersActive = hasActiveFilters(filters);
-  const canClear = hasClearableFilters(filters);
   const [mobileOpen, setMobileOpen] = useState(filtersActive);
 
   const formFields = (
@@ -110,9 +94,10 @@ export function DashboardFiltersForm({
         <Button type="submit" variant="secondary">
           {t("apply")}
         </Button>
-        {canClear ? (
+        {filtersActive ? (
           <Button variant="ghost" asChild>
-            <Link href="/dashboard">{t("clear")}</Link>
+            {/* range=all removes the default two-month window instead of re-applying it. */}
+            <Link href="/dashboard?range=all">{t("clear")}</Link>
           </Button>
         ) : null}
       </div>

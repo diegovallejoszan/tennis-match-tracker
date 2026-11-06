@@ -25,6 +25,11 @@ export type DashboardFilters = {
   opponentId?: string;
   /** all | finished (win/loss) | non_finished */
   completionStatus?: string;
+  /**
+   * When true (URL `range=all`), do not inject the default last-two-months
+   * window — the Panel shows the full match history until the user picks dates.
+   */
+  allDates?: boolean;
 };
 
 /** YYYY-MM-DD in local calendar (matches `<input type="date">`). */
@@ -51,12 +56,20 @@ export function defaultDashboardDateRange(now: Date = new Date()): {
 /**
  * When the URL has no date bounds, apply {@link defaultDashboardDateRange}.
  * An explicit `from` and/or `to` in the query is left alone.
+ * Pass `allDates: true` (Clear → `?range=all`) to keep an unbounded history view.
  */
 export function withDefaultDashboardDateRange(
   filters: DashboardFilters,
   now: Date = new Date(),
 ): DashboardFilters {
-  if (filters.from || filters.to) return filters;
+  if (filters.from || filters.to) {
+    const { allDates: _allDates, ...rest } = filters;
+    return rest;
+  }
+  if (filters.allDates) {
+    const { allDates: _allDates, ...rest } = filters;
+    return rest;
+  }
   const range = defaultDashboardDateRange(now);
   return { ...filters, from: range.from, to: range.to };
 }

@@ -114,6 +114,15 @@ describe("withDefaultDashboardDateRange", () => {
       to: "2026-06-01",
     });
   });
+
+  it("skips the default window when allDates is set (Clear)", () => {
+    expect(
+      withDefaultDashboardDateRange(
+        { completionStatus: "all", allDates: true },
+        now,
+      ),
+    ).toEqual({ completionStatus: "all" });
+  });
 });
 
 describe("filterMatchesForDashboard", () => {

@@ -31,6 +31,8 @@ type DashboardPageProps = {
     matchType?: string;
     opponentId?: string;
     completionStatus?: string;
+    /** `all` skips the default last-two-months date window. */
+    range?: string;
   }>;
 };
 
@@ -61,6 +63,7 @@ function parseFilters(params: {
   matchType?: string;
   opponentId?: string;
   completionStatus?: string;
+  range?: string;
 }): DashboardFilters {
   const filters: DashboardFilters = {
     completionStatus: params.completionStatus || "all"
@@ -69,6 +72,7 @@ function parseFilters(params: {
   if (params.to) filters.to = params.to;
   if (params.matchType) filters.matchType = params.matchType;
   if (params.opponentId) filters.opponentId = params.opponentId;
+  if (params.range === "all") filters.allDates = true;
   return withDefaultDashboardDateRange(filters);
 }
 
