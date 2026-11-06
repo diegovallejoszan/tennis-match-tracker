@@ -20,7 +20,19 @@ type DashboardFiltersFormProps = {
   opponents: OpponentOption[];
 };
 
-function hasNonDefaultFilters(filters: DashboardFilters, now = new Date()): boolean {
+/** Any applied filter, including the default last-two-months window. */
+function hasActiveFilters(filters: DashboardFilters): boolean {
+  return Boolean(
+    filters.from ||
+      filters.to ||
+      filters.matchType ||
+      filters.opponentId ||
+      (filters.completionStatus && filters.completionStatus !== "all"),
+  );
+}
+
+/** Filters beyond the default date window — worth offering Limpiar. */
+function hasClearableFilters(filters: DashboardFilters, now = new Date()): boolean {
   const defaults = defaultDashboardDateRange(now);
   return Boolean(
     (filters.from && filters.from !== defaults.from) ||
@@ -37,8 +49,9 @@ export function DashboardFiltersForm({
 }: DashboardFiltersFormProps) {
   const t = useTranslations("dashboard.filters");
 
-  const hasFilters = hasNonDefaultFilters(filters);
-  const [mobileOpen, setMobileOpen] = useState(hasFilters);
+  const filtersActive = hasActiveFilters(filters);
+  const canClear = hasClearableFilters(filters);
+  const [mobileOpen, setMobileOpen] = useState(filtersActive);
 
   const formFields = (
     <form
@@ -97,7 +110,7 @@ export function DashboardFiltersForm({
         <Button type="submit" variant="secondary">
           {t("apply")}
         </Button>
-        {hasFilters ? (
+        {canClear ? (
           <Button variant="ghost" asChild>
             <Link href="/dashboard">{t("clear")}</Link>
           </Button>
@@ -120,7 +133,7 @@ export function DashboardFiltersForm({
         >
           <SlidersHorizontal className="h-3.5 w-3.5" />
           {t("toggle")}
-          {hasFilters ? (
+          {filtersActive ? (
             <span className="rounded-full bg-primary/15 px-1.5 text-[10px] font-medium text-primary">
               {t("active")}
             </span>
