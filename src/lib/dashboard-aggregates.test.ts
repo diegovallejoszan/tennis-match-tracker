@@ -3,8 +3,10 @@ import { describe, expect, it } from "vitest";
 import {
   buildSparklinePoints,
   competitiveWinLoss,
+  defaultDashboardDateRange,
   filterMatchesByDateRange,
   filterMatchesForDashboard,
+  formatDashboardDateInput,
   gameDifferentialFromSegments,
   matchesPerMonth,
   mostFrequentOpponent,
@@ -13,6 +15,7 @@ import {
   winRateForMatchType,
   winRatePercent,
   countMatchesThisCalendarMonth,
+  withDefaultDashboardDateRange,
 } from "./dashboard-aggregates";
 
 const sample: Parameters<typeof filterMatchesByDateRange>[0] = [
@@ -75,6 +78,41 @@ describe("competitiveWinLoss and winRatePercent", () => {
     expect(competitiveWinLoss(sample)).toEqual({ wins: 2, losses: 1 });
     expect(winRatePercent(2, 1)).toBe(66.7);
     expect(winRatePercent(0, 0)).toBeNull();
+  });
+});
+
+describe("defaultDashboardDateRange", () => {
+  it("returns today and two calendar months earlier", () => {
+    const now = new Date(2026, 10, 6); // 6 Nov 2026 local
+    expect(defaultDashboardDateRange(now)).toEqual({
+      from: "2026-09-06",
+      to: "2026-11-06",
+    });
+  });
+
+  it("formats local calendar dates for date inputs", () => {
+    expect(formatDashboardDateInput(new Date(2026, 0, 5))).toBe("2026-01-05");
+  });
+});
+
+describe("withDefaultDashboardDateRange", () => {
+  const now = new Date(2026, 10, 6);
+
+  it("fills from/to when neither bound is set", () => {
+    expect(withDefaultDashboardDateRange({ completionStatus: "all" }, now)).toEqual({
+      completionStatus: "all",
+      from: "2026-09-06",
+      to: "2026-11-06",
+    });
+  });
+
+  it("leaves an explicit from or to alone", () => {
+    expect(
+      withDefaultDashboardDateRange({ from: "2025-01-01" }, now),
+    ).toEqual({ from: "2025-01-01" });
+    expect(withDefaultDashboardDateRange({ to: "2026-06-01" }, now)).toEqual({
+      to: "2026-06-01",
+    });
   });
 });
 

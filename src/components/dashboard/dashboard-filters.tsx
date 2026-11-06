@@ -7,7 +7,10 @@ import { ChevronDown, SlidersHorizontal } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import type { DashboardFilters } from "@/lib/dashboard-aggregates";
+import {
+  defaultDashboardDateRange,
+  type DashboardFilters,
+} from "@/lib/dashboard-aggregates";
 import { cn } from "@/lib/utils";
 
 type OpponentOption = { id: string; name: string };
@@ -17,26 +20,30 @@ type DashboardFiltersFormProps = {
   opponents: OpponentOption[];
 };
 
+function hasNonDefaultFilters(filters: DashboardFilters, now = new Date()): boolean {
+  const defaults = defaultDashboardDateRange(now);
+  return Boolean(
+    (filters.from && filters.from !== defaults.from) ||
+      (filters.to && filters.to !== defaults.to) ||
+      filters.matchType ||
+      filters.opponentId ||
+      (filters.completionStatus && filters.completionStatus !== "all"),
+  );
+}
+
 export function DashboardFiltersForm({
   filters,
   opponents,
 }: DashboardFiltersFormProps) {
   const t = useTranslations("dashboard.filters");
 
-  const hasFilters = Boolean(
-    filters.from ||
-      filters.to ||
-      filters.matchType ||
-      filters.opponentId ||
-      (filters.completionStatus && filters.completionStatus !== "all"),
-  );
-
+  const hasFilters = hasNonDefaultFilters(filters);
   const [mobileOpen, setMobileOpen] = useState(hasFilters);
 
   const formFields = (
     <form
       method="get"
-      className="grid gap-3 rounded-lg border border-border p-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6"
+      className="grid gap-3 rounded-lg border border-border p-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5"
     >
       <label className="space-y-1 text-sm">
         <span>{t("from")}</span>
@@ -86,8 +93,8 @@ export function DashboardFiltersForm({
           <option value="non_finished">{t("notFinishedOnly")}</option>
         </select>
       </label>
-      <div className="flex items-end gap-2">
-        <Button type="submit" variant="secondary" className="flex-1">
+      <div className="flex flex-wrap items-center gap-2 sm:col-span-2 lg:col-span-3 xl:col-span-5">
+        <Button type="submit" variant="secondary">
           {t("apply")}
         </Button>
         {hasFilters ? (

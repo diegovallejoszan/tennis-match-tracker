@@ -27,6 +27,40 @@ export type DashboardFilters = {
   completionStatus?: string;
 };
 
+/** YYYY-MM-DD in local calendar (matches `<input type="date">`). */
+export function formatDashboardDateInput(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+/**
+ * Default Panel window: today and the two calendar months before that day.
+ * Keeps the dashboard focused on recent form instead of the full history.
+ */
+export function defaultDashboardDateRange(now: Date = new Date()): {
+  from: string;
+  to: string;
+} {
+  const to = formatDashboardDateInput(now);
+  const fromDate = new Date(now.getFullYear(), now.getMonth() - 2, now.getDate());
+  return { from: formatDashboardDateInput(fromDate), to };
+}
+
+/**
+ * When the URL has no date bounds, apply {@link defaultDashboardDateRange}.
+ * An explicit `from` and/or `to` in the query is left alone.
+ */
+export function withDefaultDashboardDateRange(
+  filters: DashboardFilters,
+  now: Date = new Date(),
+): DashboardFilters {
+  if (filters.from || filters.to) return filters;
+  const range = defaultDashboardDateRange(now);
+  return { ...filters, from: range.from, to: range.to };
+}
+
 export function filterMatchesForDashboard(
   matches: MatchForDashboard[],
   filters: DashboardFilters,

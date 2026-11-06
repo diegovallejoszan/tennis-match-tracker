@@ -18,6 +18,7 @@ import {
   winLossByMatchType,
   winRateByMonth,
   winRateForMatchType,
+  withDefaultDashboardDateRange,
   type DashboardFilters,
   type MatchForDashboard
 } from "@/lib/dashboard-aggregates";
@@ -68,7 +69,7 @@ function parseFilters(params: {
   if (params.to) filters.to = params.to;
   if (params.matchType) filters.matchType = params.matchType;
   if (params.opponentId) filters.opponentId = params.opponentId;
-  return filters;
+  return withDefaultDashboardDateRange(filters);
 }
 
 export default async function DashboardPage({ searchParams }: DashboardPageProps) {
